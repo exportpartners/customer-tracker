@@ -183,6 +183,7 @@
     <button class="mini" onclick="exportData()">⬇ Backup (JSON)</button>
     <button class="mini" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
     <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
+    <span id="geriAlYeri"></span>
   </div>
 </footer>
 <div id="toast"></div>
@@ -407,11 +408,104 @@ function notify(person,msg,subj){
 }
 function toast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='customer-tracker-backup.json';a.click();}
+/* ---------- Restore, and the safety net around it ----------------------
+   10 Sep 2026. Mustafa: "the file did not refresh itself, so I lost my
+   manual notes." Measured: between 16:45 and 16:56 four memo fields got
+   shorter; Lemas Gida went from 5,393 characters to 4,271 and what
+   disappeared was the full English FDA notice and the customer's own
+   message. It was recoverable only because a hand-downloaded file from
+   that exact window happened to be sitting in ~/Downloads.
+
+   Restore replaces everything. That is what it is for, and it is fine as
+   long as it is not silent. Three things now stand between a restore and
+   a loss: it says what will be lost BEFORE writing, it keeps a copy of
+   what was there, and that copy is one click away. */
+
+const GERIAL_ANAHTAR='ep_track10_geri_al';
+
+function memoUzunluk(c){
+  return String((c&&c.memo)||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().length;
+}
+
+/* What this file would do to what is on screen. The memo comparison is
+   here because that is the field people actually write into by hand, and
+   shortening one is the loss that does not announce itself. */
+function restoreFarki(gelen){
+  const simdi=new Map(data.map(c=>[c.id,c]));
+  const gelenId=new Set(gelen.map(c=>c.id));
+  const yeni=gelen.filter(c=>!simdi.has(c.id));
+  const gidecek=data.filter(c=>!gelenId.has(c.id));
+  const kisalan=[];
+  gelen.forEach(c=>{
+    const o=simdi.get(c.id); if(!o) return;
+    const a=memoUzunluk(o), b=memoUzunluk(c);
+    if(b<a) kisalan.push({firm:o.firm||c.id, kayip:a-b});
+  });
+  kisalan.sort((x,y)=>y.kayip-x.kayip);
+  return {yeni:yeni, gidecek:gidecek, kisalan:kisalan};
+}
+
+function restoreOzeti(f){
+  const p=[];
+  if(f.yeni.length) p.push(f.yeni.length+' new record'+(f.yeni.length>1?'s':''));
+  if(f.gidecek.length) p.push(f.gidecek.length+' record'+(f.gidecek.length>1?'s':'')+' REMOVED: '
+      +f.gidecek.map(c=>c.firm||c.id).join(', '));
+  if(f.kisalan.length) p.push(f.kisalan.length+' memo'+(f.kisalan.length>1?'s':'')+' will get SHORTER: '
+      +f.kisalan.slice(0,6).map(x=>x.firm+' (-'+x.kayip+' chars)').join(', ')
+      +(f.kisalan.length>6?', …':''));
+  return p;
+}
+
+/* The copy that makes the restore reversible. It goes to this browser and
+   to a file on disk, because a copy that lives in only one place is the
+   situation this whole thing exists to prevent. */
+function geriAlKopyasiniAl(sebep){
+  const kopya={zaman:new Date().toISOString(),sebep:sebep||'restore',kayitlar:data};
+  try{ localStorage.setItem(GERIAL_ANAHTAR, JSON.stringify(kopya)); }catch(e){}
+  try{
+    /* Local time, not UTC: the file name has to match the clock on the
+       wall, otherwise the safety copy looks three hours old. */
+    const n=new Date(), ik=x=>String(x).padStart(2,'0');
+    const damga=n.getFullYear()+ik(n.getMonth()+1)+ik(n.getDate())+'-'+ik(n.getHours())+ik(n.getMinutes());
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='customer-tracker-oncesi-'+damga+'.json';
+    a.click();
+  }catch(e){}
+  geriAlDugmesi();
+}
+
+function geriAlVar(){
+  try{ return JSON.parse(localStorage.getItem(GERIAL_ANAHTAR)||'null'); }catch(e){ return null; }
+}
+
+function geriAlDugmesi(){
+  const yer=document.getElementById('geriAlYeri'); if(!yer) return;
+  const k=geriAlVar();
+  if(!k){ yer.innerHTML=''; return; }
+  const ne=new Date(k.zaman);
+  yer.innerHTML='<button class="mini" style="background:#c0392b;color:#fff;border-color:#c0392b" '
+    +'onclick="geriAl()">↺ Undo restore ('+k.kayitlar.length+' records, '
+    +ne.toLocaleString()+')</button>';
+}
+
+function geriAl(){
+  const k=geriAlVar(); if(!k) return;
+  if(!confirm('Put back the '+k.kayitlar.length+' records as they were at '
+      +new Date(k.zaman).toLocaleString()+'?\n\nWhatever is on screen now will be replaced.')) return;
+  const simdiki=data;
+  data=k.kayitlar.map(normalize); ensureIds(data); render();
+  save((tamam,nasil)=>{
+    if(!tamam){ data=simdiki; render(); alert('Undo failed, nothing was changed.\n\nReason: '+nasil); return; }
+    try{ localStorage.removeItem(GERIAL_ANAHTAR); }catch(e){}
+    geriAlDugmesi(); toast('Restored to the earlier version');
+  });
+}
+
 /* Restore. The old version said "Invalid backup file." for every possible
    failure and nothing at all when a record was dropped, so a restore that
-   half worked looked exactly like one that fully worked. It now reports
-   what it read, what it wrote and what it skipped, and one bad record no
-   longer costs the whole file. */
+   half worked looked exactly like one that fully worked. */
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
@@ -436,12 +530,21 @@ function importData(ev){
       tutulan.push(rec);
     });
     if(!tutulan.length){ alert('Nothing could be restored.\n\n'+atlanan.join('\n')); return; }
-    /* An id that is not already in the table is a NEW record and is kept.
-       Nothing is matched away or silently discarded. */
-    const eskiIdler=new Set(data.map(c=>c.id));
-    const yeniSayi=tutulan.filter(c=>!eskiIdler.has(c.id)).length;
+
+    /* Say what this costs before it costs it. */
+    const fark=restoreFarki(tutulan), uyari=restoreOzeti(fark);
+    let soru='Restore '+f.name+'?\n\n'
+      +'On screen now: '+data.length+' records.  In the file: '+tutulan.length+'.\n';
+    if(atlanan.length) soru+=atlanan.length+' record(s) in the file will be skipped.\n';
+    soru+='\n'+(uyari.length?uyari.join('\n\n'):'No record is removed and no memo gets shorter.');
+    soru+='\n\nA copy of the current data is saved to this browser and downloaded '
+         +'first, so this can be undone.';
+    if(!confirm(soru)) { toast('Restore cancelled, nothing changed.'); return; }
+
+    geriAlKopyasiniAl('restore: '+f.name);
+    const yeniSayi=fark.yeni.length;
     data=tutulan; ensureIds(data);
-    render();                         /* the table refreshes on its own */
+    render();
     save((tamam,nasil)=>{
       let m='Restore: '+okunan+' read, '+tutulan.length+' written'
             +(yeniSayi?', '+yeniSayi+' new':'')
@@ -735,6 +838,7 @@ async function boot(){
   await loadScript('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
   await loadScript('https'+'://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js');
   initData();
+  geriAlDugmesi();
 }
 boot();
 </script>
