@@ -58,6 +58,8 @@
   .sec-overdue{background:#c0392b;box-shadow:0 2px 6px rgba(192,57,43,.4)}
   .sec-progress{background:#2e9e5b;box-shadow:0 2px 6px rgba(46,158,91,.4)}
   .sec-completed{background:#0E1B3D;box-shadow:0 2px 6px rgba(14,27,61,.4)}
+  .sec-other{background:#4a5568;box-shadow:0 2px 6px rgba(74,85,104,.4)}
+  .sec-notstarted{background:#9aa3af;box-shadow:0 2px 6px rgba(154,163,175,.4)}
 
   .chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:150px;max-width:240px}
   .chip{display:inline-flex;align-items:center;gap:4px;color:#fff;border-radius:12px;padding:4px 7px 4px 9px;font-size:11px;font-weight:700;white-space:nowrap}
@@ -79,6 +81,8 @@
   .s-progress{background:linear-gradient(90deg,#1f8a4c,#62cf88,#1f8a4c);background-size:200% 100%;animation:flow 2.4s linear infinite}
   .s-overdue{background:#c0392b}.s-hold{background:#e0892a}.s-notstarted{background:#9aa3af}
   .s-importrefusal{background:#6d3b9e}
+  .s-newstatus{background:#ff7d07}
+  .s-unknown{background:#4a5568}
 
   .iconcell{display:flex;align-items:center;gap:6px}
   .field{border:1px solid var(--line);background:#fafbfc;border-radius:8px;padding:7px 8px;font-size:13px;outline:none}
@@ -158,7 +162,12 @@
 </header>
 
 <div class="wrap">
-  <div class="bar"><button class="addbtn" onclick="addRow()">+ Add Row</button></div>
+  <div class="bar">
+    <select id="taskFilter" class="field" style="margin-right:auto" onchange="render()" title="Show only the customers carrying this task">
+      <option value="">All tasks</option>
+    </select>
+    <button class="addbtn" onclick="addRow()">+ Add Row</button>
+  </div>
   <div class="scroll">
     <table>
       <thead><tr><th>Company</th><th>Task</th><th>Status</th><th>Contact Person</th><th>Phone / Email</th><th>Action</th><th>Invoice / 1st Meeting</th><th>Submit</th><th>Memo</th></tr></thead>
@@ -232,9 +241,9 @@ const EMAILJS_CONFIG={publicKey:"YOUR_EMAILJS_PUBLIC_KEY",serviceId:"YOUR_SERVIC
 const PHONE='<svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.3 21 3 13.7 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.3 2.3z"/></svg>';
 const MAIL='<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 7L4 6.5V8l8 4.5L20 8V6.5L12 11z"/></svg>';
 const GLOBE='<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.9a15.6 15.6 0 00-1.3-3.3A8 8 0 0118.9 8zM12 4.2c.7 1 1.3 2.3 1.7 3.8h-3.4c.4-1.5 1-2.8 1.7-3.8zM4.3 14A8 8 0 014 12c0-.7.1-1.4.3-2h3.4a17.6 17.6 0 000 4H4.3zm.8 2h2.9c.3 1.2.8 2.3 1.3 3.3A8 8 0 015.1 16zm2.9-8H5.1A8 8 0 019 4.7C8.5 5.7 8.3 6.8 8 8zM12 19.8c-.7-1-1.3-2.3-1.7-3.8h3.4c-.4 1.5-1 2.8-1.7 3.8zm2.1-5.8H9.9a15.4 15.4 0 010-4h4.2a15.4 15.4 0 010 4zm.9 5.3c.5-1 1-2.1 1.3-3.3h2.9a8 8 0 01-4.2 3.3zM16.3 14a17.6 17.6 0 000-4h3.4c.2.6.3 1.3.3 2s-.1 1.4-.3 2h-3.4z"/></svg>';
-const STATUSES=['In Progress','Completed','Over Due','Hold','Not Started','Import Refusal'];
+const STATUSES=['New','In Progress','Completed','Over Due','Hold','Not Started','Import Refusal'];
 const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP'];
-const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info'];
+const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted'];
 const RED_NOTES=['Payment Not Received','Technical Call Pending'];
 const ORANGE_NOTES=['Proforma Invoice Sent'];
 const GREEN_NOTES=['Payment Received'];
@@ -253,8 +262,13 @@ const ASSESS=[
   'Undecided, technical call could turn it positive'
 ];
 const SUPERSEDE={'Payment Received':'Proforma Invoice Sent','Technical Call Done':'Technical Call Pending'};
-const DONE_STATUS=['Completed','Not Started'];
-const SC={'In Progress':'s-progress','Completed':'s-completed','Over Due':'s-overdue','Hold':'s-hold','Not Started':'s-notstarted','Import Refusal':'s-importrefusal'};
+/* 10 Sep 2026: 'Not Started' was in here, so eleven customers whose work
+   had not begun were drawn under a heading that said COMPLETED. The
+   comment on isNewActive already describes the intended behaviour, "sends
+   it to that status band", and there was no such band. Not-started work
+   now has its own. */
+const DONE_STATUS=['Completed'];
+const SC={'New':'s-newstatus','In Progress':'s-progress','Completed':'s-completed','Over Due':'s-overdue','Hold':'s-hold','Not Started':'s-notstarted','Import Refusal':'s-importrefusal'};
 const KAAN={wa:'905059363733',email:'opr@exportpartners.com.tr',apikey:'YOUR_KAAN_CALLMEBOT_APIKEY'};
 const DENIZ={wa:'905327827115',email:'deniz@exportpartners.com.tr',apikey:'YOUR_DENIZ_CALLMEBOT_APIKEY'};
 const FM_TARGET=KAAN;     // intro-call notifications -> Kaan
@@ -310,7 +324,19 @@ function toArr(v){return Array.isArray(v)?v:Object.values(v||{});}
 function localData(){let d=JSON.parse(localStorage.getItem('ep_track10')||'null');let a=d?toArr(d).map(normalize):SEED.map(normalize);ensureIds(a);return a;}
 function emailReady(){return !EMAILJS_CONFIG.publicKey.includes('YOUR_') && typeof emailjs!=='undefined';}
 function setSync(mode){const el=document.getElementById('sync');if(el){el.textContent=mode==='cloud'?'● Cloud sync active — shared live with your team':'● Local only on this device';el.style.color=mode==='cloud'?'#1faa59':'#9aa1ad';}}
-function save(){localStorage.setItem('ep_track10',JSON.stringify(data));if(dbRef){try{dbRef.set(data);}catch(e){}}}
+/* The cloud write returns a promise. The old code wrapped it in try/catch,
+   which cannot catch a rejected promise: a write refused by the database
+   failed in complete silence and the table quietly reverted on the next
+   snapshot. Failures are now reported, and the caller can wait for them. */
+function save(cb){
+  try{localStorage.setItem('ep_track10',JSON.stringify(data));}
+  catch(e){toast('Could not save on this device: '+e.message);}
+  if(!dbRef){if(cb)cb(true,'local only');return;}
+  let p; try{p=dbRef.set(data);}catch(e){toast('Cloud save failed: '+e.message);if(cb)cb(false,e.message);return;}
+  if(p&&p.then) p.then(()=>{if(cb)cb(true,'cloud');})
+                 .catch(e=>{toast('Cloud save failed: '+(e&&e.message||e));if(cb)cb(false,String(e&&e.message||e));});
+  else if(cb) cb(true,'cloud');
+}
 /* Attachments live in their own branch so the main table stays light.
    File bytes are fetched only when someone actually opens the file. */
 function fileSet(id,key,dataUrl,cb){
@@ -353,6 +379,12 @@ function openMail(e){window.open('https://mail.google.com/mail/?view=cm&fs=1&to=
    1st meeting stays in NEW. Any deliberate status change (Not Started, Completed,
    In Progress, Over Due) removes it from NEW and sends it to that status band. */
 function isNewActive(c){
+  /* 10 Sep 2026. "New" is now a real status. A record whose status was
+     deliberately set to New belongs in the NEW band and stays there until
+     someone changes the status; the 5-business-day decay applies only to
+     the isNew flag, which is set automatically on intake. Before this,
+     status "New" matched no band at all and the row was drawn nowhere. */
+  if(c.status==='New') return true;
   if(!c.isNew) return false;
   if(c.status!=='Hold' && c.status!=='Import Refusal') return false;
   if(!c.firstMeeting) return true;
@@ -375,7 +407,57 @@ function notify(person,msg,subj){
 }
 function toast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='customer-tracker-backup.json';a.click();}
-function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d)){data=d.map(normalize);save();render();toast('Backup restored');}else{alert('Invalid backup file.');}}catch(e){alert('Invalid backup file.');}};r.readAsText(f);ev.target.value='';}
+/* Restore. The old version said "Invalid backup file." for every possible
+   failure and nothing at all when a record was dropped, so a restore that
+   half worked looked exactly like one that fully worked. It now reports
+   what it read, what it wrote and what it skipped, and one bad record no
+   longer costs the whole file. */
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onerror=()=>alert('Could not read the file: '+(r.error&&r.error.message||'unknown error'));
+  r.onload=()=>{
+    let d;
+    try{ d=JSON.parse(r.result); }
+    catch(e){ alert('This file is not valid JSON.\n\n'+e.message); return; }
+    const arr=Array.isArray(d)?d:(d&&typeof d==='object'?toArr(d):null);
+    if(!arr){ alert('Expected a list of records, found '+(typeof d)+'.'); return; }
+    const okunan=arr.length, tutulan=[], atlanan=[];
+    arr.forEach((raw,i)=>{
+      if(!raw||typeof raw!=='object'||Array.isArray(raw)){
+        atlanan.push('Record '+(i+1)+': not an object'); return;
+      }
+      let rec;
+      try{ rec=normalize(raw); }
+      catch(e){ atlanan.push((raw.firm||'Record '+(i+1))+': '+e.message); return; }
+      if(!rec.firm && !rec.id){
+        atlanan.push('Record '+(i+1)+': no company name and no id'); return;
+      }
+      tutulan.push(rec);
+    });
+    if(!tutulan.length){ alert('Nothing could be restored.\n\n'+atlanan.join('\n')); return; }
+    /* An id that is not already in the table is a NEW record and is kept.
+       Nothing is matched away or silently discarded. */
+    const eskiIdler=new Set(data.map(c=>c.id));
+    const yeniSayi=tutulan.filter(c=>!eskiIdler.has(c.id)).length;
+    data=tutulan; ensureIds(data);
+    render();                         /* the table refreshes on its own */
+    save((tamam,nasil)=>{
+      let m='Restore: '+okunan+' read, '+tutulan.length+' written'
+            +(yeniSayi?', '+yeniSayi+' new':'')
+            +(atlanan.length?', '+atlanan.length+' skipped':'');
+      if(!tamam){
+        alert(m+'\n\nThe table on this screen is updated, but the cloud '
+              +'write failed, so your team will not see it and the next '
+              +'refresh will undo it.\n\nReason: '+nasil);
+        return;
+      }
+      if(atlanan.length) alert(m+'\n\nSkipped:\n'+atlanan.join('\n'));
+      else toast(m);
+    });
+  };
+  r.readAsText(f); ev.target.value='';
+}
 /* Builds a short, scannable briefing. Empty fields are skipped entirely
    so the message stays clean instead of listing blanks. */
 function briefing(i,kind){
@@ -469,13 +551,31 @@ function rowHtml(c,i,pos){
 }
 
 function render(){
-  const idx=data.map((c,i)=>i);
+  let idx=data.map((c,i)=>i);
+  /* Task filter. Renewal work is the reason this exists: the ten FDA
+     RENEWAL customers had to be read off the table one row at a time. */
+  const tf=document.getElementById('taskFilter');
+  const tsel=tf?tf.value:'';
+  if(tsel) idx=idx.filter(i=>(data[i].tasks||[]).includes(tsel));
+  const inBand=c=>isNewActive(c)
+    ||c.status==='Hold'||c.status==='Import Refusal'
+    ||c.status==='Over Due'||c.status==='In Progress'
+    ||c.status==='Not Started'
+    ||DONE_STATUS.includes(c.status);
   const groups=[
     {key:'new',label:'NEW',cls:'sec-new',rows:idx.filter(i=>isNewActive(data[i]))},
     {key:'hold',label:'HOLD',cls:'sec-hold',rows:idx.filter(i=>!isNewActive(data[i])&&(data[i].status==='Hold'||data[i].status==='Import Refusal'))},
     {key:'overdue',label:'OVER DUE',cls:'sec-overdue',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='Over Due')},
     {key:'progress',label:'IN PROGRESS',cls:'sec-progress',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='In Progress')},
-    {key:'completed',label:'COMPLETED',cls:'sec-completed',rows:idx.filter(i=>!isNewActive(data[i])&&DONE_STATUS.includes(data[i].status))}
+    {key:'notstarted',label:'NOT STARTED',cls:'sec-notstarted',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='Not Started')},
+    {key:'completed',label:'COMPLETED',cls:'sec-completed',rows:idx.filter(i=>!isNewActive(data[i])&&DONE_STATUS.includes(data[i].status))},
+    /* Catch-all. Every band above tests for a specific status, so a record
+       carrying any other value used to fall through all of them and never
+       be drawn: no row, no warning, no error. That is how a restored
+       record with status "New" disappeared while sitting in the database.
+       This band means no record can be invisible again, whatever its
+       status, and the heading says what to fix. */
+    {key:'other',label:'UNGROUPED — status not recognised',cls:'sec-other',rows:idx.filter(i=>!inBand(data[i]))}
   ];
   let html='';
   for(const g of groups){
@@ -485,6 +585,22 @@ function render(){
     if(open){let pos=0;html+=g.rows.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
+  fillTaskFilter(tsel);
+}
+/* Options are built from the data, not from the TASKS constant alone, so a
+   task that exists in the records is always selectable even if someone
+   forgot to add it to the list. Counts are shown because the question is
+   usually "how many are in this pile", not "does this task exist". */
+function fillTaskFilter(keep){
+  const sel=document.getElementById('taskFilter'); if(!sel) return;
+  const sayim={};
+  data.forEach(c=>(c.tasks||[]).forEach(t=>{if(t)sayim[t]=(sayim[t]||0)+1;}));
+  const adlar=Array.from(new Set(TASKS.concat(Object.keys(sayim)))).filter(t=>sayim[t]);
+  adlar.sort((a,b)=>sayim[b]-sayim[a]||a.localeCompare(b));
+  const yeni='<option value="">All tasks ('+data.length+')</option>'+
+    adlar.map(t=>`<option value="${esc(t)}" ${t===keep?'selected':''}>${esc(t)} (${sayim[t]})</option>`).join('');
+  if(sel.innerHTML!==yeni) sel.innerHTML=yeni;
+  sel.value=keep||'';
 }
 function toggleSec(k){openSec[k]=!openSec[k];render();}
 function dropToHold(i){
