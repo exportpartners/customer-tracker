@@ -60,6 +60,11 @@
   .sec-completed{background:#0E1B3D;box-shadow:0 2px 6px rgba(14,27,61,.4)}
   .sec-other{background:#4a5568;box-shadow:0 2px 6px rgba(74,85,104,.4)}
   .sec-notstarted{background:#9aa3af;box-shadow:0 2px 6px rgba(154,163,175,.4)}
+  /* Renewal acik yesil, Mustafa'nin istegi. Acik zeminde beyaz yazi
+     okunmuyor, o yuzden bu ikisinde yazi rengi koyu. */
+  .sec-renewal{background:#8FD19E;color:#14532d;box-shadow:0 2px 6px rgba(143,209,158,.5)}
+  .sec-importrefusal{background:#6d3b9e;box-shadow:0 2px 6px rgba(109,59,158,.4)}
+  .sec-notconverted{background:#6b6f76;box-shadow:0 2px 6px rgba(107,111,118,.4)}
 
   .chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:150px;max-width:240px}
   .chip{display:inline-flex;align-items:center;gap:4px;color:#fff;border-radius:12px;padding:4px 7px 4px 9px;font-size:11px;font-weight:700;white-space:nowrap}
@@ -82,6 +87,8 @@
   .s-overdue{background:#c0392b}.s-hold{background:#e0892a}.s-notstarted{background:#9aa3af}
   .s-importrefusal{background:#6d3b9e}
   .s-newstatus{background:#ff7d07}
+  .s-renewal{background:#8FD19E;color:#14532d}
+  .s-notconverted{background:#6b6f76}
   .s-unknown{background:#4a5568}
 
   .iconcell{display:flex;align-items:center;gap:6px}
@@ -242,7 +249,12 @@ const EMAILJS_CONFIG={publicKey:"YOUR_EMAILJS_PUBLIC_KEY",serviceId:"YOUR_SERVIC
 const PHONE='<svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.3 21 3 13.7 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.3 2.3z"/></svg>';
 const MAIL='<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 7L4 6.5V8l8 4.5L20 8V6.5L12 11z"/></svg>';
 const GLOBE='<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.9a15.6 15.6 0 00-1.3-3.3A8 8 0 0118.9 8zM12 4.2c.7 1 1.3 2.3 1.7 3.8h-3.4c.4-1.5 1-2.8 1.7-3.8zM4.3 14A8 8 0 014 12c0-.7.1-1.4.3-2h3.4a17.6 17.6 0 000 4H4.3zm.8 2h2.9c.3 1.2.8 2.3 1.3 3.3A8 8 0 015.1 16zm2.9-8H5.1A8 8 0 019 4.7C8.5 5.7 8.3 6.8 8 8zM12 19.8c-.7-1-1.3-2.3-1.7-3.8h3.4c-.4 1.5-1 2.8-1.7 3.8zm2.1-5.8H9.9a15.4 15.4 0 010-4h4.2a15.4 15.4 0 010 4zm.9 5.3c.5-1 1-2.1 1.3-3.3h2.9a8 8 0 01-4.2 3.3zM16.3 14a17.6 17.6 0 000-4h3.4c.2.6.3 1.3.3 2s-.1 1.4-.3 2h-3.4z"/></svg>';
-const STATUSES=['New','In Progress','Completed','Over Due','Hold','Not Started','Import Refusal'];
+/* Sira, tablodaki bant sirasiyla AYNI tutuluyor: acilir listede gordugun
+   sira ile sayfada gordugun sira ayrismasin. Bant tanimlari BANTLAR
+   icinde, tek yerde. 'In Progress' Mustafa'nin verdigi listede yok ama
+   uygulamada duruyor ve kaldirilmasi istenmedi; aktif is oldugu icin
+   Renewal'in altina kondu, digerlerinin birbirine gore sirasi bozulmadi. */
+const STATUSES=['New','Renewal','In Progress','Not Started','Hold','Import Refusal','Over Due','Completed','Not Converted'];
 const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP'];
 const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted'];
 const RED_NOTES=['Payment Not Received','Technical Call Pending'];
@@ -269,14 +281,17 @@ const SUPERSEDE={'Payment Received':'Proforma Invoice Sent','Technical Call Done
    it to that status band", and there was no such band. Not-started work
    now has its own. */
 const DONE_STATUS=['Completed'];
-const SC={'New':'s-newstatus','In Progress':'s-progress','Completed':'s-completed','Over Due':'s-overdue','Hold':'s-hold','Not Started':'s-notstarted','Import Refusal':'s-importrefusal'};
+const SC={'New':'s-newstatus','Renewal':'s-renewal','Not Converted':'s-notconverted','In Progress':'s-progress','Completed':'s-completed','Over Due':'s-overdue','Hold':'s-hold','Not Started':'s-notstarted','Import Refusal':'s-importrefusal'};
 const KAAN={wa:'905059363733',email:'opr@exportpartners.com.tr',apikey:'YOUR_KAAN_CALLMEBOT_APIKEY'};
 const DENIZ={wa:'905327827115',email:'deniz@exportpartners.com.tr',apikey:'YOUR_DENIZ_CALLMEBOT_APIKEY'};
 const FM_TARGET=KAAN;     // intro-call notifications -> Kaan
 const TECH_TARGET=DENIZ;  // technical-call notifications -> Deniz
 const TRACKER_URL='https'+'://exportpartners.github.io/customer-tracker/';
 const HOLD_AFTER_BIZ_DAYS=5;
-let openSec={new:true,hold:false,overdue:false,progress:false,completed:false};
+/* Acilista acik duran iki bant: NEW ve RENEWAL. Ikisi de aksiyon
+   bekleyen kayitlar; digerleri baslikta sayisiyla duruyor, tiklayinca
+   aciliyor. Listede olmayan bir bant anahtari kapali sayilir. */
+let openSec={new:true,renewal:true,progress:false,notstarted:false,hold:false,refusal:false,overdue:false,completed:false,notconv:false,other:true};
 
 function toTel(r){let d=(r||'').replace(/[^\d]/g,'');if(d.startsWith('90'))d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);return '+90'+d;}
 function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -653,39 +668,57 @@ function rowHtml(c,i,pos){
   </tr>`;
 }
 
+/* ---------- Bantlar ---------------------------------------------------
+   Sira Mustafa'nin verdigi sira: aksiyon bekleyen ustte, biten ve kapanan
+   altta. Tek liste, tek yer; STATUSES de ayni sirayi izliyor.
+
+   BIR KAYIT TEK BANTA GIRER, ilk esleseni alir. Onceki hal her banti ayri
+   ayri suzuyordu ve iki kosula birden uyan kayit sayfada iki kez
+   cikabiliyordu.
+
+   RENEWAL BANDI IKI SEYI BIRLESTIRIR: status'u Renewal olan (yenileme isi
+   fiilen basladi) ve FDA RENEWAL etiketi tasiyan (temas edilecek aday)
+   kayitlar. Boylece aktif yenilemeler ile adaylar tek yerde durur.
+   Etiketle takip edilmesinin sebebi: adaylarin bir kismi Completed
+   (kaydi bizde tamamlanmis musteri), ikisi Not Converted (teklifi
+   kaybettigimiz dosya). Status'e tasinsa bu gercek durum kaybolurdu.
+
+   SON BANT her zaman en altta durur ve hicbir kosula uymayan kaydi
+   yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
+const BANTLAR=[
+  {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
+  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.tasks||[]).includes('FDA RENEWAL')},
+  {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
+  {key:'notstarted', label:'NOT STARTED',    cls:'sec-notstarted',   uyar:c=>c.status==='Not Started'},
+  {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
+  {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
+  {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
+  {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
+  {key:'notconv',    label:'NOT CONVERTED',  cls:'sec-notconverted', uyar:c=>c.status==='Not Converted'},
+  {key:'other',      label:'UNGROUPED — status not recognised', cls:'sec-other', uyar:()=>true}
+];
+
 function render(){
   let idx=data.map((c,i)=>i);
-  /* Task filter. Renewal work is the reason this exists: the ten FDA
-     RENEWAL customers had to be read off the table one row at a time. */
+  /* Task filter. Renewal work is the reason this exists: the FDA RENEWAL
+     customers had to be read off the table one row at a time. */
   const tf=document.getElementById('taskFilter');
   const tsel=tf?tf.value:'';
   if(tsel) idx=idx.filter(i=>(data[i].tasks||[]).includes(tsel));
-  const inBand=c=>isNewActive(c)
-    ||c.status==='Hold'||c.status==='Import Refusal'
-    ||c.status==='Over Due'||c.status==='In Progress'
-    ||c.status==='Not Started'
-    ||DONE_STATUS.includes(c.status);
-  const groups=[
-    {key:'new',label:'NEW',cls:'sec-new',rows:idx.filter(i=>isNewActive(data[i]))},
-    {key:'hold',label:'HOLD',cls:'sec-hold',rows:idx.filter(i=>!isNewActive(data[i])&&(data[i].status==='Hold'||data[i].status==='Import Refusal'))},
-    {key:'overdue',label:'OVER DUE',cls:'sec-overdue',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='Over Due')},
-    {key:'progress',label:'IN PROGRESS',cls:'sec-progress',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='In Progress')},
-    {key:'notstarted',label:'NOT STARTED',cls:'sec-notstarted',rows:idx.filter(i=>!isNewActive(data[i])&&data[i].status==='Not Started')},
-    {key:'completed',label:'COMPLETED',cls:'sec-completed',rows:idx.filter(i=>!isNewActive(data[i])&&DONE_STATUS.includes(data[i].status))},
-    /* Catch-all. Every band above tests for a specific status, so a record
-       carrying any other value used to fall through all of them and never
-       be drawn: no row, no warning, no error. That is how a restored
-       record with status "New" disappeared while sitting in the database.
-       This band means no record can be invisible again, whatever its
-       status, and the heading says what to fix. */
-    {key:'other',label:'UNGROUPED — status not recognised',cls:'sec-other',rows:idx.filter(i=>!inBand(data[i]))}
-  ];
+
+  const kova={}; BANTLAR.forEach(b=>kova[b.key]=[]);
+  idx.forEach(i=>{
+    const b=BANTLAR.find(b=>b.uyar(data[i]));
+    kova[b.key].push(i);
+  });
+
   let html='';
-  for(const g of groups){
-    if(g.rows.length===0) continue;
-    const open=openSec[g.key];
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${g.cls}" onclick="toggleSec('${g.key}')"><span class="chev">${open?'▾':'▸'}</span> ${g.label} (${g.rows.length})</button></td></tr>`;
-    if(open){let pos=0;html+=g.rows.map(i=>rowHtml(data[i],i,pos++)).join('');}
+  for(const b of BANTLAR){
+    const satirlar=kova[b.key];
+    if(!satirlar.length) continue;
+    const open=openSec[b.key];
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.label} (${satirlar.length})</button></td></tr>`;
+    if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
   fillTaskFilter(tsel);
