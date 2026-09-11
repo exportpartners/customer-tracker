@@ -702,10 +702,12 @@ const BANTLAR=[
      yok; completed'leri tamamla." Finished customers carrying an FDA RENEWAL
      task were being pulled into RENEWAL. A completed job is COMPLETED; the
      renewal-by-task rule now applies only to open records. */
-  /* RENEWAL bir durum degil, calisma listesi: satirlar asagida render() icinde
-     FDA RENEWAL gorevine gore AYRICA eklenir; bu kural yalnizca durumu
-     'Renewal' yazilmis kayit icin. Kayit kendi durum bandinda da durur. */
-  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'},
+  /* 11 Sep 2026, Mustafa, kural: BIR KAYIT SAYFADA BIR KEZ GORUNUR. Ilk eslesen
+     bant kazanir, tekrar yok. RENEWAL, FDA RENEWAL gorevi tasiyan her kaydin
+     yeri (In Progress haric, o kendi bandinda); durumu Completed, Hold ya da
+     Not Converted olabilir, satirdaki rozet onu soyler. Renewal listesi
+     Completed, Hold, New, Not Converted sirasiyla cizilir. */
+  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
   {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
@@ -727,20 +729,13 @@ function render(){
     const b=BANTLAR.find(b=>b.uyar(data[i]));
     kova[b.key].push(i);
   });
-  /* 11 Sep 2026, Mustafa: "renewal neden 2 tane kaldi." RENEWAL is a
-     working list, not a status: every customer whose task list carries
-     FDA RENEWAL appears there as well, even if the row already sits in
-     COMPLETED. A completed job stays in COMPLETED (his earlier request),
-     the renewal band just repeats it so the renewal round can be read
-     from one place. */
-  idx.forEach(i=>{
-    const c=data[i];
-    if((c.tasks||[]).includes('FDA RENEWAL') && !kova.renewal.includes(i)) kova.renewal.push(i);
-  });
-  /* 11 Sep 2026, Mustafa: renewal listesi durum sirasiyla okunsun:
-     Completed, Hold, In Progress, sonra Not Converted. */
   const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
   kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
+  /* Mukerrerlik olcumu: her indeks tam bir bantta olmali. Bozulursa sessiz
+     kalmaz, sayfanin ustunde uyari cikar. */
+  const gorulen=new Set(); let mukerrer=0;
+  Object.values(kova).forEach(l=>l.forEach(i=>{ if(gorulen.has(i)) mukerrer++; gorulen.add(i); }));
+  if(mukerrer) toast('UYARI: '+mukerrer+' kayit iki bantta birden gorunuyor');
 
   let html='';
   for(const b of BANTLAR){
