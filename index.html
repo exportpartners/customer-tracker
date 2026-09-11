@@ -789,21 +789,30 @@ function fillTaskFilter(keep){
    yalnizca karari kesinlesmis kayitlar uzerinden: kazanilan / (kazanilan + kaybedilen). */
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
-  const kaz=data.filter(c=>['Completed','In Progress'].includes(c.status));
-  const kay=data.filter(c=>c.status==='Not Converted');
-  const acik=data.filter(c=>!['Completed','In Progress','Not Converted'].includes(c.status));
-  const n=data.length; if(!n){el.innerHTML='';return;}
+  /* 11 Sep 2026, Mustafa: "refusal ve renewal haric bak; completed, not converted,
+     progress; Istanbul Sertifika da ok say, progress'e eklemeden." Yani:
+     IMPORT REFUSAL ve RENEWAL bantlari hesap disi (ilki aday havuzu, ikincisi
+     eski musterinin yenileme turu). Kazanilan = Completed, In Progress ve
+     faturasi kesilmis New/Hold kaydi (dosyalarinda Stripe faturasi olan).
+     Kaybedilen = Not Converted. Acik = kalan New/Hold. */
+  const renewalMi=c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'));
+  const havuz=data.filter(c=>c.status!=='Import Refusal'&&!renewalMi(c));
+  const faturali=c=>(c.files||[]).some(f=>/^Stripe-Fatura/.test(f.name||''));
+  const kaz=havuz.filter(c=>['Completed','In Progress'].includes(c.status)||(['New','Hold'].includes(c.status)&&faturali(c)));
+  const kay=havuz.filter(c=>c.status==='Not Converted');
+  const acik=havuz.filter(c=>!kaz.includes(c)&&!kay.includes(c));
+  const n=havuz.length; if(!n){el.innerHTML='';return;}
   const dilim=[['Kazanılan',kaz.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],['Kaybedilen',kay.length,'#6d3b9e']];
   const karar=kaz.length+kay.length; const oran=karar?Math.round(100*kaz.length/karar):0;
   const R=58,C=2*Math.PI*R; let ofs=0; let arcs='';
   dilim.forEach(([ad,v,renk])=>{ if(!v) return; const len=C*v/n;
     arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v} (${Math.round(100*v/n)}%)</title></circle>`; ofs+=len; });
-  const sayim={}; data.forEach(c=>{sayim[c.status]=(sayim[c.status]||0)+1;});
-  const tablo=Object.entries(sayim).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td><td>%${Math.round(100*v/n)}</td></tr>`).join('');
-  el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt. Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Açık kayıtlar orana girmez.</div>
+  const disi=data.length-n;
+  const liste=(l)=>l.map(c=>esc((c.firm||'').split(' ').slice(0,2).join(' '))).join(', ');
+  el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt üzerinden (Import Refusal ve Renewal bantlarındaki ${disi} kayıt hesap dışı). Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Faturası kesilmiş New/Hold kaydı kazanılan sayılır.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">DÖNÜŞÜM</text></svg>
   <div><div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
-  <table><tr><th>Durum</th><th>Adet</th><th>Pay</th></tr>${tablo}</table></div></div>`;
+  <table><tr><th>Kazanılan</th><td>${liste(kaz)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kay)}</td></tr></table></div></div>`;
 }
 function toggleSec(k){openSec[k]=!openSec[k];render();}
 function dropToHold(i){
