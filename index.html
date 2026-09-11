@@ -691,7 +691,7 @@ function rowHtml(c,i,pos){
    SON BANT her zaman en altta durur ve hicbir kosula uymayan kaydi
    yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
 const BANTLAR=[
-  /* 11 Sep 2026, Mustafa: HOLD always right under NEW, RENEWAL under HOLD. */
+  /* 11 Sep 2026, Mustafa: HOLD always right under NEW; IN PROGRESS above RENEWAL (16:30 istegi). */
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
@@ -702,13 +702,13 @@ const BANTLAR=[
      yok; completed'leri tamamla." Finished customers carrying an FDA RENEWAL
      task were being pulled into RENEWAL. A completed job is COMPLETED; the
      renewal-by-task rule now applies only to open records. */
+  {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
   /* 11 Sep 2026, Mustafa, kural: BIR KAYIT SAYFADA BIR KEZ GORUNUR. Ilk eslesen
      bant kazanir, tekrar yok. RENEWAL, FDA RENEWAL gorevi tasiyan her kaydin
      yeri (In Progress haric, o kendi bandinda); durumu Completed, Hold ya da
      Not Converted olabilir, satirdaki rozet onu soyler. Renewal listesi
      Completed, Hold, New, Not Converted sirasiyla cizilir. */
   {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
-  {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
   {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
