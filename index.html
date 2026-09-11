@@ -702,7 +702,10 @@ const BANTLAR=[
      yok; completed'leri tamamla." Finished customers carrying an FDA RENEWAL
      task were being pulled into RENEWAL. A completed job is COMPLETED; the
      renewal-by-task rule now applies only to open records. */
-  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(!DONE_STATUS.includes(c.status)&&c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
+  /* RENEWAL bir durum degil, calisma listesi: satirlar asagida render() icinde
+     FDA RENEWAL gorevine gore AYRICA eklenir; bu kural yalnizca durumu
+     'Renewal' yazilmis kayit icin. Kayit kendi durum bandinda da durur. */
+  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'},
   {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
@@ -734,6 +737,10 @@ function render(){
     const c=data[i];
     if((c.tasks||[]).includes('FDA RENEWAL') && !kova.renewal.includes(i)) kova.renewal.push(i);
   });
+  /* 11 Sep 2026, Mustafa: renewal listesi durum sirasiyla okunsun:
+     Completed, Hold, In Progress, sonra Not Converted. */
+  const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
+  kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
 
   let html='';
   for(const b of BANTLAR){
