@@ -814,6 +814,9 @@ function donusumCiz(){
   /* Reel Completed: bant ayrimi yok, dosyadaki her Completed kayit (renewal
      bandindaki Armin, Balen, Cota gibi eski musteriler de gercek tamamlanmis is). */
   const tamam=data.filter(c=>c.status==='Completed');
+  /* Mustafa'nin tanimi, 11 Sep 2026: "alinan = Progress + Completed". Bant
+     ayrimi yok; faturali New/Hold buraya girmez (o yalnizca pastanin kazanilani). */
+  const alinan=data.filter(c=>c.status==='Completed'||c.status==='In Progress');
   const n=havuz.length; if(!n){el.innerHTML='';return;}
   const dilim=[['Kazanılan',kaz.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],['Kaybedilen',kay.length,'#6d3b9e']];
   const karar=kaz.length+kay.length; const oran=karar?Math.round(100*kaz.length/karar):0;
@@ -825,16 +828,16 @@ function donusumCiz(){
   el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt üzerinden (Import Refusal ve Renewal bantlarındaki ${disi} kayıt hesap dışı). Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Faturası kesilmiş New/Hold kaydı kazanılan sayılır.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">DÖNÜŞÜM</text></svg>
   <div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
-  ${reklamKutu(kaz.length,tamam.length)}</div>
+  ${reklamKutu(alinan.length,tamam.length)}</div>
   <table><tr><th>Kazanılan</th><td>${liste(kaz)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kay)}</td></tr></table>`;
 }
-/* Reklam maliyeti, grafigin yaninda iki sayi: donusum basina (pastadaki
-   kazanilan) ve reel Completed basina (havuzdaki status=Completed). */
-function reklamKutu(kazanilan,completed){
+/* Reklam maliyeti, grafigin yaninda iki sayi: alinan is basina
+   (Completed + In Progress, tum bantlar) ve reel Completed basina. */
+function reklamKutu(alinan,completed){
   const tl=n=>n?Math.round(ADS.tl/n).toLocaleString('tr-TR'):'—';
   const usd=n=>n?Math.round(ADS.usd/n):'—';
   return `<div class="dz-reklam"><div class="dz-rb">Reklam maliyeti</div>
-  <div class="dz-rs"><b>${tl(kazanilan)} TL</b><span>≈ ${usd(kazanilan)} USD</span><em>dönüşüm başına (${kazanilan} kazanılan)</em></div>
+  <div class="dz-rs"><b>${tl(alinan)} TL</b><span>≈ ${usd(alinan)} USD</span><em>alınan iş başına (${alinan} Completed + In Progress)</em></div>
   <div class="dz-rs"><b>${tl(completed)} TL</b><span>≈ ${usd(completed)} USD</span><em>reel Completed başına (${completed} Completed, tüm bantlar)</em></div>
   <div class="dz-rk">Google Ads FDA kampanyası ${ADS.bas} – ${ADS.bit}: ${ADS.tl.toLocaleString('tr-TR')} TL (~${ADS.usd.toLocaleString('tr-TR')} USD). Ağustos 2025 reklamsız.</div></div>`;
 }
