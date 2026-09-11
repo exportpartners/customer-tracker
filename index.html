@@ -165,16 +165,22 @@
   #donusum{max-width:1180px;margin:28px auto 40px;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
   #donusum h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}
   #donusum .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:12px}
-  #donusum .dz-sar{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+  #donusum .dz-sar{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
   #donusum .dz-orta{font-size:24px;font-weight:800;fill:#0E1B3D}
   #donusum .dz-ortaalt{font-size:10px;fill:#6b6f76;letter-spacing:.08em}
   #donusum .dz-lejant{display:grid;grid-template-columns:auto auto auto auto;gap:6px 14px;font-size:12.5px;align-items:center;width:max-content}
   #donusum .dz-lejant i{display:inline-block;width:12px;height:12px;border-radius:3px}
   #donusum .dz-lejant b{font-weight:700}
   #donusum .dz-lejant span.m{color:#6b6f76}
-  #donusum table{border-collapse:collapse;font-size:11.5px;margin-top:10px;width:max-content}
+  #donusum table{border-collapse:collapse;font-size:11.5px;margin-top:14px;width:100%}
   #donusum td,#donusum th{padding:3px 18px 3px 0;text-align:left;color:#3d3f45}
   #donusum th{font-weight:600;color:#6b6f76;border-bottom:1px solid #e6e8ec}
+  #donusum .dz-reklam{border-left:1px solid #e6e8ec;padding-left:26px;min-width:240px;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:8px}
+  #donusum .dz-rb{font-size:11px;font-weight:700;color:#6b6f76;letter-spacing:.08em;text-transform:uppercase}
+  #donusum .dz-rs b{display:block;font-size:20px;color:#0E1B3D;line-height:1.1}
+  #donusum .dz-rs span{font-size:12px;color:#3d3f45;margin-right:6px}
+  #donusum .dz-rs em{font-size:11.5px;color:#6b6f76;font-style:normal}
+  #donusum .dz-rk{font-size:10.5px;color:#6b6f76;max-width:260px;line-height:1.35}
 </style>
 </head>
 <body>
@@ -313,10 +319,10 @@ const FM_TARGET=KAAN;     // intro-call notifications -> Kaan
 const TECH_TARGET=DENIZ;  // technical-call notifications -> Deniz
 const TRACKER_URL='https'+'://exportpartners.github.io/customer-tracker/';
 const HOLD_AFTER_BIZ_DAYS=5;
-/* Acilista acik duran iki bant: NEW ve RENEWAL. Ikisi de aksiyon
-   bekleyen kayitlar; digerleri baslikta sayisiyla duruyor, tiklayinca
-   aciliyor. Listede olmayan bir bant anahtari kapali sayilir. */
-let openSec={new:true,hold:true,renewal:true,progress:true,refusal:false,overdue:false,completed:false,notconv:false,other:true};
+/* 11 Sep 2026, Mustafa: "dosya ilk acildiginda sectionlar kapali gelsin."
+   Her bant baslikta sayisiyla durur, tiklayinca acilir. Listede olmayan
+   bir bant anahtari kapali sayilir. */
+let openSec={new:false,hold:false,renewal:false,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:false};
 
 function toTel(r){let d=(r||'').replace(/[^\d]/g,'');if(d.startsWith('90'))d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);return '+90'+d;}
 function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -787,6 +793,10 @@ function fillTaskFilter(keep){
    odemesi alinmis is (Completed, In Progress). Kaybedilen = Not Converted.
    Acik = henuz karar yok (New, Hold, Import Refusal, Renewal). Donusum orani
    yalnizca karari kesinlesmis kayitlar uzerinden: kazanilan / (kazanilan + kaybedilen). */
+/* Google Ads "FDA Belgesi" kampanyasi, arama terimleri raporundan. Elle
+   guncellenir; yeni export gelince tl, usd ve tarihler birlikte degisir.
+   USD, donem ortalama kuru (~45) ile. */
+const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
   /* 11 Sep 2026, Mustafa: "refusal ve renewal haric bak; completed, not converted,
@@ -801,6 +811,9 @@ function donusumCiz(){
   const kaz=havuz.filter(c=>['Completed','In Progress'].includes(c.status)||(['New','Hold'].includes(c.status)&&faturali(c)));
   const kay=havuz.filter(c=>c.status==='Not Converted');
   const acik=havuz.filter(c=>!kaz.includes(c)&&!kay.includes(c));
+  /* Reel Completed: bant ayrimi yok, dosyadaki her Completed kayit (renewal
+     bandindaki Armin, Balen, Cota gibi eski musteriler de gercek tamamlanmis is). */
+  const tamam=data.filter(c=>c.status==='Completed');
   const n=havuz.length; if(!n){el.innerHTML='';return;}
   const dilim=[['Kazanılan',kaz.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],['Kaybedilen',kay.length,'#6d3b9e']];
   const karar=kaz.length+kay.length; const oran=karar?Math.round(100*kaz.length/karar):0;
@@ -811,8 +824,19 @@ function donusumCiz(){
   const liste=(l)=>l.map(c=>esc((c.firm||'').split(' ').slice(0,2).join(' '))).join(', ');
   el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt üzerinden (Import Refusal ve Renewal bantlarındaki ${disi} kayıt hesap dışı). Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Faturası kesilmiş New/Hold kaydı kazanılan sayılır.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">DÖNÜŞÜM</text></svg>
-  <div><div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
-  <table><tr><th>Kazanılan</th><td>${liste(kaz)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kay)}</td></tr></table></div></div>`;
+  <div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
+  ${reklamKutu(kaz.length,tamam.length)}</div>
+  <table><tr><th>Kazanılan</th><td>${liste(kaz)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kay)}</td></tr></table>`;
+}
+/* Reklam maliyeti, grafigin yaninda iki sayi: donusum basina (pastadaki
+   kazanilan) ve reel Completed basina (havuzdaki status=Completed). */
+function reklamKutu(kazanilan,completed){
+  const tl=n=>n?Math.round(ADS.tl/n).toLocaleString('tr-TR'):'—';
+  const usd=n=>n?Math.round(ADS.usd/n):'—';
+  return `<div class="dz-reklam"><div class="dz-rb">Reklam maliyeti</div>
+  <div class="dz-rs"><b>${tl(kazanilan)} TL</b><span>≈ ${usd(kazanilan)} USD</span><em>dönüşüm başına (${kazanilan} kazanılan)</em></div>
+  <div class="dz-rs"><b>${tl(completed)} TL</b><span>≈ ${usd(completed)} USD</span><em>reel Completed başına (${completed} Completed, tüm bantlar)</em></div>
+  <div class="dz-rk">Google Ads FDA kampanyası ${ADS.bas} – ${ADS.bit}: ${ADS.tl.toLocaleString('tr-TR')} TL (~${ADS.usd.toLocaleString('tr-TR')} USD). Ağustos 2025 reklamsız.</div></div>`;
 }
 function toggleSec(k){openSec[k]=!openSec[k];render();}
 function dropToHold(i){
