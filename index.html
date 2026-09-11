@@ -159,6 +159,22 @@
   #sync{font-weight:700;margin:6px 0 10px}
   #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0E1B3D;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
   #toast.show{opacity:1}
+  /* Donusum grafigi, 11 Eylul 2026. Uc dilim: kazanilan (Completed + In Progress),
+     acik (New, Hold, Import Refusal, Renewal), kaybedilen (Not Converted).
+     Renkler dataviz dogrulayicisindan gecti: #1f6f3f #d97706 #6d3b9e. */
+  #donusum{max-width:1180px;margin:28px auto 40px;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  #donusum h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}
+  #donusum .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:12px}
+  #donusum .dz-sar{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+  #donusum .dz-orta{font-size:24px;font-weight:800;fill:#0E1B3D}
+  #donusum .dz-ortaalt{font-size:10px;fill:#6b6f76;letter-spacing:.08em}
+  #donusum .dz-lejant{display:grid;grid-template-columns:auto auto auto auto;gap:6px 14px;font-size:12.5px;align-items:center}
+  #donusum .dz-lejant i{display:inline-block;width:12px;height:12px;border-radius:3px}
+  #donusum .dz-lejant b{font-weight:700}
+  #donusum .dz-lejant span.m{color:#6b6f76}
+  #donusum table{border-collapse:collapse;font-size:11.5px;margin-top:10px}
+  #donusum td,#donusum th{padding:3px 10px 3px 0;text-align:left;color:#3d3f45}
+  #donusum th{font-weight:600;color:#6b6f76;border-bottom:1px solid #e6e8ec}
 </style>
 </head>
 <body>
@@ -180,6 +196,7 @@
       <thead><tr><th>Company</th><th>Task</th><th>Status</th><th>Contact Person</th><th>Phone / Email</th><th>Action</th><th>Invoice / 1st Meeting</th><th>Submit</th><th>Memo</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
+    <div id="donusum"></div>
   </div>
 </div>
 
@@ -747,6 +764,7 @@ function render(){
   }
   document.getElementById('rows').innerHTML=html;
   fillTaskFilter(tsel);
+  donusumCiz();
 }
 /* Options are built from the data, not from the TASKS constant alone, so a
    task that exists in the records is always selectable even if someone
@@ -762,6 +780,30 @@ function fillTaskFilter(keep){
     adlar.map(t=>`<option value="${esc(t)}" ${t===keep?'selected':''}>${esc(t)} (${sayim[t]})</option>`).join('');
   if(sel.innerHTML!==yeni) sel.innerHTML=yeni;
   sel.value=keep||'';
+}
+
+/* ---------- Donusum grafigi ---------- */
+/* Tanim olcum.md ile ayni: musteri dosyasindaki HER kayit bir temas. Kazanilan =
+   odemesi alinmis is (Completed, In Progress). Kaybedilen = Not Converted.
+   Acik = henuz karar yok (New, Hold, Import Refusal, Renewal). Donusum orani
+   yalnizca karari kesinlesmis kayitlar uzerinden: kazanilan / (kazanilan + kaybedilen). */
+function donusumCiz(){
+  const el=document.getElementById('donusum'); if(!el) return;
+  const kaz=data.filter(c=>['Completed','In Progress'].includes(c.status));
+  const kay=data.filter(c=>c.status==='Not Converted');
+  const acik=data.filter(c=>!['Completed','In Progress','Not Converted'].includes(c.status));
+  const n=data.length; if(!n){el.innerHTML='';return;}
+  const dilim=[['Kazanılan',kaz.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],['Kaybedilen',kay.length,'#6d3b9e']];
+  const karar=kaz.length+kay.length; const oran=karar?Math.round(100*kaz.length/karar):0;
+  const R=58,C=2*Math.PI*R; let ofs=0; let arcs='';
+  dilim.forEach(([ad,v,renk])=>{ if(!v) return; const len=C*v/n;
+    arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v} (${Math.round(100*v/n)}%)</title></circle>`; ofs+=len; });
+  const sayim={}; data.forEach(c=>{sayim[c.status]=(sayim[c.status]||0)+1;});
+  const tablo=Object.entries(sayim).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td><td>%${Math.round(100*v/n)}</td></tr>`).join('');
+  el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt. Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Açık kayıtlar orana girmez.</div>
+  <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">DÖNÜŞÜM</text></svg>
+  <div><div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
+  <table><tr><th>Durum</th><th>Adet</th><th>Pay</th></tr>${tablo}</table></div></div>`;
 }
 function toggleSec(k){openSec[k]=!openSec[k];render();}
 function dropToHold(i){
