@@ -724,6 +724,16 @@ function render(){
     const b=BANTLAR.find(b=>b.uyar(data[i]));
     kova[b.key].push(i);
   });
+  /* 11 Sep 2026, Mustafa: "renewal neden 2 tane kaldi." RENEWAL is a
+     working list, not a status: every customer whose task list carries
+     FDA RENEWAL appears there as well, even if the row already sits in
+     COMPLETED. A completed job stays in COMPLETED (his earlier request),
+     the renewal band just repeats it so the renewal round can be read
+     from one place. */
+  idx.forEach(i=>{
+    const c=data[i];
+    if((c.tasks||[]).includes('FDA RENEWAL') && !kova.renewal.includes(i)) kova.renewal.push(i);
+  });
 
   let html='';
   for(const b of BANTLAR){
