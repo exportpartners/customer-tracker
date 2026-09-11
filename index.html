@@ -255,8 +255,8 @@ const GLOBE='<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-
    uygulamada duruyor ve kaldirilmasi istenmedi; aktif is oldugu icin
    Renewal'in altina kondu, digerlerinin birbirine gore sirasi bozulmadi. */
 const STATUSES=['New','Renewal','In Progress','Hold','Import Refusal','Over Due','Completed','Not Converted'];
-const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP'];
-const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted'];
+const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP','PROCESS AUTHORITY LETTER'];
+const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted','Quote In Preparation'];
 const RED_NOTES=['Payment Not Received','Technical Call Pending'];
 const ORANGE_NOTES=['Proforma Invoice Sent'];
 const GREEN_NOTES=['Payment Received'];
@@ -299,7 +299,7 @@ const HOLD_AFTER_BIZ_DAYS=5;
 /* Acilista acik duran iki bant: NEW ve RENEWAL. Ikisi de aksiyon
    bekleyen kayitlar; digerleri baslikta sayisiyla duruyor, tiklayinca
    aciliyor. Listede olmayan bir bant anahtari kapali sayilir. */
-let openSec={new:true,renewal:true,progress:false,hold:false,refusal:false,overdue:false,completed:false,notconv:false,other:true};
+let openSec={new:true,hold:true,renewal:true,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:true};
 
 function toTel(r){let d=(r||'').replace(/[^\d]/g,'');if(d.startsWith('90'))d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);return '+90'+d;}
 function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -403,16 +403,13 @@ function openMail(e){window.open('https://mail.google.com/mail/?view=cm&fs=1&to=
    1st meeting stays in NEW. Any deliberate status change (Not Converted, Completed,
    In Progress, Over Due) removes it from NEW and sends it to that status band. */
 function isNewActive(c){
-  /* 10 Sep 2026. "New" is now a real status. A record whose status was
-     deliberately set to New belongs in the NEW band and stays there until
-     someone changes the status; the 5-business-day decay applies only to
-     the isNew flag, which is set automatically on intake. Before this,
-     status "New" matched no band at all and the row was drawn nowhere. */
-  if(c.status==='New') return true;
-  if(!c.isNew) return false;
-  if(c.status!=='Hold' && c.status!=='Import Refusal') return false;
-  if(!c.firstMeeting) return true;
-  return bizDaysBetween(c.firstMeeting, todayISO()) < HOLD_AFTER_BIZ_DAYS;
+  /* 11 Sep 2026, Mustafa: "NEW'de sadece Lemas ve Istanbul Sertifika kalsin;
+     import refusal'lar ayri baslikta toplansin." Until now a fresh record
+     (isNew) with status Hold or Import Refusal was also pulled into NEW for
+     five business days, so eight new refusals sat under NEW and the IMPORT
+     REFUSAL band showed only one. NEW is now strictly the status: a record
+     is in NEW because someone set it to New, nothing else. */
+  return c.status==='New';
 }
 
 function notify(person,msg,subj){
@@ -694,10 +691,11 @@ function rowHtml(c,i,pos){
    SON BANT her zaman en altta durur ve hicbir kosula uymayan kaydi
    yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
 const BANTLAR=[
+  /* 11 Sep 2026, Mustafa: HOLD always right under NEW, RENEWAL under HOLD. */
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
+  {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.tasks||[]).includes('FDA RENEWAL')},
   {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
-  {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
   {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
