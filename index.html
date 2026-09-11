@@ -698,7 +698,11 @@ const BANTLAR=[
      gormek istiyorum." A record whose status is In Progress is active work
      and belongs in IN PROGRESS even if its task list carries FDA RENEWAL;
      the renewal-by-task rule now skips those. */
-  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
+  /* 11 Sep 2026, Mustafa: "Armin Ilac, Balen Bal, Cota Gida COMPLETED'da neden
+     yok; completed'leri tamamla." Finished customers carrying an FDA RENEWAL
+     task were being pulled into RENEWAL. A completed job is COMPLETED; the
+     renewal-by-task rule now applies only to open records. */
+  {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(!DONE_STATUS.includes(c.status)&&c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
   {key:'progress',   label:'IN PROGRESS',    cls:'sec-progress',     uyar:c=>c.status==='In Progress'},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
