@@ -1097,14 +1097,19 @@ function sifreUret(){const h='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let 
    FDA&DUNS + FCE/SID varsa sira soylenir (once tesis kaydi ve DUNS, sonra
    FCE ve SID); tek gorev varsa yalnizca o. Sifre degistirme cumlesi her zaman. */
 function portalMesaj(c, em, pw){
+  /* Mustafa'nin 15 Eylul kalibi (Kuzey Guney mesajindan). Kapsam cumlesi
+     karttaki gorevlerden turetilir; gerisi sabit. */
   const t=c.tasks||[];
   const fda=t.includes('FDA&DUNS'), fce=t.includes('FCE'), sid=t.includes('SID'), lab=t.includes('LABEL REVIEW'), usda=t.includes('USDA/APHIS REGISTRATION');
   let kapsam='';
   if(fda&&(fce||sid)){
     const ek=[fce?'FCE (proses tesisi) kaydı':'',sid?'SID (ürün) kaydı':''].filter(Boolean).join(' ve ');
-    kapsam=`İlk aşamada FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz; tesis kaydı tamamlanınca ${ek} için ürün ve proses bilgilerini ayrıca isteyeceğiz.\n\n`;
-  }else if(fda){ kapsam='Bu aşamada FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz'+(lab?'; etiket incelemesi için ürün etiketlerini kayıt sonrasında isteyeceğiz':'')+(usda?'; USDA/APHIS başvurusu tesis kaydının ardından başlar':'')+'.\n\n'; }
-  return `Merhaba,\n\nÖdemeniz için teşekkür ederiz. ${kapsam}Kayıt için gereken bilgi ve belgeleri tek bir sayfada topladık. Aşağıdaki adresten girip alanları doldurabilir, evrakları yükleyebilirsiniz; yarım bırakıp sonra devam edebilirsiniz.\n\nAdres: ${portalUrl()}\nE-posta: ${em}\nŞifre: ${pw}\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\nBelgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ekibimizden Kaan Güler yürütecek. Sorunuz olursa bu numaradan yazabilirsiniz.\nExport Partners`;
+    kapsam=`İlk aşamada FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz; tesis kaydı tamamlanınca ${ek} için ürün ve proses bilgilerini ayrıca isteyeceğiz.`;
+  }else if(fda){
+    kapsam='FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz'+(lab?'; etiket incelemesi için ürün etiketlerini kayıt sonrasında isteyeceğiz':'')+(usda?'; USDA/APHIS başvurusu tesis kaydının ardından başlar':'')+'.';
+  }else if(usda){ kapsam='USDA/APHIS başvurunuzla başlıyoruz.'; }
+  else{ kapsam='Sürecinizle başlıyoruz.'; }
+  return `Merhaba,\n\nÖdemeniz için teşekkür ederiz. ${kapsam}\n\nAşağıdaki adresteki formdan girip alanları doldurabilir, evrakları yükleyebilirsiniz.\n\nAdres: ${portalUrl()}\n\nE-posta: ${em}\nŞifre: ${pw}\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\nBelgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ekibimizden Kaan Güler bey +90 505 936 37 33 yürütecek. Sorunuz olursa bu numaradan yazabilirsiniz.\n\nExport Partners`;
 }
 function portalHesapAc(){
   const c=data[memoIdx]; if(!c)return;
@@ -1167,7 +1172,7 @@ function portalYeniSifre(){
         .then(()=>db.ref('musteri_portal/'+uid).set({firma:v.firma||c.firm||'',eposta:em,giris:giris,acilis:new Date().toISOString().slice(0,10),form:v.form||null,dosyalar:v.dosyalar||null,durum:v.durum||null,guncelleme:v.guncelleme||null}))
         .then(()=>db.ref('portal_index/'+epostaAnahtari(em)).set({uid:uid,giris:giris}))
         .then(()=>db.ref('musteri_portal/'+eskiUid).set({kilit:true,firma:v.firma||'',eposta:em,kapatildi:new Date().toISOString().slice(0,10),yerine:uid}))
-        .then(()=>{c.portalUid=uid;save();portalSonMesaj='Merhaba,\n\nPortal şifreniz yenilendi.\nAdres: '+portalUrl()+'\nE-posta: '+em+'\nYeni şifre: '+pw+'\n(Girişte sağ üstten şifrenizi değiştirebilirsiniz.)\nExport Partners';renderPortal();toast('Yeni şifre üretildi; kutudan kopyalayın');});
+        .then(()=>{c.portalUid=uid;save();portalSonMesaj='Merhaba,\n\nPortal şifreniz yenilendi.\n\nAdres: '+portalUrl()+'\n\nE-posta: '+em+'\nŞifre: '+pw+'\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\nExport Partners';renderPortal();toast('Yeni şifre üretildi; kutudan kopyalayın');});
     });
   }).catch(e=>toast('Yeni şifre verilemedi: '+(e&&e.message||e)));
 }
