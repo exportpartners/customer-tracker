@@ -26,6 +26,11 @@
         "yerine":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
         "kilit":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
         "kapatildi":  { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "notlar":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')" },
+        "sorular":    {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+          "$sid": { ".write": "auth != null && auth.uid == $uid && !data.exists() && newData.hasChildren(['metin','kalem','ts']) && newData.child('metin').isString() && newData.child('metin').val().length <= 600 && !newData.hasChild('yanit')" }
+        },
         ".write":     "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
       }
     },

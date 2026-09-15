@@ -158,6 +158,11 @@
   .portalbox .pn{color:#9aa1ad;font-weight:800}
   .portalbox .pv{white-space:pre-wrap;word-break:break-word}
   .portalbox .pv.bos{color:#9aa1ad;font-style:italic}
+  .portalbox .pnot{display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap}
+  .portalbox .pnot input{flex:1;min-width:180px;border:1px solid #cfd5df;border-radius:7px;padding:5px 8px;font:inherit;font-size:12px}
+  .portalbox .pnot.eksik input{border-color:#f5b7b1;background:#fff8f7}
+  .portalbox .soru{background:#f7f9fc;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+  .portalbox .soru textarea{width:100%;min-height:54px;border:1px solid #cfd5df;border-radius:7px;padding:6px 8px;font:inherit;font-size:12px;margin-top:6px;box-sizing:border-box}
   .portalbox select{font-size:12px;border:1px solid #cfd5df;border-radius:7px;padding:4px 6px;width:100%}
   .portalbox .pmeta{font-size:12px;color:#6b7280;margin-bottom:8px}
   .portalbox .pbtn{background:#e7f2fc;border:1px solid #bcdcf6;color:#1c5fa8;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer}
@@ -1025,7 +1030,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-15 15:40';
+const SURUM='2026-09-15 21:30';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1078,17 +1083,52 @@ function renderPortal(){
       if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`<a href="javascript:void(0)" onclick="portalDosyaAc('${k}')">📎 ${esc(f.ad)}</a> <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span>`:'<span class="pv bos">yüklenmedi</span>';}
       else{const t=(v.form||{})[k]; pv=t?`<span class="pv">${esc(t)}</span>`:'<span class="pv bos">boş</span>';}
       const d=(v.durum||{})[k]||'bekleniyor';
-      return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}</div><select onchange="portalDurumSet('${k}',this.value)">${PORTAL_DURUM.map(([a,b])=>`<option value="${a}" ${a===d?'selected':''}>${b}</option>`).join('')}</select></div>`;
+      const nt=(v.notlar||{})[k]||null;
+      const ntDurum=!nt?'':(nt.gitti?`mail gitti ${esc(portalTarih(nt.gitti))}`:(nt.mail?`<b style="color:#b26a00">akşam 17:00 mailiyle gidecek</b>`:'yalnızca portalda görünüyor'));
+      const notSatir=`<div class="pnot ${d==='eksik'?'eksik':''}" id="pnot-${k}"><input id="pn-${k}" value="${esc(nt?nt.metin:'')}" placeholder="${d==='eksik'?'Ne eksik, ne bekleniyor (müşteriye gider)':'Müşteriye not (isteğe bağlı)'}" onkeydown="if(event.key==='Enter')portalNotKaydet('${k}')"><button class="pbtn" onclick="portalNotKaydet('${k}')">Kaydet</button><span class="pmeta" style="margin:0">${ntDurum}</span></div>`;
+      return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}${notSatir}</div><select onchange="portalDurumSet('${k}',this.value)">${PORTAL_DURUM.map(([a,b])=>`<option value="${a}" ${a===d?'selected':''}>${b}</option>`).join('')}</select></div>`;
     }).join('');
+    const sorular=Object.entries(v.sorular||{}).map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+    const kalemAd=k=>k&&k!=='genel'?((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1]||k):'Genel';
+    const soruBlok=`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
+      <div class="pmeta">Müşteri portaldan soru yazar; sorular akşam 17:00'de tek mailde opr@ ve deniz@ adresine düşer (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
+      ${sorular.length?sorular.map(q=>`<div class="soru" id="soru-${esc(q.id)}"><div><b>${esc(kalemAd(q.kalem))}</b> · <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span></div><div style="white-space:pre-wrap;margin-top:3px">${esc(q.metin)}</div>
+        <textarea id="yn-${esc(q.id)}" placeholder="Yanıt (müşteriye gider)">${esc(q.yanit||'')}</textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, akşam 17:00 mailiyle gidecek'):''}</span></div></div>`).join(''):'<div class="pmeta">Henüz soru yok.</div>'}`;
     const mesajKutu=portalSonMesaj?`<div style="background:#fff7ee;border:1px solid #f5c489;border-radius:9px;padding:10px;margin-bottom:10px"><div class="pmeta" style="color:#b26a00;font-weight:800">Hesap açıldı. Şifre yalnızca burada görünür, kart kapanınca silinir; şimdi kopyalayıp müşteriye gönderin.</div><textarea id="portalMesaj" readonly style="width:100%;height:150px;font:12px/1.5 -apple-system,Arial,sans-serif;border:1px solid #cfd5df;border-radius:7px;padding:8px">${esc(portalSonMesaj)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="pbtn" onclick="portalMetniKopyala()">Metni kopyala (WhatsApp)</button><button class="pbtn" onclick="portalMailTaslagi()">E-posta taslağı aç (Gmail)</button></div><div class="pmeta" style="margin-top:4px">E-posta taslağı, tarayıcıda açık olan Gmail hesabından (sen: deniz@, Kaan: opr@) taslak olarak açılır; gönderilmez, Gönder'e sen basarsın.</div></div>`:'';
     box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="pbtn" title="Müşteri şifresini unuttuysa: yeni şifre üretir, formu ve dosyaları korur" onclick="portalYeniSifre()">Yeni şifre ver</button><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı kapatır, formu siler, kart 'Form oluştur' haline döner; aynı e-postayla yeniden açılabilir" onclick="portalGeriAl()">Portalı geri al</button></span></div>
-      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> müşteri portal adresine kendi e-postası ve şifresiyle girip formu doldurur, belgeleri yükler, "Formu gönder"e basar. Cevaplar aşağıda görünür; her satırın sağındaki kutudan <b>Alındı / Eksik / Onaylandı</b> seçersin, müşteri aynı anda kendi ekranında görür. Eksik seçtiğin kalemi müşteri tamamlar. <b>Yeni şifre ver</b> = müşteri şifresini unuttuysa yeni şifre üretir (form ve dosyalar korunur), kutudan kopyalayıp iletirsin; müşteri kendi şifresini portalda "Şifre değiştir" ile de değiştirebilir. <b>Portalı geri al</b> = yanlışlıkla açıldıysa hesabı kapatır, formu siler, kart "Form oluştur" haline döner; aynı e-postayla yeniden açılabilir (onay sorar).</div>${mesajKutu}
-      <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Form: ${(v.form||{}).gonderim?'<b style="color:#1faa59">GÖNDERİLDİ '+esc(v.form.gonderim)+'</b>':'taslak, son kayıt '+esc(v.guncelleme||'henüz yok')} · Gizlilik onayı: ${esc((v.form||{}).onay||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}`;
+      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> müşteri portal adresine kendi e-postası ve şifresiyle girip formu doldurur, belgeleri yükler, "Formu gönder"e basar. Cevaplar aşağıda görünür; her satırın sağındaki kutudan <b>Alındı / Eksik / Onaylandı</b> seçersin, müşteri aynı anda kendi ekranında görür. Eksik seçtiğin kalemi müşteri tamamlar; satırın altındaki <b>not</b> kutusuna ne eksik olduğunu yazıp Kaydet dersen not portalda görünür ve (Eksik ise) akşam 17:00'de müşteriye tek toplu mail gider, kalem başına ayrı mail atılmaz. <b>Yeni şifre ver</b> = müşteri şifresini unuttuysa yeni şifre üretir (form ve dosyalar korunur), kutudan kopyalayıp iletirsin; müşteri kendi şifresini portalda "Şifre değiştir" ile de değiştirebilir. <b>Portalı geri al</b> = yanlışlıkla açıldıysa hesabı kapatır, formu siler, kart "Form oluştur" haline döner; aynı e-postayla yeniden açılabilir (onay sorar).</div>${mesajKutu}
+      <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Form: ${(v.form||{}).gonderim?'<b style="color:#1faa59">GÖNDERİLDİ '+esc(v.form.gonderim)+'</b>':'taslak, son kayıt '+esc(v.guncelleme||'henüz yok')} · Gizlilik onayı: ${esc((v.form||{}).onay||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}${soruBlok}`;
   }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
 }
 function portalDurumSet(k,val){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
-  firebase.database().ref('musteri_portal/'+c.portalUid+'/durum/'+k).set(val).then(()=>toast('Durum kaydedildi')).catch(e=>toast('Durum yazılamadı: '+(e&&e.message||e)));
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/durum/'+k).set(val).then(()=>{toast(val==='eksik'?'Eksik işaretlendi; alttaki kutuya ne eksik olduğunu yazıp Kaydet deyin, akşam mailiyle gider':'Durum kaydedildi');const pn=document.getElementById('pnot-'+k);if(pn){pn.classList.toggle('eksik',val==='eksik');const i=pn.querySelector('input');if(i&&!i.value)i.placeholder=val==='eksik'?'Ne eksik, ne bekleniyor (müşteriye gider)':'Müşteriye not (isteğe bağlı)';if(val==='eksik'&&i)i.focus();}}).catch(e=>toast('Durum yazılamadı: '+(e&&e.message||e)));
+}
+function portalTarih(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return iso;return d.toLocaleDateString('tr-TR')+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
+function portalKim(){const e=(firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'';return e.startsWith('opr@')?'Kaan':'Export Partners';}
+/* Kalem notu: portalda musteriye gorunur. Durum "Eksik" ise mail:true, aksam
+   17:00 turunda (portal-bildirim.py) o gunun butun notlari TEK mailde gider;
+   diger durumlarda yalnizca portalda durur. Bos metin notu siler. */
+function portalNotKaydet(k){
+  const c=data[memoIdx]; if(!c||!c.portalUid)return;
+  const inp=document.getElementById('pn-'+k); const metin=(inp?inp.value:'').trim();
+  const ref=firebase.database().ref('musteri_portal/'+c.portalUid+'/notlar/'+k);
+  if(!metin){ref.set(null).then(()=>{toast('Not silindi');renderPortal();}).catch(e=>toast('Silinemedi: '+(e&&e.message||e)));return;}
+  const sel=inp.closest('.prow').querySelector('select'); const durum=sel?sel.value:'bekleniyor';
+  const mail=durum==='eksik';
+  if(mail&&!confirm('Not portalda görünecek ve bugün 17:00\'de "'+(c.firm||'')+'" için '+(c.portalEmail||c.email||'')+' adresine giden toplu mailde yer alacak. Devam?'))return;
+  ref.set({metin:metin,ts:new Date().toISOString(),kim:portalKim(),mail:mail,gitti:null})
+    .then(()=>{toast(mail?'Not kaydedildi; 17:00 mailiyle gidecek':'Not kaydedildi (yalnızca portalda)');renderPortal();})
+    .catch(e=>toast('Not yazılamadı: '+(e&&e.message||e)));
+}
+function portalYanitla(id){
+  const c=data[memoIdx]; if(!c||!c.portalUid)return;
+  const ta=document.getElementById('yn-'+id); const metin=(ta?ta.value:'').trim();
+  if(!metin){toast('Yanıt boş');return;}
+  if(!confirm('Yanıt portalda görünecek ve bugün 17:00 toplu mailiyle müşteriye gidecek. Devam?'))return;
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/sorular/'+id).update({yanit:metin,yanit_ts:new Date().toISOString(),yanit_kim:portalKim(),yanit_gitti:null})
+    .then(()=>{toast('Yanıt kaydedildi');renderPortal();}).catch(e=>toast('Yanıt yazılamadı: '+(e&&e.message||e)));
 }
 function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k];if(!f||!f.veri)return;triggerDownload(f.veri,f.ad||'dosya');}
 function epostaAnahtari(e){return (e||'').trim().toLowerCase().replace(/[.#$\[\]\/]/g,ch=>'%'+ch.charCodeAt(0).toString(16));}
