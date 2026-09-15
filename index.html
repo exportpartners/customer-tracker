@@ -1121,7 +1121,7 @@ function portalHesapAc(){
          tarayicilarda engellendigi icin (15 Eylul) kutu kartin icinde acilir. */
       portalSonMesaj=metin; renderPortal();
     });
-  }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Bu e-posta ile hesap zaten var.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
+  }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Bu e-posta ile hesap zaten var (muhtemelen geri alınmış eski hesap). Firebase > Authentication > Users listesinden o e-postayı silin, sonra tekrar Form oluştur; ya da farklı bir e-posta yazın.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
 }
 /* Portali geri al: hesap yanlis e-postaya ya da erken acildiysa. Firebase'de
    kullanici silme yalnizca kendi oturumuyla yapilabildigi icin admin onun
@@ -1145,7 +1145,7 @@ function portalMailTaslagi(){
 }
 function portalGeriAl(){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
-  if(!confirm('PORTAL GERİ ALINACAK: '+(c.firm||'')+' için hesap kapatılır, form ve dosyalar silinir, kart "Form oluştur" haline döner. Devam?'))return;
+  if(!confirm('PORTAL GERİ ALINACAK: '+(c.firm||'')+' için hesap kapatılır, form ve dosyalar silinir, kart "Form oluştur" haline döner.\n\nNot: aynı e-postayla yeniden açmak istersen önce Firebase > Authentication > Users listesinden bu e-postayı silmen gerekir ('+(c.portalEmail||'')+'). Devam?'))return;
   const uid=c.portalUid, em=c.portalEmail;
   firebase.database().ref('musteri_portal/'+uid).set({kilit:true,firma:c.firm||'',eposta:em||'',kapatildi:new Date().toISOString().slice(0,10)})
     .then(()=>{c.portalUid='';c.portalEmail='';save();toast('Portal geri alındı');renderPortal();})
