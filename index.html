@@ -1081,8 +1081,8 @@ function renderPortal(){
       return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}</div><select onchange="portalDurumSet('${k}',this.value)">${PORTAL_DURUM.map(([a,b])=>`<option value="${a}" ${a===d?'selected':''}>${b}</option>`).join('')}</select></div>`;
     }).join('');
     const mesajKutu=portalSonMesaj?`<div style="background:#fff7ee;border:1px solid #f5c489;border-radius:9px;padding:10px;margin-bottom:10px"><div class="pmeta" style="color:#b26a00;font-weight:800">Hesap açıldı. Şifre yalnızca burada görünür, kart kapanınca silinir; şimdi kopyalayıp müşteriye gönderin.</div><textarea id="portalMesaj" readonly style="width:100%;height:150px;font:12px/1.5 -apple-system,Arial,sans-serif;border:1px solid #cfd5df;border-radius:7px;padding:8px">${esc(portalSonMesaj)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="pbtn" onclick="portalMetniKopyala()">Metni kopyala (WhatsApp)</button><button class="pbtn" onclick="portalMailTaslagi()">E-posta taslağı aç (Gmail)</button></div><div class="pmeta" style="margin-top:4px">E-posta taslağı, tarayıcıda açık olan Gmail hesabından (sen: deniz@, Kaan: opr@) taslak olarak açılır; gönderilmez, Gönder'e sen basarsın.</div></div>`:'';
-    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı ve formu tamamen kaldırır, kart 'Form oluştur' haline döner" onclick="portalGeriAl()">Portalı geri al</button></div>
-      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> müşteri portal adresine kendi e-postası ve şifresiyle girip formu doldurur, belgeleri yükler, "Formu gönder"e basar. Cevaplar aşağıda görünür; her satırın sağındaki kutudan <b>Alındı / Eksik / Onaylandı</b> seçersin, müşteri aynı anda kendi ekranında görür. Eksik seçtiğin kalemi müşteri tamamlar. Şifre işleri müşteride: portalda "Şifre değiştir" ve giriş ekranında "Şifremi unuttum" var, buradan bir şey yapman gerekmez. <b>Portalı geri al</b> = yanlışlıkla açıldıysa hesabı ve formu tamamen kaldırır, kart "Form oluştur" haline döner (onay sorar; müşteri girdiyse verisi de silinir).</div>${mesajKutu}
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="pbtn" title="Müşteri şifresini unuttuysa: yeni şifre üretir, formu ve dosyaları korur" onclick="portalYeniSifre()">Yeni şifre ver</button><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı kapatır, formu siler, kart 'Form oluştur' haline döner; aynı e-postayla yeniden açılabilir" onclick="portalGeriAl()">Portalı geri al</button></span></div>
+      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> müşteri portal adresine kendi e-postası ve şifresiyle girip formu doldurur, belgeleri yükler, "Formu gönder"e basar. Cevaplar aşağıda görünür; her satırın sağındaki kutudan <b>Alındı / Eksik / Onaylandı</b> seçersin, müşteri aynı anda kendi ekranında görür. Eksik seçtiğin kalemi müşteri tamamlar. <b>Yeni şifre ver</b> = müşteri şifresini unuttuysa yeni şifre üretir (form ve dosyalar korunur), kutudan kopyalayıp iletirsin; müşteri kendi şifresini portalda "Şifre değiştir" ile de değiştirebilir. <b>Portalı geri al</b> = yanlışlıkla açıldıysa hesabı kapatır, formu siler, kart "Form oluştur" haline döner; aynı e-postayla yeniden açılabilir (onay sorar).</div>${mesajKutu}
       <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Form: ${(v.form||{}).gonderim?'<b style="color:#1faa59">GÖNDERİLDİ '+esc(v.form.gonderim)+'</b>':'taslak, son kayıt '+esc(v.guncelleme||'henüz yok')} · Gizlilik onayı: ${esc((v.form||{}).onay||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}`;
   }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
 }
@@ -1091,6 +1091,7 @@ function portalDurumSet(k,val){
   firebase.database().ref('musteri_portal/'+c.portalUid+'/durum/'+k).set(val).then(()=>toast('Durum kaydedildi')).catch(e=>toast('Durum yazılamadı: '+(e&&e.message||e)));
 }
 function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k];if(!f||!f.veri)return;triggerDownload(f.veri,f.ad||'dosya');}
+function epostaAnahtari(e){return (e||'').trim().toLowerCase().replace(/[.#$\[\]\/]/g,ch=>'%'+ch.charCodeAt(0).toString(16));}
 function sifreUret(){const h='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<10;i++)s+=h[Math.floor(Math.random()*h.length)];return s;}
 /* Musteriye giden hazir mesaj: kapsam karttaki gorevlerden turetilir.
    FDA&DUNS + FCE/SID varsa sira soylenir (once tesis kaydi ve DUNS, sonra
@@ -1110,18 +1111,27 @@ function portalHesapAc(){
   const kutu=document.getElementById('portalEmailKutu'); const em=kutu?kutu.value.trim():'';
   if(!em||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('Geçerli bir e-posta yazın.');if(kutu)kutu.focus();return;}
   const pw=sifreUret();
-  /* Ikincil uygulama: yeni kullanici olusturulurken admin oturumu dusmesin. */
+  /* 15 Eylul 2026: Firebase hesabi GERCEK e-postayla degil, tek kullanimlik
+     sentetik bir giris kimligiyle acilir (m-xxxx@portal.exportpartners.com.tr).
+     Musteri portalda gercek e-postasini yazar, portal portal_index'ten sentetik
+     kimligi bulur. Boylece "Portali geri al" ve "Yeni sifre ver" konsolsuz
+     calisir: eski hesap kilitlenir, ayni gercek e-postaya yeni hesap acilir.
+     Ikincil uygulama: yeni kullanici olusturulurken admin oturumu dusmesin. */
+  const giris='m-'+genId()+'@portal.exportpartners.com.tr';
   const ikincil=firebase.apps.find(a=>a.name==='ikincil')||firebase.initializeApp(FIREBASE_CONFIG,'ikincil');
-  ikincil.auth().createUserWithEmailAndPassword(em.trim(),pw).then(cred=>{
+  ikincil.auth().createUserWithEmailAndPassword(giris,pw).then(cred=>{
     const uid=cred.user.uid;
-    return ikincil.auth().signOut().then(()=>firebase.database().ref('musteri_portal/'+uid).update({firma:c.firm||'',eposta:em.trim(),acilis:new Date().toISOString().slice(0,10)})).then(()=>{
+    return ikincil.auth().signOut()
+      .then(()=>firebase.database().ref('musteri_portal/'+uid).update({firma:c.firm||'',eposta:em.trim(),giris:giris,acilis:new Date().toISOString().slice(0,10)}))
+      .then(()=>firebase.database().ref('portal_index/'+epostaAnahtari(em.trim())).set({uid:uid,giris:giris}))
+      .then(()=>{
       c.portalUid=uid; c.portalEmail=em.trim(); save();
       const metin=portalMesaj(c, em.trim(), pw);
       /* Sifre yalnizca burada, bir kez gorunur; kaydedilmez. prompt() bazi
          tarayicilarda engellendigi icin (15 Eylul) kutu kartin icinde acilir. */
       portalSonMesaj=metin; renderPortal();
     });
-  }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Bu e-posta ile hesap zaten var (muhtemelen geri alınmış eski hesap). Firebase > Authentication > Users listesinden o e-postayı silin, sonra tekrar Form oluştur; ya da farklı bir e-posta yazın.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
+  }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Giriş kimliği çakıştı, tekrar deneyin.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
 }
 /* Portali geri al: hesap yanlis e-postaya ya da erken acildiysa. Firebase'de
    kullanici silme yalnizca kendi oturumuyla yapilabildigi icin admin onun
@@ -1143,12 +1153,31 @@ function portalMailTaslagi(){
   const gm='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.portalEmail||c.email||'')+'&cc='+encodeURIComponent('info@exportpartners.com.tr')+'&su='+encodeURIComponent(su)+'&body='+encodeURIComponent(portalSonMesaj);
   window.open(gm,'_blank');
 }
+function portalYeniSifre(){
+  const c=data[memoIdx]; if(!c||!c.portalUid||!c.portalEmail)return;
+  if(!confirm('YENİ ŞİFRE: '+(c.portalEmail)+' için yeni bir şifre üretilir, doldurduğu form ve dosyalar korunur, eski şifre geçersiz olur. Devam?'))return;
+  const eskiUid=c.portalUid, em=c.portalEmail, pw=sifreUret(), giris='m-'+genId()+'@portal.exportpartners.com.tr';
+  const db=firebase.database();
+  const ikincil=firebase.apps.find(a=>a.name==='ikincil')||firebase.initializeApp(FIREBASE_CONFIG,'ikincil');
+  db.ref('musteri_portal/'+eskiUid).once('value').then(sn=>{
+    const v=sn.val()||{};
+    return ikincil.auth().createUserWithEmailAndPassword(giris,pw).then(cred=>{
+      const uid=cred.user.uid;
+      return ikincil.auth().signOut()
+        .then(()=>db.ref('musteri_portal/'+uid).set({firma:v.firma||c.firm||'',eposta:em,giris:giris,acilis:new Date().toISOString().slice(0,10),form:v.form||null,dosyalar:v.dosyalar||null,durum:v.durum||null,guncelleme:v.guncelleme||null}))
+        .then(()=>db.ref('portal_index/'+epostaAnahtari(em)).set({uid:uid,giris:giris}))
+        .then(()=>db.ref('musteri_portal/'+eskiUid).set({kilit:true,firma:v.firma||'',eposta:em,kapatildi:new Date().toISOString().slice(0,10),yerine:uid}))
+        .then(()=>{c.portalUid=uid;save();portalSonMesaj='Merhaba,\n\nPortal şifreniz yenilendi.\nAdres: '+portalUrl()+'\nE-posta: '+em+'\nYeni şifre: '+pw+'\n(Girişte sağ üstten şifrenizi değiştirebilirsiniz.)\nExport Partners';renderPortal();toast('Yeni şifre üretildi; kutudan kopyalayın');});
+    });
+  }).catch(e=>toast('Yeni şifre verilemedi: '+(e&&e.message||e)));
+}
 function portalGeriAl(){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
   if(!confirm('PORTAL GERİ ALINACAK: '+(c.firm||'')+' için hesap kapatılır, form ve dosyalar silinir, kart "Form oluştur" haline döner.\n\nNot: aynı e-postayla yeniden açmak istersen önce Firebase > Authentication > Users listesinden bu e-postayı silmen gerekir ('+(c.portalEmail||'')+'). Devam?'))return;
   const uid=c.portalUid, em=c.portalEmail;
   firebase.database().ref('musteri_portal/'+uid).set({kilit:true,firma:c.firm||'',eposta:em||'',kapatildi:new Date().toISOString().slice(0,10)})
-    .then(()=>{c.portalUid='';c.portalEmail='';save();toast('Portal geri alındı');renderPortal();})
+    .then(()=>em?firebase.database().ref('portal_index/'+epostaAnahtari(em)).set(null):null)
+    .then(()=>{c.portalUid='';c.portalEmail='';save();toast('Portal geri alındı; aynı e-postayla yeniden açılabilir');renderPortal();})
     .catch(e=>toast('Geri alınamadı: '+(e&&e.message||e)));
 }
 function portalFormuSifirla(){

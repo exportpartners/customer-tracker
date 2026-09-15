@@ -73,7 +73,7 @@
       <input type="password" id="pass" autocomplete="current-password">
       <p class="err" id="loginErr"></p>
       <button class="btn" id="loginBtn" onclick="giris()">Giriş yap</button>
-      <a href="javascript:void(0)" onclick="sifreSifirla()">Şifremi unuttum</a>
+      <p class="msg" style="margin-top:12px">Şifrenizi unuttuysanız Export Partners'a yazın (info@exportpartners.com.tr ya da WhatsApp); size yeni şifre iletilir.</p>
     </div>
   </section>
 
@@ -260,7 +260,11 @@ function giris(){
   const err=document.getElementById('loginErr'); err.textContent='';
   if(!em||!pw){err.textContent='E-posta ve şifre gerekli.';return;}
   document.getElementById('loginBtn').disabled=true;
-  auth.signInWithEmailAndPassword(em,pw).catch(e=>{err.textContent=hataMetni(e);}).finally(()=>{document.getElementById('loginBtn').disabled=false;});
+  /* Gercek e-posta -> portal_index -> sentetik giris kimligi. Dizinde yoksa
+     (eski hesaplar) e-postanin kendisiyle denenir. */
+  const anahtar=em.toLowerCase().replace(/[.#$\[\]\/]/g,ch=>'%'+ch.charCodeAt(0).toString(16));
+  db.ref('portal_index/'+anahtar).once('value').then(sn=>{const v=sn.val(); return auth.signInWithEmailAndPassword((v&&v.giris)||em,pw);})
+    .catch(e=>{err.textContent=hataMetni(e);}).finally(()=>{document.getElementById('loginBtn').disabled=false;});
 }
 document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')giris();});
 function sifreSifirla(){
@@ -289,12 +293,13 @@ auth.onAuthStateChanged(u=>{
   document.getElementById('formBox').hidden=!u;
   document.getElementById('who').hidden=!u;
   if(!u){kayit={form:{},dosyalar:{},durum:{}};return;}
-  document.getElementById('whoMail').textContent=u.email||'';
+  document.getElementById('whoMail').textContent=/@portal\.exportpartners\.com\.tr$/.test(u.email||'')?'':(u.email||'');
   db.ref('musteri_portal/'+uid).on('value',s=>{
     const v=s.val()||{};
     if(v.kilit){ toast('Bu hesap kapatılmış. Lütfen Export Partners ile iletişime geçin.'); auth.signOut(); return; }
     if(kirli){/* kullanici yazarken sunucu verisiyle ezme; yalnizca durumu tazele */ kayit.durum=v.durum||{}; kayit.firma=v.firma||''; ciz(true); return; }
-    kayit={form:v.form||{},dosyalar:v.dosyalar||{},durum:v.durum||{},firma:v.firma||'',guncelleme:v.guncelleme||''};
+    kayit={form:v.form||{},dosyalar:v.dosyalar||{},durum:v.durum||{},firma:v.firma||'',guncelleme:v.guncelleme||'',eposta:v.eposta||''};
+    if(v.eposta) document.getElementById('whoMail').textContent=v.eposta;
     ciz(false);
   },e=>{toast('Kayıt okunamadı: '+(e&&e.message||e));});
 });
