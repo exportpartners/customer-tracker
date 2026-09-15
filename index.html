@@ -885,7 +885,7 @@ function openMemo(i){
   renderFiles();renderAssess();renderPortal();
   document.getElementById('memoBg').classList.add('show');
 }
-function closeMemo(){document.getElementById('memoBg').classList.remove('show');memoIdx=-1;render();}
+function closeMemo(){document.getElementById('memoBg').classList.remove('show');memoIdx=-1;portalSonMesaj='';render();}
 function saveMemo(){
   if(memoIdx<0)return;
   data[memoIdx].memo=cleanRich(document.getElementById('memoText').innerHTML);
@@ -1043,7 +1043,7 @@ const PORTAL_KALEMLER=[
   ["k09","Ürün listesi"],["k10","Ambalaj tipi"],["k11","Vergi levhası","dosya"],["k12","İmza sirküleri / beyannamesi","dosya"],
   ["k13","Sahibin kimlik fotokopisi","dosya"],["k14","Certificate of Formation ve EIN Letter","dosya"]];
 const PORTAL_DURUM=[["bekleniyor","Bekleniyor"],["alindi","Alındı"],["eksik","Eksik"],["onaylandi","Onaylandı"]];
-let portalVeri=null;
+let portalVeri=null; let portalSonMesaj='';
 function portalUrl(){return location.origin+location.pathname.replace(/[^/]*$/,'')+'musteri/';}
 function renderPortal(){
   const box=document.getElementById('memoPortal'); if(!box||memoIdx<0)return;
@@ -1064,7 +1064,8 @@ function renderPortal(){
       const d=(v.durum||{})[k]||'bekleniyor';
       return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}</div><select onchange="portalDurumSet('${k}',this.value)">${PORTAL_DURUM.map(([a,b])=>`<option value="${a}" ${a===d?'selected':''}>${b}</option>`).join('')}</select></div>`;
     }).join('');
-    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" onclick="portalSifreSifirla()">Şifre sıfırlama maili</button></div>
+    const mesajKutu=portalSonMesaj?`<div style="background:#fff7ee;border:1px solid #f5c489;border-radius:9px;padding:10px;margin-bottom:10px"><div class="pmeta" style="color:#b26a00;font-weight:800">Hesap açıldı. Şifre yalnızca burada görünür, kart kapanınca silinir; şimdi kopyalayıp müşteriye gönderin.</div><textarea id="portalMesaj" readonly style="width:100%;height:150px;font:12px/1.5 -apple-system,Arial,sans-serif;border:1px solid #cfd5df;border-radius:7px;padding:8px">${esc(portalSonMesaj)}</textarea><button class="pbtn" style="margin-top:6px" onclick="const t=document.getElementById('portalMesaj');t.select();document.execCommand('copy');toast('Kopyalandı, WhatsApp\'a yapıştırın')">Metni kopyala</button></div>`:'';
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" onclick="portalSifreSifirla()">Şifre sıfırlama maili</button></div>${mesajKutu}
       <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Müşterinin son kaydı: ${esc(v.guncelleme||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}`;
   }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
 }
@@ -1084,9 +1085,11 @@ function portalHesapAc(){
   ikincil.auth().createUserWithEmailAndPassword(em.trim(),pw).then(cred=>{
     const uid=cred.user.uid;
     return ikincil.auth().signOut().then(()=>firebase.database().ref('musteri_portal/'+uid).update({firma:c.firm||'',eposta:em.trim(),acilis:new Date().toISOString().slice(0,10)})).then(()=>{
-      c.portalUid=uid; c.portalEmail=em.trim(); save(); renderPortal();
+      c.portalUid=uid; c.portalEmail=em.trim(); save();
       const metin=`Merhaba,\n\nFDA kaydı için evrak ve bilgi formunuz hazır. Aşağıdaki adresten girip sarı alanları doldurabilir, evrakları yükleyebilirsiniz:\n${portalUrl()}\nE-posta: ${em.trim()}\nŞifre: ${pw}\n\nSorunuz olursa bu numaradan yazabilirsiniz.\nExport Partners`;
-      prompt('Hesap açıldı. Müşteriye göndermek için metni kopyalayın (Cmd+C):', metin);
+      /* Sifre yalnizca burada, bir kez gorunur; kaydedilmez. prompt() bazi
+         tarayicilarda engellendigi icin (15 Eylul) kutu kartin icinde acilir. */
+      portalSonMesaj=metin; renderPortal();
     });
   }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Bu e-posta ile hesap zaten var.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
 }
