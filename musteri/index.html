@@ -292,6 +292,7 @@ auth.onAuthStateChanged(u=>{
   document.getElementById('whoMail').textContent=u.email||'';
   db.ref('musteri_portal/'+uid).on('value',s=>{
     const v=s.val()||{};
+    if(v.kilit){ toast('Bu hesap kapatılmış. Lütfen Export Partners ile iletişime geçin.'); auth.signOut(); return; }
     if(kirli){/* kullanici yazarken sunucu verisiyle ezme; yalnizca durumu tazele */ kayit.durum=v.durum||{}; kayit.firma=v.firma||''; ciz(true); return; }
     kayit={form:v.form||{},dosyalar:v.dosyalar||{},durum:v.durum||{},firma:v.firma||'',guncelleme:v.guncelleme||''};
     ciz(false);
