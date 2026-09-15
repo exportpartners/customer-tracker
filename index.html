@@ -1099,12 +1099,13 @@ function portalHesapAc(){
 }
 function portalFormuSifirla(){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
-  if(!confirm('Bu müşterinin formundaki tüm cevaplar, yüklenen dosyalar ve durum işaretleri silinecek; hesap ve şifre kalır. Devam?'))return;
+  if(!confirm('FORM SİLİNECEK: '+(c.firm||'')+' için tüm cevaplar, yüklenen dosyalar ve durum işaretleri silinir; hesap ve şifre kalır. Devam?'))return;
   firebase.database().ref('musteri_portal/'+c.portalUid).update({form:null,dosyalar:null,durum:null,guncelleme:null})
     .then(()=>{toast('Form sıfırlandı');renderPortal();}).catch(e=>toast('Sıfırlanamadı: '+(e&&e.message||e)));
 }
 function portalSifreSifirla(){
   const c=data[memoIdx]; if(!c||!c.portalEmail)return;
+  if(!confirm('MÜŞTERİYE MAİL GİDECEK: '+c.portalEmail+' adresine şifre sıfırlama bağlantısı gönderilsin mi?'))return;
   firebase.auth().sendPasswordResetEmail(c.portalEmail).then(()=>toast('Sıfırlama maili gönderildi: '+c.portalEmail)).catch(e=>toast('Gönderilemedi: '+(e&&e.message||e)));
 }
 boot();
