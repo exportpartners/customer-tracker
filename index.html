@@ -1109,7 +1109,17 @@ function portalMesaj(c, em, pw){
     kapsam='FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz'+(lab?'; etiket incelemesi için ürün etiketlerini kayıt sonrasında isteyeceğiz':'')+(usda?'; USDA/APHIS başvurusu tesis kaydının ardından başlar':'')+'.';
   }else if(usda){ kapsam='USDA/APHIS başvurunuzla başlıyoruz.'; }
   else{ kapsam='Sürecinizle başlıyoruz.'; }
-  return `Merhaba,\n\nÖdemeniz için teşekkür ederiz. ${kapsam}\n\nAşağıdaki adresteki formdan girip alanları doldurabilir, evrakları yükleyebilirsiniz.\n\nAdres: ${portalUrl()}\n\nE-posta: ${em}\nŞifre: ${pw}\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\nBelgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ekibimizden Kaan Güler bey +90 505 936 37 33 yürütecek. Sorunuz olursa bu numaradan yazabilirsiniz.\n\nExport Partners`;
+  /* Hitap: karttaki ilgili kisi (parantez, virgul ve tireden oncesi). */
+  const kisi=(c.contact||'').split(/[(,·\-]/)[0].trim();
+  const hitap=kisi?('Sayın '+kisi+', merhaba,'):'Merhaba,';
+  /* Gonderen: tracker'a kim girdiyse ona gore kapanis (Kaan opr@ ile girerse
+     kendi adiyla, Mustafa girerse Kaan'i isaret ederek). */
+  const ben=(firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'';
+  const kaanYaziyor=/^opr@/.test(ben);
+  const kapanis=kaanYaziyor
+    ?`Belgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ben yürüteceğim. Sorunuz olursa bu numaradan yazabilirsiniz.\n\nKaan Güler\n+90 505 936 37 33\nExport Partners`
+    :`Belgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ekibimizden Kaan Güler Bey (+90 505 936 37 33) yürütecek. Sorunuz olursa bu numaradan yazabilirsiniz.\n\nExport Partners`;
+  return `${hitap}\n\nÖdemeniz için teşekkür ederiz. ${kapsam}\n\nAşağıdaki adresteki formdan girip alanları doldurabilir, evrakları yükleyebilirsiniz.\n\nAdres: ${portalUrl()}\n\nE-posta: ${em}\nŞifre: ${pw}\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\n${kapanis}`;
 }
 function portalHesapAc(){
   const c=data[memoIdx]; if(!c)return;
