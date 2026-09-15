@@ -84,6 +84,11 @@
       <p class="lead">Kayıt üretim tesisi adına açılır; bilgiler üretici firmaya ait olmalıdır. Kayıt yabancı tesis adına açıldığı için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir.</p>
       <div id="alanlar"></div>
     </div>
+    <div class="card" style="margin-top:16px">
+      <h2 style="margin-top:0">Gizlilik</h2>
+      <p class="lead" style="margin:0 0 10px">Bu formda verdiğiniz bilgiler ve yüklediğiniz belgeler yalnızca FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu için kullanılır; yalnızca Export Partners ekibi görür, üçüncü kişiyle paylaşılmaz. Veriler Google Firebase altyapısında (Avrupa Birliği, Belçika) şifreli bağlantıyla saklanır. Kayıt tamamlandıktan sonra belgelerinizin silinmesini istediğinizde info@exportpartners.com.tr adresine yazmanız yeterlidir. Ayrıntı: <a href="https://www.exportpartners.com.tr/gizlilik-politikasi/" target="_blank" rel="noopener">Gizlilik Politikası</a>.</p>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer"><input type="checkbox" id="onayKutu" style="margin-top:4px" onchange="kirli=true"> <span>Bilgilerimin ve belgelerimin yukarıdaki amaçla işlenmesini kabul ediyorum. <span class="msg" id="onayTarih"></span></span></label>
+    </div>
     <div class="actions">
       <span class="msg" id="sonKayit"></span>
       <button class="btn" id="kaydetBtn" onclick="kaydet()">Kaydet</button>
@@ -201,6 +206,8 @@ function ciz(sadeceRozet){
       <p class="hint">${esc(x.a)}</p>${alan}</div></div>`);
   });
   document.getElementById('alanlar').innerHTML=h.join('');
+  const ok=kayit.form.onay||''; const kutu=document.getElementById('onayKutu'); if(kutu){kutu.checked=!!ok;}
+  document.getElementById('onayTarih').textContent=ok?('(onaylandı: '+ok+')'):'';
 }
 function dosyaSec(ev,k){
   const f=ev.target.files[0]; if(!f)return;
@@ -213,6 +220,9 @@ function dosyaSil(k){if(!confirm('Dosya kaldırılsın mı?'))return;delete kayi
 function dosyaAc(k){const f=kayit.dosyalar[k];if(!f||!f.veri)return;const a=document.createElement('a');a.href=f.veri;a.download=f.ad||'dosya';document.body.appendChild(a);a.click();a.remove();}
 function kaydet(){
   if(!uid)return;
+  const kutu=document.getElementById('onayKutu');
+  if(kutu&&!kutu.checked){toast('Kaydetmek için gizlilik onay kutusunu işaretleyin.');kutu.focus();return;}
+  if(!kayit.form.onay){const g0=new Date();kayit.form.onay=g0.toLocaleDateString('tr-TR')+' '+g0.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
   KALEMLER.forEach(x=>{if(x.k&&!x.dosya){const el=document.getElementById('in-'+x.k);if(el)kayit.form[x.k]=el.value.trim();}});
   const btn=document.getElementById('kaydetBtn'); btn.disabled=true;
   const g=new Date(); const damga=g.toLocaleDateString('tr-TR')+' '+g.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
