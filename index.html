@@ -1049,8 +1049,10 @@ function renderPortal(){
   const box=document.getElementById('memoPortal'); if(!box||memoIdx<0)return;
   const c=data[memoIdx]; portalVeri=null;
   if(!c.portalUid){
-    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" onclick="portalHesapAc()">Portal hesabı aç</button></div>
-      <div class="pmeta">Bu müşterinin portal hesabı yok. Hesap açınca müşteri <code>${esc(portalUrl())}</code> adresinden kendi formunu doldurur ve evrak yükler; cevaplar burada görünür.</div>`;
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span></div>
+      <div class="pmeta">Bu müşterinin portal hesabı yok. Hesap açınca müşteri <code>${esc(portalUrl())}</code> adresinden kendi formunu doldurur ve evrak yükler; cevaplar burada görünür.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="email" id="portalEmailKutu" value="${esc(c.email||'')}" placeholder="Müşterinin giriş e-postası" style="flex:1;min-width:220px;border:1px solid #cfd5df;border-radius:8px;padding:7px 10px;font:inherit;font-size:13px"><button class="pbtn" onclick="portalHesapAc()">Portal hesabı aç</button></div>
+      <div class="pmeta" style="margin-top:6px">E-posta karttan geldi; farklıysa düzeltin.</div>`;
     return;
   }
   box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span class="pmeta">yükleniyor…</span></div>`;
@@ -1077,8 +1079,8 @@ function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.do
 function sifreUret(){const h='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<10;i++)s+=h[Math.floor(Math.random()*h.length)];return s;}
 function portalHesapAc(){
   const c=data[memoIdx]; if(!c)return;
-  const em=prompt('Müşterinin giriş e-postası (portal hesabı bu adrese açılır):', c.email||'');
-  if(!em)return;
+  const kutu=document.getElementById('portalEmailKutu'); const em=kutu?kutu.value.trim():'';
+  if(!em||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('Geçerli bir e-posta yazın.');if(kutu)kutu.focus();return;}
   const pw=sifreUret();
   /* Ikincil uygulama: yeni kullanici olusturulurken admin oturumu dusmesin. */
   const ikincil=firebase.apps.find(a=>a.name==='ikincil')||firebase.initializeApp(FIREBASE_CONFIG,'ikincil');

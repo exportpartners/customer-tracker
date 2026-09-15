@@ -5,7 +5,7 @@
 
     "ep_tracker_v1": {
       ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')"
+      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')"
     },
     "ep_tracker_files": {
       ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
