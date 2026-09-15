@@ -1059,7 +1059,9 @@ function renderPortal(){
   if(!firebase.database){box.innerHTML+='<div class="pmeta">Bulut bağlantısı yok.</div>';return;}
   firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(s=>{
     const v=s.val()||{}; portalVeri=v;
-    const rows=PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
+    const K=(v.form||{}).kategori||{};
+    const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn">9b</span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv">İnsan gıdası: ${esc((K.insan||[]).join(', ')||'-')} · Hayvan gıdası: ${esc((K.hayvan||[]).join(', ')||'-')} · Faaliyet: ${esc((K.faaliyet||[]).join(', ')||'-')}${K.diger?' · Diğer: '+esc(K.diger):''}</span></div><span class="pmeta">numara = formdaki kutu</span></div>`:'';
+    const rows=katSatir+PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
       let pv;
       if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`<a href="javascript:void(0)" onclick="portalDosyaAc('${k}')">📎 ${esc(f.ad)}</a> <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span>`:'<span class="pv bos">yüklenmedi</span>';}
       else{const t=(v.form||{})[k]; pv=t?`<span class="pv">${esc(t)}</span>`:'<span class="pv bos">boş</span>';}

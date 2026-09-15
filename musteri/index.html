@@ -128,12 +128,104 @@ const KALEMLER=[
   {b:"ÜRÜN BİLGİSİ"},
   {k:"k09",n:9,ad:"Üretilen ürünlerin listesi",a:"FDA kategori seçimi bu listeye göre yapılır",ph:"Kuru incir, kuru kayisi, ceviz ici",cok:true},
   {k:"k10",n:10,ad:"Ambalaj tipi",a:"Cam kavanoz, teneke, poşet vb."},
+  {k:"kat",n:"9b",ad:"FDA ürün kategorisi ve tesis faaliyeti",a:"FDA kayıt formundaki (Form 3537, Bölüm 9) resmi listeden ürününüze uyan kategorileri işaretleyin; birden fazla seçilebilir. Emin değilseniz en yakın olanı seçin, Export Partners kontrol eder.",kategori:true},
   {b:"EVRAKLAR"},
   {k:"k11",n:11,ad:"Vergi levhası",a:"Kaşeli ve imzalı, PDF",dosya:true},
   {k:"k12",n:12,ad:"İmza sirküleri veya imza beyannamesi",a:"Sermaye şirketlerinde sirküler, şahıs işletmelerinde beyanname",dosya:true},
   {k:"k13",n:13,ad:"Şirket sahibinin kimlik fotokopisi",a:"PDF veya net fotoğraf",dosya:true},
   {k:"k14",n:14,ad:"Certificate of Formation ve EIN Letter",a:"Yalnızca firma ABD'de kurulu ise",dosya:true}
 ];
+
+/* FDA Form 3537 (11/16) Bolum 9a ve 9b, birebir; Turkce aciklama parantezde. Kaynak: fda.gov/media/71632 */
+const KAT_INSAN=[
+ ["1","Alcoholic Beverages","Alkollü içecekler"],
+ ["2","Baby (Infant and Junior) Food Products, incl. Infant Formula","Bebek ve çocuk gıdaları, mama"],
+ ["3","Bakery Products, Dough Mixes, or Icings","Fırın ürünleri, hamur karışımları, glazür"],
+ ["4","Beverage Bases","İçecek bazları, konsantreler"],
+ ["5","Candy Without Chocolate, Candy Specialties and Chewing Gum","Çikolatasız şekerleme, lokum, sakız"],
+ ["6","Cereal Preparations, Breakfast Foods, Quick Cooking/Instant Cereals","Kahvaltılık tahıllar"],
+ ["7","Cheese and Cheese Product Categories","Peynir ve peynir ürünleri"],
+ ["7a","Soft, Ripened Cheese","Yumuşak olgunlaşmış peynir"],
+ ["7b","Semi-Soft Cheese","Yarı sert peynir"],
+ ["7c","Hard Cheese","Sert peynir"],
+ ["7d","Other Cheeses and Cheese Products","Diğer peynir ürünleri"],
+ ["8","Chocolate and Cocoa Products","Çikolata ve kakao ürünleri"],
+ ["9","Coffee and Tea","Kahve ve çay"],
+ ["10","Color Additives for Foods","Gıda renklendiricileri"],
+ ["11","Dietary Conventional Foods or Meal Replacements (incl. Medical Foods)","Diyet gıdalar, öğün ikameleri, tıbbi gıdalar"],
+ ["12","Dietary Supplement Categories","Takviye edici gıda"],
+ ["12a","Proteins, Amino Acids, Fats and Lipid Substances","Protein, amino asit, yağ bazlı takviye"],
+ ["12b","Vitamins and Minerals","Vitamin ve mineral"],
+ ["12c","Animal By-Products and Extracts","Hayvansal yan ürün ve ekstre"],
+ ["12d","Herbals and Botanicals","Bitkisel takviye"],
+ ["13","Dressing and Condiments","Sos, salça, turşu, çeşni"],
+ ["14","Fishery/Seafood Product Categories","Su ürünleri"],
+ ["14a","Fin Fish, Whole or Filet","Balık, bütün ya da fileto"],
+ ["14b","Molluscan Shellfish","Yumuşakça (midye, istiridye)"],
+ ["14c","Other Shellfish","Diğer kabuklular (karides vb.)"],
+ ["14d","Ready to Eat (RTE) Fishery Products","Tüketime hazır su ürünleri"],
+ ["14e","Processed and Other Fishery Products","İşlenmiş diğer su ürünleri"],
+ ["15","Food Additives, GRAS Ingredients, or Other Ingredients Used for Processing","Gıda katkıları, işleme bileşenleri"],
+ ["16","Food Sweeteners (Nutritive)","Şeker ve tatlandırıcılar (besleyici)"],
+ ["17","Fruit and Fruit Products","Meyve ve meyve ürünleri (kuru meyve dahil)"],
+ ["17a","Fresh Cut Produce","Taze doğranmış ürün"],
+ ["17b","Raw Agricultural Commodities","Ham tarım ürünü (bütün taze meyve)"],
+ ["17c","Other Fruit and Fruit Products","Diğer meyve ürünleri (kuru meyve, reçel)"],
+ ["18","Fruit or Vegetable Juice, Pulp or Concentrate Products","Meyve/sebze suyu, püre, konsantre"],
+ ["19","Gelatin, Rennet, Pudding Mixes, or Pie Fillings","Jelatin, peynir mayası, puding, pasta dolgusu"],
+ ["20","Ice Cream and Related Products","Dondurma ve benzerleri"],
+ ["21","Imitation Milk Products","Bitkisel süt benzeri ürünler"],
+ ["22","Macaroni or Noodle Products","Makarna, erişte"],
+ ["23","Meat, Meat Products and Poultry (FDA Regulated)","Et ve kanatlı ürünleri (FDA kapsamındakiler)"],
+ ["24","Milk, Butter, or Dried Milk Products","Süt, tereyağı, süt tozu"],
+ ["25","Multiple Food Dinners, Gravies, Sauces and Specialties","Hazır yemek, sos, özel ürünler"],
+ ["26","Nuts and Edible Seed Product Categories","Kuruyemiş ve yenilebilir tohum"],
+ ["26a","Nut and Nut Products","Kuruyemiş (fındık, ceviz, badem) ve ürünleri"],
+ ["26b","Edible Seed and Edible Seed Products","Tohum (ayçekirdeği, susam) ve ürünleri"],
+ ["27","Prepared Salad Products","Hazır salata"],
+ ["28","Shell Egg and Egg Product Categories","Yumurta ve yumurta ürünleri"],
+ ["28a","Chicken Egg and Egg Products","Tavuk yumurtası ve ürünleri"],
+ ["28b","Other Eggs and Egg Products","Diğer yumurtalar"],
+ ["29","Snack Food Items (Flour, Meal or Vegetable Base)","Atıştırmalık (cips, kraker)"],
+ ["30","Spices, Flavors, and Salts","Baharat, aroma, tuz"],
+ ["31","Soups","Çorba"],
+ ["32","Soft Drinks and Waters","Meşrubat ve su"],
+ ["33","Vegetable and Vegetable Product Categories","Sebze ve sebze ürünleri"],
+ ["33a","Fresh Cut Products","Taze doğranmış sebze"],
+ ["33b","Raw Agricultural Commodities","Ham tarım ürünü (bütün taze sebze)"],
+ ["33c","Other Vegetable and Vegetable Products","Diğer sebze ürünleri (konserve, kurutulmuş)"],
+ ["34","Vegetable Oils (includes Olive Oil)","Bitkisel yağlar (zeytinyağı dahil)"],
+ ["35","Vegetable Protein Products (Simulated Meats)","Bitkisel protein, et benzeri ürünler"],
+ ["36","Whole Grains, Milled Grain Products (Flours), or Starch","Tahıl, un, nişasta"],
+ ["37","None of the above (enter category)","Hiçbiri uymuyor (aşağıya yazın)"]
+];
+const KAT_HAYVAN=[
+ ["1","Grain or Grain Products","Tahıl ve tahıl ürünleri"],["2","Oilseed or Oilseed Products","Yağlı tohum ürünleri"],
+ ["3","Alfalfa Products or Lespedeza Products","Yonca ürünleri"],["4","Amino Acids or Related Products","Amino asitler"],
+ ["5","Animal Protein Products","Hayvansal protein"],["6","Botanicals and Herbs","Bitkisel ürünler"],
+ ["7","Brewer Products","Biracılık yan ürünleri"],["8","Chemical Preservatives","Kimyasal koruyucular"],
+ ["9","Citrus Products","Narenciye ürünleri"],["10","Direct Feed Microbials","Probiyotik yem katkıları"],
+ ["11","Distillery Products","Damıtma yan ürünleri"],["12","Enzymes","Enzimler"],["13","Fats or Oils","Yağlar"],
+ ["14","Fermentation Products","Fermantasyon ürünleri"],["15","Forage Products","Kaba yem"],
+ ["16","Human Food By-Products Not Otherwise Listed","İnsan gıdası yan ürünleri"],["17","Marine Products","Deniz ürünleri"],
+ ["18","Milk Products","Süt ürünleri"],["19","Minerals or Mineral Products","Mineraller"],
+ ["20","Miscellaneous or Special Purpose Products","Özel amaçlı ürünler"],["21","Molasses or Molasses Products","Melas"],
+ ["22","Non-Protein Nitrogen Products","Protein dışı azot ürünleri"],["23","Peanut Products","Yer fıstığı ürünleri"],
+ ["24","Processed Animal Waste Products","İşlenmiş hayvansal atık"],["25","Screenings","Elek altı"],
+ ["26","Technical Additives","Teknik katkılar"],["27","Vitamins or Vitamin Products","Vitaminler"],
+ ["28","Yeast Products","Maya ürünleri"],["29","Mixed Feed (e.g., Poultry, Livestock, Equine)","Karma yem"],
+ ["30","Pet Food","Evcil hayvan maması"],["31","Pet Treats or Pet Chews","Evcil hayvan ödül ve çiğneme ürünleri"],
+ ["32","Pet Nutritional Supplements (e.g., Vitamins, Minerals)","Evcil hayvan takviyeleri"],
+ ["33","None of the above (enter category)","Hiçbiri uymuyor (aşağıya yazın)"]
+];
+const FAALIYET=[
+ ["manufacturer","Manufacturer/Processor","Üretici / işleyici"],["packer","Repacker/Packer","Paketleyici"],
+ ["labeler","Labeler/Relabeler","Etiketleyici"],["ambient","Ambient Food Storage Warehouse/Holding Facility","Depo (oda sıcaklığı)"],
+ ["refrigerated","Refrigerated Food Storage Warehouse/Holding Facility","Soğuk depo"],["frozen","Frozen Food Storage Warehouse/Holding Facility","Dondurulmuş depo"],
+ ["acidified","Acidified Food Processor","Asitlendirilmiş gıda işleyici (turşu, sos)"],["lowacid","Low-Acid Food Processor","Düşük asitli konserve işleyici"],
+ ["contract","Contract Sterilizer","Fason sterilizasyon"],["farm","Farm Mixed-Type Facility","Çiftlik karma tesis"]
+];
+
 const DURUM={bekleniyor:"Bekleniyor",alindi:"Alındı",eksik:"Eksik",onaylandi:"Onaylandı"};
 const MAX_DOSYA=3*1024*1024;
 
@@ -192,7 +284,14 @@ function ciz(sadeceRozet){
     if(x.b){h.push(`<h2>${x.b}</h2>`);return;}
     const val=kayit.form[x.k]||'';
     let alan;
-    if(x.dosya){
+    if(x.kategori){
+      const K=kayit.form.kategori||{}; const sec=(l,v)=>(K[l]||[]).includes(v)?'checked':'';
+      const liste=(l,arr)=>arr.map(([id,en,tr])=>`<label style="display:flex;gap:8px;align-items:flex-start;font-weight:${id.length<=2?'700':'400'};padding:${id.length<=2?'6px 0 2px':'2px 0 2px 22px'};font-size:13.5px"><input type="checkbox" data-kat="${l}" value="${id}" ${sec(l,id)} onchange="kirli=true" style="margin-top:3px"><span>${id}. ${esc(en)} <span class="msg">(${esc(tr)})</span></span></label>`).join('');
+      alan=`<details ${(K.insan||[]).length?'open':''}><summary style="cursor:pointer;font-weight:700;font-size:13.5px;padding:6px 0">İnsan gıdası (Bölüm 9a, 37 kategori)</summary><div style="max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:#fff">${liste('insan',KAT_INSAN)}</div></details>
+        <details ${(K.hayvan||[]).length?'open':''}><summary style="cursor:pointer;font-weight:700;font-size:13.5px;padding:6px 0">Hayvan gıdası, pet food (Bölüm 9b, 33 kategori)</summary><div style="max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:#fff">${liste('hayvan',KAT_HAYVAN)}</div></details>
+        <div style="margin-top:8px"><label for="in-katdiger" style="font-weight:600">"Hiçbiri uymuyor" seçtiyseniz kategoriyi yazın</label><input type="text" id="in-katdiger" value="${esc(K.diger||'')}" oninput="kirli=true"></div>
+        <details ${(K.faaliyet||[]).length?'open':''} style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:13.5px;padding:6px 0">Tesiste yapılan faaliyet (en az bir tane)</summary><div style="border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:#fff">${liste('faaliyet',FAALIYET)}</div></details>`;
+    }else if(x.dosya){
       const f=kayit.dosyalar[x.k];
       alan=`<div class="file" id="f-${x.k}">${f?`<a href="javascript:void(0)" onclick="dosyaAc('${x.k}')">📎 ${esc(f.ad)}</a><span class="msg">${Math.round((f.boyut||0)/1024)} KB</span><button class="fx" title="Kaldır" onclick="dosyaSil('${x.k}')">✕</button>`:'<span class="msg">Henüz yüklenmedi</span>'}
         <label class="upl">${f?'Değiştir':'Dosya yükle'}<input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="dosyaSec(event,'${x.k}')"></label></div>`;
@@ -223,7 +322,9 @@ function kaydet(){
   const kutu=document.getElementById('onayKutu');
   if(kutu&&!kutu.checked){toast('Kaydetmek için gizlilik onay kutusunu işaretleyin.');kutu.focus();return;}
   if(!kayit.form.onay){const g0=new Date();kayit.form.onay=g0.toLocaleDateString('tr-TR')+' '+g0.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
-  KALEMLER.forEach(x=>{if(x.k&&!x.dosya){const el=document.getElementById('in-'+x.k);if(el)kayit.form[x.k]=el.value.trim();}});
+  KALEMLER.forEach(x=>{if(x.k&&!x.dosya&&!x.kategori){const el=document.getElementById('in-'+x.k);if(el)kayit.form[x.k]=el.value.trim();}});
+  const topla=l=>[...document.querySelectorAll('input[data-kat="'+l+'"]:checked')].map(i=>i.value);
+  kayit.form.kategori={insan:topla('insan'),hayvan:topla('hayvan'),faaliyet:topla('faaliyet'),diger:(document.getElementById('in-katdiger')||{value:''}).value.trim()};
   const btn=document.getElementById('kaydetBtn'); btn.disabled=true;
   const g=new Date(); const damga=g.toLocaleDateString('tr-TR')+' '+g.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
   db.ref('musteri_portal/'+uid).update({form:kayit.form,dosyalar:kayit.dosyalar,guncelleme:damga})
