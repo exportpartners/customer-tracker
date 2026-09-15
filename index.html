@@ -1154,7 +1154,7 @@ function portalMetniKopyala(){
 }
 function portalMailTaslagi(){
   const c=data[memoIdx]; if(!c||!portalSonMesaj)return;
-  const su='FDA kaydı: evrak formu ve portal girişi · '+(c.firm||'').slice(0,60);
+  const su=(c.firm||'').slice(0,60)+' / Talep edilen FDA & DUNS kayıt evrakları hk.';
   const gm='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.portalEmail||c.email||'')+'&cc='+encodeURIComponent('info@exportpartners.com.tr')+'&su='+encodeURIComponent(su)+'&body='+encodeURIComponent(portalSonMesaj);
   window.open(gm,'_blank');
 }
