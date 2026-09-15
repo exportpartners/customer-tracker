@@ -59,7 +59,7 @@
 <body>
 <header>
   <div class="brand">Export <span>Partners</span> · Müşteri Paneli</div>
-  <div class="who" id="who" hidden><span id="whoFirm"></span><span id="whoMail"></span><button onclick="cikis()">Çıkış</button></div>
+  <div class="who" id="who" hidden><span id="whoFirm"></span><span id="whoMail"></span><button onclick="sifreKutusu()">Şifre değiştir</button><button onclick="cikis()">Çıkış</button></div>
 </header>
 
 <main>
@@ -97,6 +97,16 @@
   </section>
 </main>
 <footer>Export Partners LLC · info@exportpartners.com.tr · exportpartners.com.tr</footer>
+<div id="sifreBg" style="position:fixed;inset:0;background:rgba(31,56,100,.55);display:none;align-items:center;justify-content:center;z-index:90;padding:16px" onclick="if(event.target===this)this.style.display='none'">
+  <div class="card" style="width:min(400px,100%)">
+    <h1 style="font-size:18px">Şifre değiştir</h1>
+    <label for="sfEski">Mevcut şifre</label><input type="password" id="sfEski" autocomplete="current-password">
+    <label for="sfYeni" style="margin-top:10px">Yeni şifre (en az 8 karakter)</label><input type="password" id="sfYeni" autocomplete="new-password">
+    <label for="sfYeni2" style="margin-top:10px">Yeni şifre, tekrar</label><input type="password" id="sfYeni2" autocomplete="new-password">
+    <p class="msg" id="sfHata" style="color:var(--bad);min-height:18px;margin:8px 0 0"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><button class="btn sec" onclick="document.getElementById('sifreBg').style.display='none'">Vazgeç</button><button class="btn" id="sfBtn" onclick="sifreDegistir()">Kaydet</button></div>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -257,6 +267,19 @@ function sifreSifirla(){
   const em=document.getElementById('email').value.trim();
   if(!em){document.getElementById('loginErr').textContent='Önce e-posta adresinizi yazın, sonra "Şifremi unuttum"a basın.';return;}
   auth.sendPasswordResetEmail(em).then(()=>toast('Şifre sıfırlama bağlantısı e-postanıza gönderildi.')).catch(e=>{document.getElementById('loginErr').textContent=hataMetni(e);});
+}
+function sifreKutusu(){['sfEski','sfYeni','sfYeni2'].forEach(i=>document.getElementById(i).value='');document.getElementById('sfHata').textContent='';document.getElementById('sifreBg').style.display='flex';document.getElementById('sfEski').focus();}
+function sifreDegistir(){
+  const u=auth.currentUser; if(!u)return;
+  const eski=document.getElementById('sfEski').value, y1=document.getElementById('sfYeni').value, y2=document.getElementById('sfYeni2').value, h=document.getElementById('sfHata');
+  h.textContent='';
+  if(y1.length<8){h.textContent='Yeni şifre en az 8 karakter olmalı.';return;}
+  if(y1!==y2){h.textContent='Yeni şifreler birbirini tutmuyor.';return;}
+  const btn=document.getElementById('sfBtn'); btn.disabled=true;
+  const cred=firebase.auth.EmailAuthProvider.credential(u.email,eski);
+  u.reauthenticateWithCredential(cred).then(()=>u.updatePassword(y1)).then(()=>{document.getElementById('sifreBg').style.display='none';toast('Şifreniz değiştirildi.');})
+    .catch(e=>{const c=(e&&e.code)||'';h.textContent=(c.includes('wrong-password')||c.includes('invalid-credential'))?'Mevcut şifre hatalı.':c.includes('weak-password')?'Yeni şifre çok zayıf.':('Değiştirilemedi: '+(e&&e.message||e));})
+    .finally(()=>{btn.disabled=false;});
 }
 function cikis(){if(kirli&&!confirm('Kaydedilmemiş değişiklik var. Yine de çıkılsın mı?'))return;auth.signOut();}
 
