@@ -1080,6 +1080,19 @@ function portalDurumSet(k,val){
 }
 function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k];if(!f||!f.veri)return;triggerDownload(f.veri,f.ad||'dosya');}
 function sifreUret(){const h='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<10;i++)s+=h[Math.floor(Math.random()*h.length)];return s;}
+/* Musteriye giden hazir mesaj: kapsam karttaki gorevlerden turetilir.
+   FDA&DUNS + FCE/SID varsa sira soylenir (once tesis kaydi ve DUNS, sonra
+   FCE ve SID); tek gorev varsa yalnizca o. Sifre degistirme cumlesi her zaman. */
+function portalMesaj(c, em, pw){
+  const t=c.tasks||[];
+  const fda=t.includes('FDA&DUNS'), fce=t.includes('FCE'), sid=t.includes('SID'), lab=t.includes('LABEL REVIEW'), usda=t.includes('USDA/APHIS REGISTRATION');
+  let kapsam='';
+  if(fda&&(fce||sid)){
+    const ek=[fce?'FCE (proses tesisi) kaydı':'',sid?'SID (ürün) kaydı':''].filter(Boolean).join(' ve ');
+    kapsam=`İlk aşamada FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz; tesis kaydı tamamlanınca ${ek} için ürün ve proses bilgilerini ayrıca isteyeceğiz.\n\n`;
+  }else if(fda){ kapsam='Bu aşamada FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusunu yapıyoruz'+(lab?'; etiket incelemesi için ürün etiketlerini kayıt sonrasında isteyeceğiz':'')+(usda?'; USDA/APHIS başvurusu tesis kaydının ardından başlar':'')+'.\n\n'; }
+  return `Merhaba,\n\nÖdemeniz için teşekkür ederiz. ${kapsam}Kayıt için gereken bilgi ve belgeleri tek bir sayfada topladık. Aşağıdaki adresten girip alanları doldurabilir, evrakları yükleyebilirsiniz; yarım bırakıp sonra devam edebilirsiniz.\n\nAdres: ${portalUrl()}\nE-posta: ${em}\nŞifre: ${pw}\n(İlk girişte sağ üstten şifrenizi değiştirebilirsiniz.)\n\nBelgeler tamamlandığında kayıt ortalama iki hafta içinde sonuçlanır; süreci ekibimizden Kaan Güler yürütecek. Sorunuz olursa bu numaradan yazabilirsiniz.\nExport Partners`;
+}
 function portalHesapAc(){
   const c=data[memoIdx]; if(!c)return;
   const kutu=document.getElementById('portalEmailKutu'); const em=kutu?kutu.value.trim():'';
@@ -1091,7 +1104,7 @@ function portalHesapAc(){
     const uid=cred.user.uid;
     return ikincil.auth().signOut().then(()=>firebase.database().ref('musteri_portal/'+uid).update({firma:c.firm||'',eposta:em.trim(),acilis:new Date().toISOString().slice(0,10)})).then(()=>{
       c.portalUid=uid; c.portalEmail=em.trim(); save();
-      const metin=`Merhaba,\n\nFDA kaydı için evrak ve bilgi formunuz hazır. Aşağıdaki adresten girip sarı alanları doldurabilir, evrakları yükleyebilirsiniz:\n${portalUrl()}\nE-posta: ${em.trim()}\nŞifre: ${pw}\n\nSorunuz olursa bu numaradan yazabilirsiniz.\nExport Partners`;
+      const metin=portalMesaj(c, em.trim(), pw);
       /* Sifre yalnizca burada, bir kez gorunur; kaydedilmez. prompt() bazi
          tarayicilarda engellendigi icin (15 Eylul) kutu kartin icinde acilir. */
       portalSonMesaj=metin; renderPortal();
