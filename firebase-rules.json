@@ -4,24 +4,24 @@
     ".write": false,
 
     "ep_tracker_v1": {
-      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')"
+      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')"
     },
     "ep_tracker_files": {
-      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')"
+      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
     },
 
     "musteri_portal": {
       "$uid": {
-        ".read":  "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-        "form":       { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "dosyalar":   { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "guncelleme": { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "durum":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "firma":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "eposta":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
-        "acilis":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" }
+        ".read":  "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+        "form":       { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "dosyalar":   { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "guncelleme": { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "durum":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "firma":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "eposta":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
+        "acilis":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" }
       }
     },
 

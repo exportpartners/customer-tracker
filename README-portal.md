@@ -1,7 +1,7 @@
 # Musteri portali ve giris (15 Eylul 2026)
 
 - `index.html`: Customer Tracker. Artik girisli: Firebase Authentication
-  (e-posta + sifre), yalnizca admin e-postalari (firebase-rules.json).
+  (e-posta + sifre), yalnizca admin e-postalari: deniz@, info@, opr@ Kaan (firebase-rules.json).
 - `musteri/index.html`: musteri portali. Musteri kendi hesabiyla girer,
   yalnizca `musteri_portal/<uid>` dugumunu gorur: FDA Evrak Formu (14 kalem),
   evrak yukleme (data URL, 3 MB), her kalemde admin'in isaretledigi durum.
