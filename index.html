@@ -763,9 +763,13 @@ const BANTLAR=[
      yeri (In Progress haric, o kendi bandinda); durumu Completed, Hold ya da
      Not Converted olabilir, satirdaki rozet onu soyler. Renewal listesi
      Completed, Hold, New, Not Converted sirasiyla cizilir. */
+  /* 15 Sep 2026, Mustafa: "Over Due her zaman OVER DUE icinde; renewal
+     sadece ekstra bir not." OVER DUE bandi RENEWAL'in ONUNE alindi: gecikmis
+     bir kayit FDA RENEWAL gorevi tasisa da OVER DUE'da durur, renewal
+     gorevi satirdaki etiketten okunur (Molu Et bu yuzden kaybolmustu). */
+  {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
   {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
-  {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
   {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
   {key:'notconv',    label:'NOT CONVERTED',  cls:'sec-notconverted', uyar:c=>c.status==='Not Converted'},
   {key:'other',      label:'UNGROUPED — status not recognised', cls:'sec-other', uyar:()=>true}
