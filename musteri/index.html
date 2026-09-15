@@ -78,7 +78,7 @@
   </section>
 
   <section id="formBox" hidden>
-    <div class="note">Sarı alanları doldurun, evrakları yükleyin ve <b>Kaydet</b>'e basın. İstediğiniz zaman geri dönüp tamamlayabilirsiniz; her kalemin durumunu Export Partners işaretler.</div>
+    <div class="note">Yıldızlı (*) kalemler zorunlu. İstediğiniz zaman <b>Taslak kaydet</b> ile ara verebilir, hepsi tamamlanınca <b>Formu gönder</b>'e basarsınız; eksik varsa hangi kalemler olduğunu söyler. Her kalemin durumunu Export Partners işaretler.</div>
     <div class="card">
       <h1>FDA Gıda Tesisi Kaydı ve DUNS Numarası: Evrak ve Bilgi Formu</h1>
       <p class="lead">Kayıt üretim tesisi adına açılır; bilgiler üretici firmaya ait olmalıdır. Kayıt yabancı tesis adına açıldığı için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir.</p>
@@ -91,7 +91,8 @@
     </div>
     <div class="actions">
       <span class="msg" id="sonKayit"></span>
-      <button class="btn" id="kaydetBtn" onclick="kaydet()">Kaydet</button>
+      <button class="btn sec" id="kaydetBtn" onclick="kaydet()">Taslak kaydet</button>
+      <button class="btn" id="gonderBtn" onclick="kaydet(true)">Formu gönder</button>
     </div>
   </section>
 </main>
@@ -116,23 +117,23 @@ const FIREBASE_CONFIG={
 };
 const KALEMLER=[
   {b:"FİRMA BİLGİLERİ"},
-  {k:"k01",n:1,ad:"Firma tam unvanı (İngilizce)",a:"Ticaret sicilindeki unvanın İngilizce yazımı, kısaltmasız",ph:"ORNEK GIDA SANAYI VE TICARET A.S."},
-  {k:"k02",n:2,ad:"Üretim tesisinin açık adresi (İngilizce)",a:"Fiili üretimin yapıldığı adres",ph:"Organize Sanayi Bolgesi, 5. Cadde No:12, Nilufer / Bursa, Turkiye",cok:true},
+  {k:"k01",zorunlu:true,n:1,ad:"Firma tam unvanı (İngilizce)",a:"Ticaret sicilindeki unvanın İngilizce yazımı, kısaltmasız",ph:"ORNEK GIDA SANAYI VE TICARET A.S."},
+  {k:"k02",zorunlu:true,n:2,ad:"Üretim tesisinin açık adresi (İngilizce)",a:"Fiili üretimin yapıldığı adres",ph:"Organize Sanayi Bolgesi, 5. Cadde No:12, Nilufer / Bursa, Turkiye",cok:true},
   {k:"k03",n:3,ad:"Fatura adresi",a:"Üretim adresinden farklıysa yazınız",ph:"Ornek: Merkez Mah. Atatürk Cad. No:5 Kat:3, Sisli / Istanbul, Turkiye",cok:true},
   {k:"k04",n:4,ad:"Şirket web sitesi",a:"Varsa",ph:"Ornek: www.ornekgida.com"},
-  {k:"k05",n:5,ad:"Şirket e-posta adresi",a:"FDA doğrulama mailleri bu adrese gelir, aktif olmalı",ph:"Ornek: export@ornekgida.com"},
+  {k:"k05",zorunlu:true,n:5,ad:"Şirket e-posta adresi",a:"FDA doğrulama mailleri bu adrese gelir, aktif olmalı",ph:"Ornek: export@ornekgida.com"},
   {k:"k06",n:6,ad:"Mevcut DUNS numarası",a:"Varsa yazınız, yoksa boş bırakın, başvurusunu biz yaparız",ph:"Ornek: 12-345-6789 (9 hane)"},
   {b:"YETKİLİ KİŞİ"},
-  {k:"k07",n:7,ad:"Şirket sahibinin adı, adresi, telefonu",a:"Kimlik fotokopisi 13. kalemde yüklenir",ph:"Ornek: Ahmet Yilmaz, Merkez Mah. Atatürk Cad. No:5, Sisli / Istanbul, +90 532 000 00 00",cok:true},
+  {k:"k07",zorunlu:true,n:7,ad:"Şirket sahibinin adı, adresi, telefonu",a:"Kimlik fotokopisi 13. kalemde yüklenir",ph:"Ornek: Ahmet Yilmaz, Merkez Mah. Atatürk Cad. No:5, Sisli / Istanbul, +90 532 000 00 00",cok:true},
   {k:"k08",n:8,ad:"FDA muhatabı yetkilinin adı, e-postası, telefonu",a:"Şirket sahibi dışında biri olacaksa doldurulur",ph:"Ornek: Ayse Kaya, Ihracat Muduru, ayse@ornekgida.com, +90 533 000 00 00",cok:true},
   {b:"ÜRÜN BİLGİSİ"},
-  {k:"k09",n:9,ad:"Üretilen ürünlerin listesi",a:"FDA kategori seçimi bu listeye göre yapılır",ph:"Kuru incir, kuru kayisi, ceviz ici",cok:true},
-  {k:"k10",n:10,ad:"Ambalaj tipi",a:"Cam kavanoz, teneke, poşet vb.",ph:"Ornek: 250 g doypack poset ve 5 kg karton koli"},
-  {k:"kat",n:"9b",ad:"FDA ürün kategorisi ve tesis faaliyeti",a:"FDA kayıt formundaki (Form 3537, Bölüm 9) resmi listeden ürününüze uyan kategorileri işaretleyin; birden fazla seçilebilir. Örnek: kuru incir üreticisi 17c ve 26a, zeytinyağı 34, turşu ve sos 13, pet ödül maması hayvan gıdası 31; faaliyet çoğu üretici için Manufacturer/Processor. Emin değilseniz en yakınını seçin, Export Partners kontrol eder.",kategori:true},
+  {k:"k09",zorunlu:true,n:9,ad:"Üretilen ürünlerin listesi",a:"FDA kategori seçimi bu listeye göre yapılır",ph:"Kuru incir, kuru kayisi, ceviz ici",cok:true},
+  {k:"k10",zorunlu:true,n:10,ad:"Ambalaj tipi",a:"Cam kavanoz, teneke, poşet vb.",ph:"Ornek: 250 g doypack poset ve 5 kg karton koli"},
+  {k:"kat",zorunlu:true,n:"9b",ad:"FDA ürün kategorisi ve tesis faaliyeti",a:"FDA kayıt formundaki (Form 3537, Bölüm 9) resmi listeden ürününüze uyan kategorileri işaretleyin; birden fazla seçilebilir. Örnek: kuru incir üreticisi 17c ve 26a, zeytinyağı 34, turşu ve sos 13, pet ödül maması hayvan gıdası 31; faaliyet çoğu üretici için Manufacturer/Processor. Emin değilseniz en yakınını seçin, Export Partners kontrol eder.",kategori:true},
   {b:"EVRAKLAR"},
-  {k:"k11",n:11,ad:"Vergi levhası",a:"Kaşeli ve imzalı, PDF",dosya:true},
-  {k:"k12",n:12,ad:"İmza sirküleri veya imza beyannamesi",a:"Sermaye şirketlerinde sirküler, şahıs işletmelerinde beyanname",dosya:true},
-  {k:"k13",n:13,ad:"Şirket sahibinin kimlik fotokopisi",a:"PDF veya net fotoğraf",dosya:true},
+  {k:"k11",zorunlu:true,n:11,ad:"Vergi levhası",a:"Kaşeli ve imzalı, PDF",dosya:true},
+  {k:"k12",zorunlu:true,n:12,ad:"İmza sirküleri veya imza beyannamesi",a:"Sermaye şirketlerinde sirküler, şahıs işletmelerinde beyanname",dosya:true},
+  {k:"k13",zorunlu:true,n:13,ad:"Şirket sahibinin kimlik fotokopisi",a:"PDF veya net fotoğraf",dosya:true},
   {k:"k14",n:14,ad:"Certificate of Formation ve EIN Letter",a:"Yalnızca firma ABD'de kurulu ise",dosya:true}
 ];
 
@@ -277,7 +278,7 @@ auth.onAuthStateChanged(u=>{
 function rozet(k){const d=kayit.durum[k]||'bekleniyor';return `<span class="badge b-${esc(d)}">${DURUM[d]||d}</span>`;}
 function ciz(sadeceRozet){
   document.getElementById('whoFirm').textContent=kayit.firma?kayit.firma+' ·':'';
-  document.getElementById('sonKayit').textContent=kayit.guncelleme?'Son kayıt: '+kayit.guncelleme:'Henüz kaydedilmedi';
+  document.getElementById('sonKayit').textContent=kayit.form&&kayit.form.gonderim?('Form gönderildi: '+kayit.form.gonderim+(kayit.guncelleme&&kayit.guncelleme!==kayit.form.gonderim?' · son değişiklik '+kayit.guncelleme:'')):(kayit.guncelleme?'Taslak, son kayıt: '+kayit.guncelleme:'Henüz kaydedilmedi');
   if(sadeceRozet){KALEMLER.forEach(x=>{if(x.k){const el=document.getElementById('rz-'+x.k);if(el)el.innerHTML=rozet(x.k);}});return;}
   const h=[];
   KALEMLER.forEach(x=>{
@@ -301,7 +302,7 @@ function ciz(sadeceRozet){
       alan=`<input type="text" id="in-${x.k}" value="${esc(val)}" placeholder="${esc(x.ph||'')}" oninput="kirli=true">`;
     }
     h.push(`<div class="row"><div class="num">${x.n}</div><div>
-      <div class="top"><label for="in-${x.k}">${esc(x.ad)}</label><span id="rz-${x.k}">${rozet(x.k)}</span></div>
+      <div class="top"><label for="in-${x.k}">${esc(x.ad)}${x.zorunlu?' <span style="color:var(--bad)" title="zorunlu">*</span>':' <span class="msg">(isteğe bağlı)</span>'}</label><span id="rz-${x.k}">${rozet(x.k)}</span></div>
       <p class="hint">${esc(x.a)}</p>${alan}</div></div>`);
   });
   document.getElementById('alanlar').innerHTML=h.join('');
@@ -317,20 +318,43 @@ function dosyaSec(ev,k){
 }
 function dosyaSil(k){if(!confirm('Dosya kaldırılsın mı?'))return;delete kayit.dosyalar[k];kirli=true;ciz(false);}
 function dosyaAc(k){const f=kayit.dosyalar[k];if(!f||!f.veri)return;const a=document.createElement('a');a.href=f.veri;a.download=f.ad||'dosya';document.body.appendChild(a);a.click();a.remove();}
-function kaydet(){
+function eksikler(){
+  const e=[];
+  KALEMLER.forEach(x=>{
+    if(!x.k||!x.zorunlu)return;
+    if(x.dosya){ if(!kayit.dosyalar[x.k]) e.push(x); }
+    else if(x.kategori){ const K=kayit.form.kategori||{}; if(!((K.insan||[]).length||(K.hayvan||[]).length)||!(K.faaliyet||[]).length) e.push(x); }
+    else { const el=document.getElementById('in-'+x.k); if(!el||!el.value.trim()) e.push(x); }
+  });
+  return e;
+}
+function kaydet(gonder){
   if(!uid)return;
   const kutu=document.getElementById('onayKutu');
   if(kutu&&!kutu.checked){toast('Kaydetmek için gizlilik onay kutusunu işaretleyin.');kutu.focus();return;}
+  if(gonder){
+    /* kategori kutulari once toplanmali ki eksik kontrolu guncel olsun */
+    const topla0=l=>[...document.querySelectorAll('input[data-kat="'+l+'"]:checked')].map(i=>i.value);
+    kayit.form.kategori={insan:topla0('insan'),hayvan:topla0('hayvan'),faaliyet:topla0('faaliyet'),diger:(document.getElementById('in-katdiger')||{value:''}).value.trim()};
+    const e=eksikler();
+    if(e.length){
+      toast('Eksik: '+e.map(x=>x.n).join(', ')+' numaralı kalemler. Taslak olarak kaydedebilir, tamamlayınca gönderebilirsiniz.');
+      const ilk=document.getElementById('in-'+e[0].k)||document.getElementById('f-'+e[0].k); if(ilk){ilk.scrollIntoView({behavior:'smooth',block:'center'});}
+      e.forEach(x=>{const rz=document.getElementById('rz-'+x.k); if(rz) rz.innerHTML='<span class="badge b-eksik">Eksik</span>';});
+      return;
+    }
+  }
   if(!kayit.form.onay){const g0=new Date();kayit.form.onay=g0.toLocaleDateString('tr-TR')+' '+g0.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
   KALEMLER.forEach(x=>{if(x.k&&!x.dosya&&!x.kategori){const el=document.getElementById('in-'+x.k);if(el)kayit.form[x.k]=el.value.trim();}});
   const topla=l=>[...document.querySelectorAll('input[data-kat="'+l+'"]:checked')].map(i=>i.value);
   kayit.form.kategori={insan:topla('insan'),hayvan:topla('hayvan'),faaliyet:topla('faaliyet'),diger:(document.getElementById('in-katdiger')||{value:''}).value.trim()};
-  const btn=document.getElementById('kaydetBtn'); btn.disabled=true;
+  const btn=document.getElementById('kaydetBtn'); btn.disabled=true; document.getElementById('gonderBtn').disabled=true;
   const g=new Date(); const damga=g.toLocaleDateString('tr-TR')+' '+g.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  if(gonder) kayit.form.gonderim=damga;
   db.ref('musteri_portal/'+uid).update({form:kayit.form,dosyalar:kayit.dosyalar,guncelleme:damga})
-    .then(()=>{kirli=false;toast('Kaydedildi. Teşekkürler, Export Partners bilgilendirildi.');})
+    .then(()=>{kirli=false;toast(gonder?'Formunuz gönderildi. Teşekkürler, Export Partners inceleyip sizinle iletişime geçecek.':'Taslak kaydedildi; tamamlayınca "Formu gönder"e basın.');})
     .catch(e=>{toast('Kaydedilemedi: '+(e&&e.message||e));})
-    .finally(()=>{btn.disabled=false;});
+    .finally(()=>{btn.disabled=false;document.getElementById('gonderBtn').disabled=false;});
 }
 window.addEventListener('beforeunload',e=>{if(kirli){e.preventDefault();e.returnValue='';}});
 </script>
