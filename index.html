@@ -1050,8 +1050,8 @@ function renderPortal(){
   const c=data[memoIdx]; portalVeri=null;
   if(!c.portalUid){
     box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span></div>
-      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> "Portal hesabı aç" müşteriye özel bir giriş oluşturur (e-posta + otomatik şifre) ve WhatsApp'a yapıştırılacak hazır mesajı verir. Müşteri <code>${esc(portalUrl())}</code> adresine girip FDA evrak formunu doldurur, belgeleri yükler; cevaplar bu kutuda görünür, durumu buradan işaretlersin. Müşteri yalnızca kendi formunu görür, tracker'ı görmez.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="email" id="portalEmailKutu" value="${esc(c.email||'')}" placeholder="Müşterinin giriş e-postası" style="flex:1;min-width:220px;border:1px solid #cfd5df;border-radius:8px;padding:7px 10px;font:inherit;font-size:13px"><button class="pbtn" onclick="portalHesapAc()">Portal hesabı aç</button></div>
+      <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> "Form oluştur" müşteriye özel bir giriş oluşturur (e-posta + otomatik şifre) ve WhatsApp'a yapıştırılacak hazır mesajı verir. Müşteri <code>${esc(portalUrl())}</code> adresine girip FDA evrak formunu doldurur, belgeleri yükler; cevaplar bu kutuda görünür, durumu buradan işaretlersin. Müşteri yalnızca kendi formunu görür, tracker'ı görmez.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="email" id="portalEmailKutu" value="${esc(c.email||'')}" placeholder="Müşterinin giriş e-postası" style="flex:1;min-width:220px;border:1px solid #cfd5df;border-radius:8px;padding:7px 10px;font:inherit;font-size:13px"><button class="pbtn" onclick="portalHesapAc()">Form oluştur (müşteri hesabı aç)</button></div>
       <div class="pmeta" style="margin-top:6px">E-posta karttan geldi; farklıysa düzeltin.</div>`;
     return;
   }
