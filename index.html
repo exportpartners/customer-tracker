@@ -142,6 +142,27 @@
   .fhint{font-size:10.5px;color:#9aa1ad;margin-top:7px}
   .assessbox{margin-top:13px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
   .assessbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:var(--gold);text-transform:uppercase;margin-bottom:9px}
+  /* Musteri portali (15 Eylul 2026): giris kapisi ve karttaki Evrak formu kutusu */
+  #girisBg{position:fixed;inset:0;background:var(--navy);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+  #girisBg.show{display:flex}
+  .giris{background:#fff;border-radius:14px;padding:26px;width:min(400px,100%);box-shadow:0 14px 44px rgba(0,0,0,.35)}
+  .giris h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+  .giris p{margin:0 0 14px;font-size:12.5px;color:#6b7280}
+  .giris input{width:100%;border:1px solid #cfd5df;border-radius:9px;padding:10px 12px;font:inherit;font-size:14px;margin-bottom:10px}
+  .giris .err{color:#c0392b;font-size:12.5px;min-height:16px;margin:0 0 8px}
+  .giris button{width:100%;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:11px;font-weight:800;font-size:14px;cursor:pointer}
+  .portalbox{margin-top:13px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+  .portalbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#1c5fa8;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .portalbox .prow{display:grid;grid-template-columns:26px 1fr 120px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .portalbox .prow:last-child{border-bottom:0}
+  .portalbox .pn{color:#9aa1ad;font-weight:800}
+  .portalbox .pv{white-space:pre-wrap;word-break:break-word}
+  .portalbox .pv.bos{color:#9aa1ad;font-style:italic}
+  .portalbox select{font-size:12px;border:1px solid #cfd5df;border-radius:7px;padding:4px 6px;width:100%}
+  .portalbox .pmeta{font-size:12px;color:#6b7280;margin-bottom:8px}
+  .portalbox .pbtn{background:#e7f2fc;border:1px solid #bcdcf6;color:#1c5fa8;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer}
+  .portalbox code{background:#f4f5f8;padding:2px 6px;border-radius:5px;font-size:12px}
+  @media (max-width:600px){.portalbox .prow{grid-template-columns:1fr}.portalbox .pn{display:none}}
   .assessgrid{display:flex;flex-wrap:wrap;gap:7px}
   .asschip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fafbfc;border-radius:9px;padding:7px 11px;font-size:11.5px;font-weight:700;color:#4b5563;cursor:pointer;user-select:none;line-height:1.25}
   .asschip:active{opacity:.8}
@@ -217,6 +238,16 @@
   </div>
 </footer>
 <div id="toast"></div>
+<div id="girisBg">
+  <div class="giris">
+    <h2>Export Partners · Customer Tracker</h2>
+    <p>Bu tablo yalnızca yetkili hesaba açık. E-posta ve şifrenizle girin.</p>
+    <input type="email" id="girisEmail" placeholder="E-posta" autocomplete="username">
+    <input type="password" id="girisPass" placeholder="Şifre" autocomplete="current-password" onkeydown="if(event.key==='Enter')girisYap()">
+    <p class="err" id="girisErr"></p>
+    <button id="girisBtn" onclick="girisYap()">Giriş yap</button>
+  </div>
+</div>
 <div class="modal-bg" id="memoBg" onclick="if(event.target===this)closeMemo()">
   <div class="modal">
     <div class="mhead">
@@ -249,6 +280,7 @@
         <div class="fbh">⭑ Intro call assessment</div>
         <div class="assessgrid" id="memoAssess"></div>
       </div>
+      <div class="portalbox" id="memoPortal"></div>
     </div>
     <div class="mfoot"><button class="btn-save" onclick="saveMemo()">Save</button></div>
   </div>
@@ -360,7 +392,7 @@ function normalize(r){
   let notes=applySupersede((r.notes||[]).map(normNote));
   return {id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
-    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted};
+    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||''};
 }
 let data=[];
 let dbRef=null;
@@ -402,7 +434,7 @@ function initData(){
   if(emailReady()){try{emailjs.init({publicKey:EMAILJS_CONFIG.publicKey});}catch(e){}}
   if(fbReady()){
     try{
-      firebase.initializeApp(FIREBASE_CONFIG);
+      if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       dbRef=firebase.database().ref('ep_tracker_v1');
       filesRef=firebase.database().ref('ep_tracker_files');
       dbRef.on('value',snap=>{
@@ -850,7 +882,7 @@ function openMemo(i){
   memoIdx=i;
   document.getElementById('memoTitle').innerHTML=esc(data[i].firm||'(no company)')+'<small>NOTES & FILES</small>';
   document.getElementById('memoText').innerHTML=toRich(data[i].memo||'');
-  renderFiles();renderAssess();
+  renderFiles();renderAssess();renderPortal();
   document.getElementById('memoBg').classList.add('show');
 }
 function closeMemo(){document.getElementById('memoBg').classList.remove('show');memoIdx=-1;render();}
@@ -970,9 +1002,97 @@ function loadScript(src){return new Promise((res)=>{var s=document.createElement
 async function boot(){
   await loadScript('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
   await loadScript('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
+  await loadScript('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js');
   await loadScript('https'+'://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js');
-  initData();
+  girisKapisi();
   geriAlDugmesi();
+}
+
+/* ================================================================
+   GIRIS KAPISI ve MUSTERI PORTALI, 15 Eylul 2026.
+   Veritabani o gune kadar adresi bilen herkese acikti. Artik tablo yalnizca
+   Firebase Authentication ile giren admin hesabina acik (kurallar
+   firebase-rules.json). Musteri portali (musteri/index.html) ayni
+   veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
+   durumu isaretler ve musteri hesabi acar.
+   ================================================================ */
+function girisKapisi(){
+  if(!fbReady()||!firebase.auth){initData();return;}
+  if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  let basladi=false;
+  firebase.auth().onAuthStateChanged(u=>{
+    const bg=document.getElementById('girisBg');
+    if(u){bg.classList.remove('show');if(!basladi){basladi=true;initData();}}
+    else{bg.classList.add('show');}
+  });
+}
+function girisYap(){
+  const em=document.getElementById('girisEmail').value.trim(), pw=document.getElementById('girisPass').value;
+  const err=document.getElementById('girisErr'); err.textContent='';
+  if(!em||!pw){err.textContent='E-posta ve şifre gerekli.';return;}
+  document.getElementById('girisBtn').disabled=true;
+  firebase.auth().signInWithEmailAndPassword(em,pw)
+    .catch(e=>{const c=(e&&e.code)||'';err.textContent=c.includes('operation-not-allowed')?'E-posta/şifre girişi Firebase konsolunda henüz açık değil.':(c.includes('invalid')||c.includes('wrong')||c.includes('not-found'))?'E-posta ya da şifre hatalı.':('Giriş yapılamadı: '+(e&&e.message||e));})
+    .finally(()=>{document.getElementById('girisBtn').disabled=false;});
+}
+function cikisYap(){if(firebase.auth)firebase.auth().signOut();}
+
+const PORTAL_KALEMLER=[
+  ["k01","Firma tam unvanı (İngilizce)"],["k02","Üretim tesisi adresi (İngilizce)"],["k03","Fatura adresi"],["k04","Web sitesi"],
+  ["k05","Şirket e-postası"],["k06","Mevcut DUNS"],["k07","Şirket sahibi: ad, adres, telefon"],["k08","FDA muhatabı yetkili"],
+  ["k09","Ürün listesi"],["k10","Ambalaj tipi"],["k11","Vergi levhası","dosya"],["k12","İmza sirküleri / beyannamesi","dosya"],
+  ["k13","Sahibin kimlik fotokopisi","dosya"],["k14","Certificate of Formation ve EIN Letter","dosya"]];
+const PORTAL_DURUM=[["bekleniyor","Bekleniyor"],["alindi","Alındı"],["eksik","Eksik"],["onaylandi","Onaylandı"]];
+let portalVeri=null;
+function portalUrl(){return location.origin+location.pathname.replace(/[^/]*$/,'')+'musteri/';}
+function renderPortal(){
+  const box=document.getElementById('memoPortal'); if(!box||memoIdx<0)return;
+  const c=data[memoIdx]; portalVeri=null;
+  if(!c.portalUid){
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" onclick="portalHesapAc()">Portal hesabı aç</button></div>
+      <div class="pmeta">Bu müşterinin portal hesabı yok. Hesap açınca müşteri <code>${esc(portalUrl())}</code> adresinden kendi formunu doldurur ve evrak yükler; cevaplar burada görünür.</div>`;
+    return;
+  }
+  box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span class="pmeta">yükleniyor…</span></div>`;
+  if(!firebase.database){box.innerHTML+='<div class="pmeta">Bulut bağlantısı yok.</div>';return;}
+  firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(s=>{
+    const v=s.val()||{}; portalVeri=v;
+    const rows=PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
+      let pv;
+      if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`<a href="javascript:void(0)" onclick="portalDosyaAc('${k}')">📎 ${esc(f.ad)}</a> <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span>`:'<span class="pv bos">yüklenmedi</span>';}
+      else{const t=(v.form||{})[k]; pv=t?`<span class="pv">${esc(t)}</span>`:'<span class="pv bos">boş</span>';}
+      const d=(v.durum||{})[k]||'bekleniyor';
+      return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}</div><select onchange="portalDurumSet('${k}',this.value)">${PORTAL_DURUM.map(([a,b])=>`<option value="${a}" ${a===d?'selected':''}>${b}</option>`).join('')}</select></div>`;
+    }).join('');
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><button class="pbtn" onclick="portalSifreSifirla()">Şifre sıfırlama maili</button></div>
+      <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Müşterinin son kaydı: ${esc(v.guncelleme||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}`;
+  }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
+}
+function portalDurumSet(k,val){
+  const c=data[memoIdx]; if(!c||!c.portalUid)return;
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/durum/'+k).set(val).then(()=>toast('Durum kaydedildi')).catch(e=>toast('Durum yazılamadı: '+(e&&e.message||e)));
+}
+function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k];if(!f||!f.veri)return;triggerDownload(f.veri,f.ad||'dosya');}
+function sifreUret(){const h='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<10;i++)s+=h[Math.floor(Math.random()*h.length)];return s;}
+function portalHesapAc(){
+  const c=data[memoIdx]; if(!c)return;
+  const em=prompt('Müşterinin giriş e-postası (portal hesabı bu adrese açılır):', c.email||'');
+  if(!em)return;
+  const pw=sifreUret();
+  /* Ikincil uygulama: yeni kullanici olusturulurken admin oturumu dusmesin. */
+  const ikincil=firebase.apps.find(a=>a.name==='ikincil')||firebase.initializeApp(FIREBASE_CONFIG,'ikincil');
+  ikincil.auth().createUserWithEmailAndPassword(em.trim(),pw).then(cred=>{
+    const uid=cred.user.uid;
+    return ikincil.auth().signOut().then(()=>firebase.database().ref('musteri_portal/'+uid).update({firma:c.firm||'',eposta:em.trim(),acilis:new Date().toISOString().slice(0,10)})).then(()=>{
+      c.portalUid=uid; c.portalEmail=em.trim(); save(); renderPortal();
+      const metin=`Merhaba,\n\nFDA kaydı için evrak ve bilgi formunuz hazır. Aşağıdaki adresten girip sarı alanları doldurabilir, evrakları yükleyebilirsiniz:\n${portalUrl()}\nE-posta: ${em.trim()}\nŞifre: ${pw}\n\nSorunuz olursa bu numaradan yazabilirsiniz.\nExport Partners`;
+      prompt('Hesap açıldı. Müşteriye göndermek için metni kopyalayın (Cmd+C):', metin);
+    });
+  }).catch(e=>{const code=(e&&e.code)||'';toast(code.includes('email-already-in-use')?'Bu e-posta ile hesap zaten var.':code.includes('operation-not-allowed')?'Firebase konsolunda E-posta/Şifre girişi henüz açık değil.':('Hesap açılamadı: '+(e&&e.message||e)));});
+}
+function portalSifreSifirla(){
+  const c=data[memoIdx]; if(!c||!c.portalEmail)return;
+  firebase.auth().sendPasswordResetEmail(c.portalEmail).then(()=>toast('Sıfırlama maili gönderildi: '+c.portalEmail)).catch(e=>toast('Gönderilemedi: '+(e&&e.message||e)));
 }
 boot();
 </script>

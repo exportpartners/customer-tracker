@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "ep_tracker_v1": {
+      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')"
+    },
+    "ep_tracker_files": {
+      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')"
+    },
+
+    "musteri_portal": {
+      "$uid": {
+        ".read":  "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+        "form":       { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "dosyalar":   { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "guncelleme": { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "durum":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "firma":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "eposta":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" },
+        "acilis":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')" }
+      }
+    },
+
+    "bargello_tracker_v2": { ".read": true, ".write": true },
+    "bargello_visits_v1":  { ".read": true, ".write": true },
+    "bargello_tracker":    { ".read": true, ".write": true },
+    "molubon_tracker_v2":  { ".read": true, ".write": true },
+    "molubon_tracker":     { ".read": true, ".write": true },
+
+    "spapi_auth": {
+      "$state": { ".read": true, ".write": true }
+    }
+  }
+}
