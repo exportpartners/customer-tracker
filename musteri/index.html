@@ -96,7 +96,7 @@
       <p class="lead" style="margin:0 0 10px">Bu formda verdiğiniz bilgiler ve yüklediğiniz belgeler yalnızca FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu için kullanılır; yalnızca Export Partners ekibi görür, üçüncü kişiyle paylaşılmaz. Veriler Google Firebase altyapısında (Avrupa Birliği, Belçika) şifreli bağlantıyla saklanır. Kayıt tamamlandıktan sonra belgelerinizin silinmesini istediğinizde info@exportpartners.com.tr adresine yazmanız yeterlidir. Ayrıntı: <a href="https://www.exportpartners.com.tr/gizlilik-politikasi/" target="_blank" rel="noopener">Gizlilik Politikası</a>.</p>
       <label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer"><input type="checkbox" id="onayKutu" style="margin-top:4px" onchange="kirli=true"> <span>Bilgilerimin ve belgelerimin yukarıdaki amaçla işlenmesini kabul ediyorum. <span class="msg" id="onayTarih"></span></span></label>
     </div>
-    <div class="card" style="margin-top:16px" id="soruKart">
+    <div class="card" style="margin-top:16px" id="soruKart" hidden>
       <h2 style="margin-top:0">Sorularınız</h2>
       <p class="lead" style="margin:0 0 10px">Bir kalemde takıldıysanız buradan sorabilirsiniz. Sorular her iş günü akşamı topluca ekibimize iletilir; yanıt genellikle bir iş günü içinde burada ve e-posta adresinizde görünür. Günde en fazla 3 soru.</p>
       <label for="soruKalem" style="font-weight:600">Hangi kalem hakkında</label>
@@ -255,7 +255,7 @@ const FAALIYET=[
 ];
 
 const DURUM={bekleniyor:"Bekleniyor",alindi:"Alındı",eksik:"Eksik",onaylandi:"Onaylandı"};
-const MAX_DOSYA=3*1024*1024;
+const MAX_DOSYA=7*1024*1024; /* RTDB tek deger siniri 10 MB; base64 sisirmesi ile 7 MB ham dosya ust sinir. Daha buyugu icin Firebase Storage gerekir (Blaze plani). */
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth=firebase.auth(); const db=firebase.database();
@@ -349,7 +349,7 @@ function ciz(sadeceRozet){
     }
     h.push(`<div class="row"><div class="num">${x.n}</div><div>
       <div class="top"><label for="in-${x.k}">${esc(x.ad)}${x.zorunlu?' <span style="color:var(--bad)" title="zorunlu">*</span>':' <span class="msg">(isteğe bağlı)</span>'}</label><span id="rz-${x.k}">${rozet(x.k)}</span></div>
-      <p class="hint">${esc(x.a)}</p>${alan}<div id="nt-${x.k}">${notKutu(x.k)}</div><a class="sorulink" onclick="soruAc('${x.k}')">Bu kalem için soru sor</a></div></div>`);
+      <p class="hint">${esc(x.a)}</p>${alan}<div id="nt-${x.k}">${notKutu(x.k)}</div></div></div>`);
   });
   document.getElementById('alanlar').innerHTML=h.join('');
   const sel=document.getElementById('soruKalem'); if(sel&&sel.options.length<=1){KALEMLER.forEach(x=>{if(x.k){const o=document.createElement('option');o.value=x.k;o.textContent=x.n+'. '+x.ad;sel.appendChild(o);}});}
@@ -359,12 +359,19 @@ function ciz(sadeceRozet){
 }
 function dosyaSec(ev,k){
   const f=ev.target.files[0]; if(!f)return;
-  if(f.size>MAX_DOSYA){toast('Dosya 3 MB sınırını aşıyor: '+f.name);ev.target.value='';return;}
+  if(f.size>MAX_DOSYA){toast('Dosya 7 MB sınırını aşıyor: '+f.name+'. PDF ise sıkıştırıp tekrar deneyin.');ev.target.value='';return;}
   const r=new FileReader();
-  r.onload=()=>{kayit.dosyalar[k]={ad:f.name,tip:f.type,boyut:f.size,veri:r.result,tarih:new Date().toISOString().slice(0,10)};kirli=true;ciz(false);toast('Dosya eklendi, Kaydet ile gönderin.');};
+  r.onload=()=>{
+    const d={ad:f.name,tip:f.type,boyut:f.size,veri:r.result,tarih:new Date().toISOString().slice(0,10)};
+    toast('Dosya yükleniyor: '+f.name);
+    /* her dosya kendi dugumune ayri yazilir: tek update() icinde toplam 16 MB siniri asilmasin */
+    db.ref('musteri_portal/'+uid+'/dosyalar/'+k).set(d)
+      .then(()=>{kayit.dosyalar[k]=d;ciz(false);toast('Dosya yüklendi: '+f.name);})
+      .catch(e=>{toast('Dosya yüklenemedi: '+(e&&e.message||e));ev.target.value='';});
+  };
   r.readAsDataURL(f);
 }
-function dosyaSil(k){if(!confirm('Dosya kaldırılsın mı?'))return;delete kayit.dosyalar[k];kirli=true;ciz(false);}
+function dosyaSil(k){if(!confirm('Dosya kaldırılsın mı?'))return;db.ref('musteri_portal/'+uid+'/dosyalar/'+k).remove().then(()=>{delete kayit.dosyalar[k];ciz(false);toast('Dosya kaldırıldı.');}).catch(e=>toast('Kaldırılamadı: '+(e&&e.message||e)));}
 function dosyaAc(k){const f=kayit.dosyalar[k];if(!f||!f.veri)return;const a=document.createElement('a');a.href=f.veri;a.download=f.ad||'dosya';document.body.appendChild(a);a.click();a.remove();}
 function eksikler(){
   const e=[];
@@ -388,6 +395,8 @@ function soruCiz(){
   const s=document.getElementById('soruSayac'); if(s){const n=bugunSoru();s.textContent=n?('Bugün '+n+'/3 soru'):'';}
 }
 function soruGonder(){
+  /* 17 Eylul 2026, Mustafa: musteri soru soramasin. Kart gizli, gonderim kapali; sorular icin e-posta ve WhatsApp. */
+  toast('Sorularınız için info@exportpartners.com.tr ya da WhatsApp.'); return;
   if(!uid)return;
   const ta=document.getElementById('soruMetin'); const metin=(ta.value||'').trim();
   if(metin.length<5){toast('Lütfen sorunuzu yazın.');ta.focus();return;}
@@ -423,7 +432,7 @@ function kaydet(gonder){
   const btn=document.getElementById('kaydetBtn'); btn.disabled=true; document.getElementById('gonderBtn').disabled=true;
   const g=new Date(); const damga=g.toLocaleDateString('tr-TR')+' '+g.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
   if(gonder) kayit.form.gonderim=damga;
-  db.ref('musteri_portal/'+uid).update({form:kayit.form,dosyalar:kayit.dosyalar,guncelleme:damga})
+  db.ref('musteri_portal/'+uid).update({form:kayit.form,guncelleme:damga})
     .then(()=>{kirli=false;toast(gonder?'Formunuz gönderildi. Teşekkürler, Export Partners inceleyip sizinle iletişime geçecek.':'Taslak kaydedildi; tamamlayınca "Formu gönder"e basın.');})
     .catch(e=>{toast('Kaydedilemedi: '+(e&&e.message||e));})
     .finally(()=>{btn.disabled=false;document.getElementById('gonderBtn').disabled=false;});

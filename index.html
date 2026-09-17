@@ -1091,7 +1091,7 @@ function renderPortal(){
     const sorular=Object.entries(v.sorular||{}).map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
     const kalemAd=k=>k&&k!=='genel'?((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1]||k):'Genel';
     const soruBlok=`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
-      <div class="pmeta">Müşteri portaldan soru yazar; sorular akşam 17:00'de tek mailde opr@ ve deniz@ adresine düşer (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
+      <div class="pmeta">Portalda soru kutusu 17 Eylül 2026'dan itibaren kapalı (Mustafa). Eski sorular burada durur; yeni soru gelmez, bildirim yalnızca deniz@ adresine (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
       ${sorular.length?sorular.map(q=>`<div class="soru" id="soru-${esc(q.id)}"><div><b>${esc(kalemAd(q.kalem))}</b> · <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span></div><div style="white-space:pre-wrap;margin-top:3px">${esc(q.metin)}</div>
         <textarea id="yn-${esc(q.id)}" placeholder="Yanıt (müşteriye gider)">${esc(q.yanit||'')}</textarea>
         <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, akşam 17:00 mailiyle gidecek'):''}</span></div></div>`).join(''):'<div class="pmeta">Henüz soru yok.</div>'}`;
