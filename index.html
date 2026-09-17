@@ -724,7 +724,9 @@ function rowHtml(c,i,pos){
   const hasW=(c.website||'').trim().length>3;
   const webIc=hasW?`<a class="ic web" href="${esc(toUrl(c.website))}" target="_blank" rel="noopener">${GLOBE}</a>`:`<span class="ic web off">${GLOBE}</span>`;
   const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('');
-  const noteChips=(c.notes||[]).map((t,j)=>{const cl=noteClass(t);const pre=cl==='note-red'?'⚠ ':'';return `<span class="chip ${cl}">${pre}${esc(t)}<span onclick="rm(${i},'notes',${j})">✕</span></span>`;}).join('');
+  /* 18 Eylul 2026, Mustafa: odeme alindiysa Action sutununda yalnizca 'Payment Received' gorunsun; onceki adim cipleri (Intro/Technical Call Done, Proposal Sent) gizlenir, veri silinmez */
+  const odemeVar=(c.notes||[]).includes('Payment Received');
+  const noteChips=(c.notes||[]).map((t,j)=>{if(odemeVar&&['Intro Call Done','Technical Call Done','Proposal Sent'].includes(t))return '';const cl=noteClass(t);const pre=cl==='note-red'?'⚠ ':'';return `<span class="chip ${cl}">${pre}${esc(t)}<span onclick="rm(${i},'notes',${j})">✕</span></span>`;}).join('');
   const techDone=(c.notes||[]).includes('Technical Call Done');
   const newActive=isNewActive(c);
   const light=c.status==='In Progress'?'<span class="light green"></span>':c.status==='Hold'?'<span class="light red"></span>':'';
@@ -1067,7 +1069,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 00:15';
+const SURUM='2026-09-18 00:25';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
