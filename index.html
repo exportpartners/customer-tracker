@@ -474,7 +474,7 @@ function initData(){
         const val=snap.val();
         if(val){data=toArr(val).map(normalize);if(ensureIds(data))save();}
         else{data=localData();try{dbRef.set(data);}catch(e){}}
-        setSync('cloud');render();
+        setSync('cloud');render();derinLink();
       },err=>{console.error(err);dbRef=null;filesRef=null;data=localData();setSync('local');render();});
       return;
     }catch(e){console.error(e);dbRef=null;filesRef=null;}
@@ -827,6 +827,16 @@ const BANTLAR=[
   {key:'other',      label:'UNGROUPED — status not recognised', cls:'sec-other', uyar:()=>true}
 ];
 
+/* Tek linkle kart acma (18 Eylul 2026, Mustafa: "Kaan'a formu nasil atarim tek link"):
+   .../customer-tracker/#kart=<kayit id> ya da #kart=<firma adinin bir parcasi>. Giris ve veri yuklendikten sonra kart acilir. */
+let derinAcildi=false;
+function derinLink(){
+  if(derinAcildi)return; const m=/[#&]kart=([^&]+)/.exec(location.hash||''); if(!m)return;
+  const q=decodeURIComponent(m[1]).toLowerCase(); let i=data.findIndex(c=>String(c.id)===q); if(i<0) i=data.findIndex(c=>(c.firm||'').toLowerCase().includes(q));
+  if(i<0){toast('Kart bulunamadı: '+q);return;} derinAcildi=true; const grp=(data[i].status||'').toLowerCase(); if(typeof openSec==='object') openSec[grp]=true; setTimeout(()=>openMemo(i),300);
+}
+function kartLinki(i){const c=data[i]; const u=new URL(location.href); u.hash='kart='+encodeURIComponent(c.id||c.firm||''); u.searchParams.delete('v'); return u.toString();}
+function kartLinkiKopyala(){if(memoIdx<0)return; const l=kartLinki(memoIdx); (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>toast('Kart linki kopyalandı')).catch(()=>prompt('Kart linki:',l));}
 function render(){
   let idx=data.map((c,i)=>i);
   /* Task filter. Renewal work is the reason this exists: the FDA RENEWAL
@@ -1072,7 +1082,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 01:25';
+const SURUM='2026-09-18 01:35';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
@@ -1151,7 +1161,7 @@ function renderPortal(){
         <textarea id="yn-${esc(q.id)}" placeholder="Yanıt (müşteriye gider)">${esc(q.yanit||'')}</textarea>
         <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, yalnızca portalda görünüyor'):''}</span></div></div>`).join('')}`;
     const mesajKutu=portalSonMesaj?`<div style="background:#fff7ee;border:1px solid #f5c489;border-radius:9px;padding:10px;margin-bottom:10px"><div class="pmeta" style="color:#b26a00;font-weight:800">Hesap açıldı. Şifre yalnızca burada görünür, kart kapanınca silinir; şimdi kopyalayıp müşteriye gönderin.</div><textarea id="portalMesaj" readonly style="width:100%;height:150px;font:12px/1.5 -apple-system,Arial,sans-serif;border:1px solid #cfd5df;border-radius:7px;padding:8px">${esc(portalSonMesaj)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="pbtn" onclick="portalMetniKopyala()">Metni kopyala (WhatsApp)</button><button class="pbtn" onclick="portalMailTaslagi()">E-posta taslağı aç (Gmail)</button></div><div class="pmeta" style="margin-top:4px">E-posta taslağı, tarayıcıda açık olan Gmail hesabından (sen: deniz@, Kaan: opr@) taslak olarak açılır; gönderilmez, Gönder'e sen basarsın.</div></div>`:'';
-    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="pbtn" title="Form cevaplarını Excel olarak indir" onclick="portalExcel()">⬇ Excel</button><button class="pbtn" title="Yüklenen bütün belgeleri tek ZIP olarak indir" onclick="portalZip()">⬇ Belgeler (ZIP)</button><button class="pbtn" title="Müşteri şifresini unuttuysa: yeni şifre üretir, formu ve dosyaları korur" onclick="portalYeniSifre()">Yeni şifre ver</button><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı kapatır, formu siler, kart 'Form oluştur' haline döner; aynı e-postayla yeniden açılabilir" onclick="portalGeriAl()">Portalı geri al</button></span></div>
+    box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="pbtn" title="Bu kartı doğrudan açan linki kopyala (Kaan'a atmak için)" onclick="kartLinkiKopyala()">🔗 Linki kopyala</button><button class="pbtn" title="Form cevaplarını Excel olarak indir" onclick="portalExcel()">⬇ Excel</button><button class="pbtn" title="Yüklenen bütün belgeleri tek ZIP olarak indir" onclick="portalZip()">⬇ Belgeler (ZIP)</button><button class="pbtn" title="Müşteri şifresini unuttuysa: yeni şifre üretir, formu ve dosyaları korur" onclick="portalYeniSifre()">Yeni şifre ver</button><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı kapatır, formu siler, kart 'Form oluştur' haline döner; aynı e-postayla yeniden açılabilir" onclick="portalGeriAl()">Portalı geri al</button></span></div>
       <details style="margin-bottom:8px"><summary style="cursor:pointer;margin:0;font-weight:800;color:#E8821E;font-size:12.5px">Form Kullanım Bilgisi (aç)</summary><div style="background:#f4f5f8;border-radius:8px;padding:10px 12px;margin-top:6px;font-size:12.5px;line-height:1.6"><p style="margin:0 0 6px"><b>1. Müşteri doldurur.</b> Portal adresine kendi e-postası ve şifresiyle girer, kalemleri doldurur, belgeleri yükler, "Formu gönder"e basar. Gönderdiği anda cevaplar ve belgeler tek mailde (Excel + ZIP) opr@ adresine düşer; burada da görünür.</p><p style="margin:0 0 6px"><b>2. Biz inceleriz.</b> Bu kartta yazma yok, yalnızca inceleme. Belgeyi <b>Görüntüle</b> ile burada aç, <b>İndir</b> ile al; <b>⬇ Excel</b> ve <b>⬇ Belgeler (ZIP)</b> hepsini tek seferde verir.</p><p style="margin:0 0 6px"><b>3. Eksik varsa İade.</b> Satırdaki <b>✖ İade</b> → gerekçeyi yaz → İade et. İadeler birikir; alttaki <b>✉ Müşteriye e-posta gönder</b> hepsini tek mailde yollar. Müşteri portalda kalemi "Eksik" görür, düzeltip yeniden gönderir.</p><p style="margin:0 0 6px"><b>4. Sorular.</b> Müşterinin sorusu ilgili kalemin altında görünür; <b>Yanıtla</b> ile yanıt yazılır, yanıt portalda görünür ve aynı toplu mailde gider.</p><p style="margin:0 0 6px"><b>5. Tamsa Formu onayla.</b> Bekleyen iade yoksa alttaki <b>✔ Formu onayla</b> → müşteriye "belgeleriniz alındı, süreç başladı" maili gider, kart yeşil "Form onaylandı" olur.</p><p style="margin:0"><b>Diğer.</b> Müşteriye giden her mail, gönderen kim ise (deniz@ ya da opr@) ötekini cc'ler. <b>Yeni şifre ver</b>: müşteri şifresini unuttuysa. <b>Portalı geri al</b>: hesabı kapatır, form ve belgeler silinmez.</p></div></details>
       ${rows}${(()=>{const bekleyen=Object.entries(v.notlar||{}).filter(([k,n])=>!k.startsWith('_')&&n&&n.iade&&!n.gitti);const yanitlar=Object.entries(v.sorular||{}).filter(([id,q])=>q.yanit&&!q.yanit_gitti);const istek=(v.notlar||{})._iade;const g=(v.form||{}).gonderim;const onay=(v.notlar||{})._onay;const acikIade=Object.values(v.durum||{}).some(x=>x==='eksik');
       const kAd=k=>((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1])||k;
