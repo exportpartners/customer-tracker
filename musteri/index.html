@@ -321,7 +321,7 @@ auth.onAuthStateChanged(u=>{
   },e=>{toast('Kayıt okunamadı: '+(e&&e.message||e));});
 });
 
-function rozet(k){const d=kayit.durum[k]||'bekleniyor';return `<span class="badge b-${esc(d)}">${DURUM[d]||d}</span>`;}
+function rozet(k){let d=kayit.durum[k]||'bekleniyor'; /* 17 Eylul: gonderilmis formda dolu kalem 'Alindi' gorunur, elle isaretlenmez */ if(d==='bekleniyor'&&(kayit.form||{}).gonderim){const x=KALEMLER.find(y=>y.k===k); const dolu=x&&x.dosya?!!kayit.dosyalar[k]:!!(kayit.form[k]||(x&&x.kategori)); if(dolu)d='alindi';}return `<span class="badge b-${esc(d)}">${DURUM[d]||d}</span>`;}
 function ciz(sadeceRozet){
   document.getElementById('whoFirm').textContent=kayit.firma?kayit.firma+' ·':'';
   document.getElementById('sonKayit').textContent=kayit.form&&kayit.form.gonderim?('Form gönderildi: '+kayit.form.gonderim+(kayit.guncelleme&&kayit.guncelleme!==kayit.form.gonderim?' · son değişiklik '+kayit.guncelleme:'')):(kayit.guncelleme?'Taslak, son kayıt: '+kayit.guncelleme:'Henüz kaydedilmedi');
