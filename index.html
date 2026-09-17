@@ -161,6 +161,9 @@
   .portalbox .pv{font-weight:700}
   .portalbox .pv.bos{font-weight:400}
   .portalbox .psoru{background:#fff7ee;border:1px solid #f5c489;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:12.5px}
+  .pblink{display:inline-block;background:#fff3c4;color:#7a5a00;border:1px solid #f5d76e;border-radius:10px;padding:4px 9px;font-size:11px;font-weight:800;white-space:nowrap;animation:pblink 1.6s ease-in-out infinite}
+  @keyframes pblink{0%,100%{background:#fff3c4}50%{background:#ffe08a}}
+  @media (prefers-reduced-motion:reduce){.pblink{animation:none}}
   .portalbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#1c5fa8;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .portalbox .prow{display:grid;grid-template-columns:26px 1fr 150px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
   .portalbox .prow:last-child{border-bottom:0}
@@ -706,13 +709,12 @@ function submitTech(i){
 const PORTAL_OZET={};
 function portalRozet(c,i){
   const o=PORTAL_OZET[c.portalUid];
-  if(o===undefined){PORTAL_OZET[c.portalUid]=null; if(firebase.database) firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(sn=>{const v=sn.val()||{};const bos=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).length;const ys=Object.values(v.sorular||{}).filter(q=>q.metin&&!q.yanit).length;const iade=Object.values(v.durum||{}).filter(x=>x==='eksik').length;PORTAL_OZET[c.portalUid]={g:!!(v.form||{}).gonderim,bos,ys,iade};render();}).catch(e=>{PORTAL_OZET[c.portalUid]={hata:(e&&e.message)||'okunamadı'};render();}); return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;}
+  if(o===undefined){PORTAL_OZET[c.portalUid]=null; if(firebase.database) firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(sn=>{const v=sn.val()||{};const bos=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).length;const ys=Object.values(v.sorular||{}).filter(q=>q.metin&&!q.yanit).length;const iade=Object.values(v.durum||{}).filter(x=>x==='eksik').length;PORTAL_OZET[c.portalUid]={g:!!(v.form||{}).gonderim,bos,ys,iade,toplam:PORTAL_KALEMLER.length,onay:!!((v.notlar||{})._onay)};render();}).catch(e=>{PORTAL_OZET[c.portalUid]={hata:(e&&e.message)||'okunamadı'};render();}); return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;}
   if(!o) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;
   if(o.hata) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#fdecea;color:#c0392b" title="${esc(o.hata)}" onclick="delete PORTAL_OZET['${esc(c.portalUid)}'];render()">portal okunamadı ↻</span>`;
-  if(!o.g) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#f4f5f8;color:#6b7280;border:1px solid var(--line)" title="Müşteri formu henüz göndermedi">form bekleniyor</span>`;
-  const p=[]; if(o.bos) p.push(o.bos+' alan boş'); if(o.ys) p.push(o.ys+' yanıt eksik'); if(o.iade) p.push(o.iade+' iade');
-  const renk=p.length?'#b26a00':'#1faa59';
-  return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:${renk}" title="Portal formu gönderildi">${p.length?'evrak geldi · '+p.join(' · '):'evraklar tam'}</span>`;
+  const dolu=o.toplam-o.bos; const ek=[]; if(o.ys) ek.push(o.ys+' soru'); if(o.iade) ek.push(o.iade+' iade');
+  if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" title="Form onaylandı">✓ Form onaylandı</span>`;
+  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'}">${dolu}/${o.toplam} bilgi formda eklendi${ek.length?' · '+ek.join(' · '):''}</span>`;
 }
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
@@ -721,7 +723,7 @@ function rowHtml(c,i,pos){
   const mailIc=hasE?`<span class="ic mail" onclick="openMail('${esc(c.email)}')">${MAIL}</span>`:`<span class="ic mail off">${MAIL}</span>`;
   const hasW=(c.website||'').trim().length>3;
   const webIc=hasW?`<a class="ic web" href="${esc(toUrl(c.website))}" target="_blank" rel="noopener">${GLOBE}</a>`:`<span class="ic web off">${GLOBE}</span>`;
-  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('')+(c.portalUid?portalRozet(c,i):'');
+  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('');
   const noteChips=(c.notes||[]).map((t,j)=>{const cl=noteClass(t);const pre=cl==='note-red'?'⚠ ':'';return `<span class="chip ${cl}">${pre}${esc(t)}<span onclick="rm(${i},'notes',${j})">✕</span></span>`;}).join('');
   const techDone=(c.notes||[]).includes('Technical Call Done');
   const newActive=isNewActive(c);
@@ -737,6 +739,10 @@ function rowHtml(c,i,pos){
     ?`<div class="fmlabel">1st meeting</div><input type="date" class="firstmeet" value="${esc(c.firstMeeting)}" onchange="upd(${i},'firstMeeting',this.value);render()">`
     :`<input type="date" class="issued" value="${esc(c.issuedDate)}" onchange="upd(${i},'issuedDate',this.value)">`;
   let acts='';
+  const odemeAlindi=(c.notes||[]).includes('Payment Received');
+  if(odemeAlindi){ /* 17 Eylul 2026, Mustafa: odeme alininca submit etiketleri gitsin, yerinde portal ilerlemesi yanip sonsun */
+    if(c.portalUid) acts=portalRozet(c,i);
+  } else {
   const introDone=(c.notes||[]).includes('Intro Call Done');
   if(introDone && !c.fmSubmitted){
     acts+=`<button class="submit-btn" onclick="submitFM(${i})">SUBMIT<small>Intro → Kaan</small></button>`;
@@ -749,6 +755,7 @@ function rowHtml(c,i,pos){
   } else if(c.techSubmitted){
     if(acts) acts+='<div style="height:6px"></div>';
     acts+=`<span class="sent-tag">✓ Technical submitted</span>`;
+  }
   }
   const alt=pos%2?'alt':'';
   return `<tr class="${alt}">
@@ -1060,7 +1067,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 22:20';
+const SURUM='2026-09-17 22:45';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1084,6 +1091,9 @@ function girisYap(){
 }
 function cikisYap(){if(firebase.auth)firebase.auth().signOut();}
 
+/* FDA Form 3537 Bolum 9 kategori adlari (portaldaki listelerden uretildi), kodu degil adi gostermek icin */
+const KAT_AD={"insan": {"1": "Alkollü içecekler", "2": "Bebek ve çocuk gıdaları, mama", "3": "Fırın ürünleri, hamur karışımları, glazür", "4": "İçecek bazları, konsantreler", "5": "Çikolatasız şekerleme, lokum, sakız", "6": "Kahvaltılık tahıllar", "7": "Peynir ve peynir ürünleri", "7a": "Yumuşak olgunlaşmış peynir", "7b": "Yarı sert peynir", "7c": "Sert peynir", "7d": "Diğer peynir ürünleri", "8": "Çikolata ve kakao ürünleri", "9": "Kahve ve çay", "10": "Gıda renklendiricileri", "11": "Diyet gıdalar, öğün ikameleri, tıbbi gıdalar", "12": "Takviye edici gıda", "12a": "Protein, amino asit, yağ bazlı takviye", "12b": "Vitamin ve mineral", "12c": "Hayvansal yan ürün ve ekstre", "12d": "Bitkisel takviye", "13": "Sos, salça, turşu, çeşni", "14": "Su ürünleri", "14a": "Balık, bütün ya da fileto", "14b": "Yumuşakça (midye, istiridye)", "14c": "Diğer kabuklular (karides vb.)", "14d": "Tüketime hazır su ürünleri", "14e": "İşlenmiş diğer su ürünleri", "15": "Gıda katkıları, işleme bileşenleri", "16": "Şeker ve tatlandırıcılar (besleyici)", "17": "Meyve ve meyve ürünleri (kuru meyve dahil)", "17a": "Taze doğranmış ürün", "17b": "Ham tarım ürünü (bütün taze meyve)", "17c": "Diğer meyve ürünleri (kuru meyve, reçel)", "18": "Meyve/sebze suyu, püre, konsantre", "19": "Jelatin, peynir mayası, puding, pasta dolgusu", "20": "Dondurma ve benzerleri", "21": "Bitkisel süt benzeri ürünler", "22": "Makarna, erişte", "23": "Et ve kanatlı ürünleri (FDA kapsamındakiler)", "24": "Süt, tereyağı, süt tozu", "25": "Hazır yemek, sos, özel ürünler", "26": "Kuruyemiş ve yenilebilir tohum", "26a": "Kuruyemiş (fındık, ceviz, badem) ve ürünleri", "26b": "Tohum (ayçekirdeği, susam) ve ürünleri", "27": "Hazır salata", "28": "Yumurta ve yumurta ürünleri", "28a": "Tavuk yumurtası ve ürünleri", "28b": "Diğer yumurtalar", "29": "Atıştırmalık (cips, kraker)", "30": "Baharat, aroma, tuz", "31": "Çorba", "32": "Meşrubat ve su", "33": "Sebze ve sebze ürünleri", "33a": "Taze doğranmış sebze", "33b": "Ham tarım ürünü (bütün taze sebze)", "33c": "Diğer sebze ürünleri (konserve, kurutulmuş)", "34": "Bitkisel yağlar (zeytinyağı dahil)", "35": "Bitkisel protein, et benzeri ürünler", "36": "Tahıl, un, nişasta", "37": "Hiçbiri uymuyor (aşağıya yazın)"}, "hayvan": {"1": "Tahıl ve tahıl ürünleri", "2": "Yağlı tohum ürünleri", "3": "Yonca ürünleri", "4": "Amino asitler", "5": "Hayvansal protein", "6": "Bitkisel ürünler", "7": "Biracılık yan ürünleri", "8": "Kimyasal koruyucular", "9": "Narenciye ürünleri", "10": "Probiyotik yem katkıları", "11": "Damıtma yan ürünleri", "12": "Enzimler", "13": "Yağlar", "14": "Fermantasyon ürünleri", "15": "Kaba yem", "16": "İnsan gıdası yan ürünleri", "17": "Deniz ürünleri", "18": "Süt ürünleri", "19": "Mineraller", "20": "Özel amaçlı ürünler", "21": "Melas", "22": "Protein dışı azot ürünleri", "23": "Yer fıstığı ürünleri", "24": "İşlenmiş hayvansal atık", "25": "Elek altı", "26": "Teknik katkılar", "27": "Vitaminler", "28": "Maya ürünleri", "29": "Karma yem", "30": "Evcil hayvan maması", "31": "Evcil hayvan ödül ve çiğneme ürünleri", "32": "Evcil hayvan takviyeleri", "33": "Hiçbiri uymuyor (aşağıya yazın)"}, "faaliyet": {"manufacturer": "Üretici / işleyici", "packer": "Paketleyici", "labeler": "Etiketleyici", "ambient": "Depo (oda sıcaklığı)", "refrigerated": "Soğuk depo", "frozen": "Dondurulmuş depo", "acidified": "Asitlendirilmiş gıda işleyici (turşu, sos)", "lowacid": "Düşük asitli konserve işleyici", "contract": "Fason sterilizasyon", "farm": "Çiftlik karma tesis"}};
+const katAd=(l,id)=>(KAT_AD[l]||{})[id]?((KAT_AD[l][id])+' ('+id+')'):id;
 const PORTAL_KALEMLER=[
   ["k01","Firma tam unvanı (İngilizce)"],["k02","Üretim tesisi adresi (İngilizce)"],["k03","Fatura adresi"],["k04","Web sitesi"],
   ["k05","Şirket e-postası"],["k06","Mevcut DUNS"],["k07","Şirket sahibi: ad, adres, telefon"],["k08","FDA muhatabı yetkili"],
@@ -1107,7 +1117,7 @@ function renderPortal(){
   firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(s=>{
     const v=s.val()||{}; portalVeri=v;
     const K=(v.form||{}).kategori||{};
-    const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv">İnsan gıdası: ${esc((K.insan||[]).join(', ')||'-')} · Hayvan gıdası: ${esc((K.hayvan||[]).join(', ')||'-')} · Faaliyet: ${esc((K.faaliyet||[]).join(', ')||'-')}${K.diger?' · Diğer: '+esc(K.diger):''}</span></div><span></span></div>`:'';
+    const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv"><span class="pmeta" style="margin:0">Müşterinin FDA tesis kaydı formunda işaretlediği ürün ve faaliyet kategorileri (kayıt sırasında Form 3537 Bölüm 9'a girilir).</span><br><b>Ürün, insan gıdası:</b> ${esc((K.insan||[]).map(x=>katAd('insan',x)).join(', ')||'-')}<br><b>Ürün, hayvan gıdası:</b> ${esc((K.hayvan||[]).map(x=>katAd('hayvan',x)).join(', ')||'-')}<br><b>Tesisin faaliyeti:</b> ${esc((K.faaliyet||[]).map(x=>katAd('faaliyet',x)).join(', ')||'-')}${K.diger?'<br><b>Müşterinin notu:</b> '+esc(K.diger):''}</span></div><span></span></div>`:'';
     const rows=katSatir+PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
       let pv;
       if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span> <button class="pbtn" style="padding:3px 8px" onclick="portalOnizle('${k}')">Görüntüle</button> <button class="pbtn" style="padding:3px 8px" onclick="portalDosyaAc('${k}')">İndir</button><div id="pv-${k}" style="display:none;margin-top:6px"></div>`:'<span class="pv bos">yüklenmedi</span>';}
@@ -1317,9 +1327,9 @@ function portalYeniSifre(){
 }
 function portalGeriAl(){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
-  if(!confirm('PORTAL GERİ ALINACAK: '+(c.firm||'')+' için hesap kapatılır, form ve dosyalar silinir, kart "Form oluştur" haline döner.\n\nNot: aynı e-postayla yeniden açmak istersen önce Firebase > Authentication > Users listesinden bu e-postayı silmen gerekir ('+(c.portalEmail||'')+'). Devam?'))return;
+  if(!confirm('PORTAL GERİ ALINACAK: '+(c.firm||'')+' için hesap kapatılır (müşteri giremez), form ve dosyalar veritabanında kalır, kart "Form oluştur" haline döner.\n\nNot: aynı e-postayla yeniden açmak istersen önce Firebase > Authentication > Users listesinden bu e-postayı silmen gerekir ('+(c.portalEmail||'')+'). Devam?'))return;
   const uid=c.portalUid, em=c.portalEmail;
-  firebase.database().ref('musteri_portal/'+uid).set({kilit:true,firma:c.firm||'',eposta:em||'',kapatildi:new Date().toISOString().slice(0,10)})
+  firebase.database().ref('musteri_portal/'+uid).update({kilit:true,firma:c.firm||'',eposta:em||'',kapatildi:new Date().toISOString().slice(0,10)}) /* 17 Eylul: form ve dosyalar SILINMEZ, hesap kilitlenir */
     .then(()=>em?firebase.database().ref('portal_index/'+epostaAnahtari(em)).set(null):null)
     .then(()=>{c.portalUid='';c.portalEmail='';save();toast('Portal geri alındı; aynı e-postayla yeniden açılabilir');renderPortal();})
     .catch(e=>toast('Geri alınamadı: '+(e&&e.message||e)));
