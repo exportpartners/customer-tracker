@@ -1072,7 +1072,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 01:00';
+const SURUM='2026-09-18 01:15';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
@@ -1173,7 +1173,7 @@ function portalFormOnayla(){
   if(!confirm('Form onaylanacak.\n\nMüşteriye ('+alici+') e-posta gidecek:\n\nKonu: '+ONAY_KONU+'\n\n'+ONAY_METIN+'\n\nGönderilsin mi?'))return;
   const ref=firebase.database().ref('musteri_portal/'+c.portalUid); const upd={};
   PORTAL_KALEMLER.forEach(([k,ad,tip])=>{const dolu=tip==='dosya'?!!(portalVeri.dosyalar||{})[k]:!!(portalVeri.form||{})[k];if(dolu)upd['durum/'+k]='onaylandi';});
-  upd['notlar/_onay']={ts:new Date().toISOString(),kim:portalKim(),gitti:null};
+  upd['notlar/_onay']={ts:new Date().toISOString(),kim:portalKim(),kim_eposta:portalKimEposta(),gitti:null};
   ref.update(upd).then(()=>{toast('Form onaylandı; e-posta 15 dk içinde gider');renderPortal();}).catch(e=>toast('Yazılamadı: '+(e&&e.message||e)));
 }
 function portalIadeGonder(){
@@ -1187,7 +1187,7 @@ function portalIadeGonder(){
   const konu=bekleyen.length&&yanitlar.length?'FDA evrak formunuz: iade ve sorularınıza yanıtlar':bekleyen.length?(bekleyen.length===1?(tarih+' tarihli panele eklenen '+kAd(bekleyen[0][0])+' dokümanı revize edilip tekrar yüklenmelidir'):(tarih+' tarihli panele eklenen belgeler: '+bekleyen.length+' kalem revize edilip tekrar yüklenmelidir')):'FDA evrak formu: sorularınıza yanıtlarımız';
   const govde=bekleyen.map(([k,n])=>'• İade, '+kAd(k)+': '+n.metin).concat(yanitlar.map(([id,q])=>'• Soru: '+q.metin+'\n  Yanıt: '+q.yanit)).join('\n');
   if(!confirm('Müşteriye ('+(portalVeri.eposta||c.email||'')+') tek e-posta gidecek.\n\nKonu: '+konu+'\n\n'+govde+'\n\nGönderilsin mi?'))return;
-  firebase.database().ref('musteri_portal/'+c.portalUid+'/notlar/_iade').set({ts:new Date().toISOString(),kim:portalKim(),gitti:null})
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/notlar/_iade').set({ts:new Date().toISOString(),kim:portalKim(),kim_eposta:portalKimEposta(),gitti:null})
     .then(()=>{toast('Kuyruğa alındı; 15 dakika içinde tek mail gider');renderPortal();}).catch(e=>toast('Yazılamadı: '+(e&&e.message||e)));
 }
 function portalIadeKapat(k){const pn=document.getElementById('pnot-'+k);if(!pn)return;pn.style.display='none';pn.classList.remove('eksik');const i=pn.querySelector('input');if(i)i.value='';}
@@ -1214,6 +1214,7 @@ function portalDurumSet(k,val){
   firebase.database().ref('musteri_portal/'+c.portalUid+'/durum/'+k).set(val).then(()=>{toast(val==='onaylandi'?'Onaylandı':'Durum kaydedildi');renderPortal();const pn=document.getElementById('pnot-'+k);if(pn){pn.classList.toggle('eksik',val==='eksik');const i=pn.querySelector('input');if(i&&!i.value)i.placeholder=val==='eksik'?'Ne eksik, ne bekleniyor (müşteriye gider)':'Müşteriye not (isteğe bağlı)';if(val==='eksik'&&i)i.focus();}}).catch(e=>toast('Durum yazılamadı: '+(e&&e.message||e)));
 }
 function portalTarih(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return iso;return d.toLocaleDateString('tr-TR')+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
+function portalKimEposta(){return (firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'';}
 function portalKim(){const e=(firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'';return e.startsWith('opr@')?'Kaan':'Export Partners';}
 /* Kalem notu: portalda musteriye gorunur. Durum "Eksik" ise mail:true, aksam
    17:00 turunda (portal-bildirim.py) o gunun butun notlari TEK mailde gider;
