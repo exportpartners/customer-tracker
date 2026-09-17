@@ -263,8 +263,8 @@
   <div>A NEW inquiry auto-moves to HOLD 5 business days after its 1st-meeting date. Tap the NEW badge to move it there straight away. SUBMIT buttons open a WhatsApp / e-mail draft to Kaan (intro) or Deniz (technical); nothing is sent automatically.</div>
   <div id="sync">● Local only on this device</div>
   <div style="display:flex;gap:8px;justify-content:center;opacity:.85">
-    <button class="mini" onclick="exportData()">⬇ Backup (JSON)</button>
-    <button class="mini" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
+    <span id="yedekDugmeleri" style="display:none"><button class="mini" onclick="exportData()">⬇ Backup (JSON)</button>
+    <button class="mini" onclick="document.getElementById('importFile').click()">⬆ Restore</button></span>
     <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
     <span id="geriAlYeri"></span>
   </div>
@@ -518,7 +518,8 @@ function notify(person,msg,subj){
   toast('Notification sent to '+(person===KAAN?'Kaan':'Deniz'));
 }
 function toast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
-function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='customer-tracker-backup.json';a.click();}
+function yedekYetkisi(){const e=(firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'';if(e!=='deniz@exportpartners.com.tr'){toast('Yedek ve geri yükleme yalnızca Mustafa tarafından yapılır');return false;}return true;}
+function exportData(){if(!yedekYetkisi())return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='customer-tracker-backup.json';a.click();}
 /* ---------- Restore, and the safety net around it ----------------------
    10 Sep 2026. Mustafa: "the file did not refresh itself, so I lost my
    manual notes." Measured: between 16:45 and 16:56 four memo fields got
@@ -617,7 +618,8 @@ function geriAl(){
 /* Restore. The old version said "Invalid backup file." for every possible
    failure and nothing at all when a record was dropped, so a restore that
    half worked looked exactly like one that fully worked. */
-function importData(ev){
+function importData(ev){if(!yedekYetkisi()){if(ev&&ev.target)ev.target.value='';return;}return importData_(ev);}
+function importData_(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onerror=()=>alert('Could not read the file: '+(r.error&&r.error.message||'unknown error'));
@@ -1085,7 +1087,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 02:15';
+const SURUM='2026-09-18 02:25';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
@@ -1096,7 +1098,7 @@ function girisKapisi(){
   let basladi=false;
   firebase.auth().onAuthStateChanged(u=>{
     const bg=document.getElementById('girisBg');
-    if(u){bg.classList.remove('show');if(!basladi){basladi=true;initData();}}
+    if(u){bg.classList.remove('show');const yd=document.getElementById('yedekDugmeleri');if(yd)yd.style.display=(u.email||'')==='deniz@exportpartners.com.tr'?'':'none'; /* 18 Eylul 2026, Mustafa: yedek ve geri yukleme yalnizca bende */ if(!basladi){basladi=true;initData();}}
     else{bg.classList.add('show');}
   });
 }
