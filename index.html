@@ -161,8 +161,11 @@
   .portalbox .pv{font-weight:700}
   .portalbox .pv.bos{font-weight:400}
   .portalbox .psoru{background:#fff7ee;border:1px solid #f5c489;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:12.5px}
-  .pblink{display:inline-block;background:#fff3c4;color:#7a5a00;border:1px solid #f5d76e;border-radius:10px;padding:4px 9px;font-size:11px;font-weight:800;white-space:nowrap;animation:pblink 1.6s ease-in-out infinite}
-  @keyframes pblink{0%,100%{background:#fff3c4}50%{background:#ffe08a}}
+  .pblink{display:inline-block;border-radius:10px;padding:4px 9px;font-size:11px;font-weight:800;white-space:nowrap}
+  .pblink.kismi{background:#e7f2fc;color:#1c5fa8;border:1px solid #bcdcf6;animation:pblinkA 1.6s ease-in-out infinite}
+  .pblink.tam{background:#1c5fa8;color:#fff;border:1px solid #1c5fa8;animation:pblinkK 1.6s ease-in-out infinite}
+  @keyframes pblinkA{0%,100%{background:#e7f2fc}50%{background:#c9e2f8}}
+  @keyframes pblinkK{0%,100%{background:#1c5fa8}50%{background:#3b82c4}}
   @media (prefers-reduced-motion:reduce){.pblink{animation:none}}
   .portalbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#1c5fa8;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .portalbox .prow{display:grid;grid-template-columns:26px 1fr 150px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
@@ -714,7 +717,7 @@ function portalRozet(c,i){
   if(o.hata) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#fdecea;color:#c0392b" title="${esc(o.hata)}" onclick="delete PORTAL_OZET['${esc(c.portalUid)}'];render()">portal okunamadı ↻</span>`;
   const dolu=o.toplam-o.bos; const ek=[]; if(o.ys) ek.push(o.ys+' soru'); if(o.iade) ek.push(o.iade+' iade');
   if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="Form onaylandı · tıkla: müşteri formu">✓ Form onaylandı</span>`;
-  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${o.bos?dolu+'/'+o.toplam+' bilgi formda eklendi':'Bilgiler tam ('+o.toplam+'/'+o.toplam+')'}${ek.length?' · '+ek.join(' · '):''}</span>`;
+  return `<span class="pblink ${o.bos?'kismi':'tam'}" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${o.bos?'Form dolduruluyor · '+dolu+'/'+o.toplam:'Form dolduruldu · '+o.toplam+'/'+o.toplam}${ek.length?' · '+ek.join(' · '):''}</span>`;
 }
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
@@ -1069,7 +1072,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 00:50';
+const SURUM='2026-09-18 01:00';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
