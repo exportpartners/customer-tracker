@@ -709,12 +709,12 @@ function submitTech(i){
 const PORTAL_OZET={};
 function portalRozet(c,i){
   const o=PORTAL_OZET[c.portalUid];
-  if(o===undefined){PORTAL_OZET[c.portalUid]=null; if(firebase.database) firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(sn=>{const v=sn.val()||{};const bosL=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).map(x=>x[0]);const bos=bosL.length;const zbos=bosL.filter(k=>!PORTAL_OPSIYONEL.has(k)).length;const ys=Object.values(v.sorular||{}).filter(q=>q.metin&&!q.yanit).length;const iade=Object.values(v.durum||{}).filter(x=>x==='eksik').length;PORTAL_OZET[c.portalUid]={g:!!(v.form||{}).gonderim,bos,zbos,ys,iade,toplam:PORTAL_KALEMLER.length,onay:!!((v.notlar||{})._onay)};render();}).catch(e=>{PORTAL_OZET[c.portalUid]={hata:(e&&e.message)||'okunamadı'};render();}); return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;}
+  if(o===undefined){PORTAL_OZET[c.portalUid]=null; if(firebase.database) firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(sn=>{const v=sn.val()||{};const bosL=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).map(x=>x[0]);const zbos=bosL.filter(k=>!PORTAL_OPSIYONEL.has(k)).length;const obos=bosL.length-zbos;const bos=zbos; /* 17 Eylul: opsiyonel boslar sayilmaz; payda = 14 - bos opsiyonel */const ys=Object.values(v.sorular||{}).filter(q=>q.metin&&!q.yanit).length;const iade=Object.values(v.durum||{}).filter(x=>x==='eksik').length;PORTAL_OZET[c.portalUid]={g:!!(v.form||{}).gonderim,bos,zbos,ys,iade,toplam:PORTAL_KALEMLER.length-obos,onay:!!((v.notlar||{})._onay)};render();}).catch(e=>{PORTAL_OZET[c.portalUid]={hata:(e&&e.message)||'okunamadı'};render();}); return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;}
   if(!o) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;
   if(o.hata) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#fdecea;color:#c0392b" title="${esc(o.hata)}" onclick="delete PORTAL_OZET['${esc(c.portalUid)}'];render()">portal okunamadı ↻</span>`;
-  const dolu=o.toplam-o.bos; const ek=[]; if(o.zbos) ek.push(o.zbos+' zorunlu boş'); if(o.ys) ek.push(o.ys+' soru'); if(o.iade) ek.push(o.iade+' iade');
+  const dolu=o.toplam-o.bos; const ek=[]; if(o.ys) ek.push(o.ys+' soru'); if(o.iade) ek.push(o.iade+' iade');
   if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="Form onaylandı · tıkla: müşteri formu">✓ Form onaylandı</span>`;
-  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${dolu}/${o.toplam} bilgi formda eklendi${ek.length?' · '+ek.join(' · '):''}</span>`;
+  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${o.bos?dolu+'/'+o.toplam+' bilgi formda eklendi':'Bilgiler tam ('+o.toplam+'/'+o.toplam+')'}${ek.length?' · '+ek.join(' · '):''}</span>`;
 }
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
@@ -1067,7 +1067,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 23:55';
+const SURUM='2026-09-18 00:05';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
