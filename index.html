@@ -152,6 +152,15 @@
   .giris .err{color:#c0392b;font-size:12.5px;min-height:16px;margin:0 0 8px}
   .giris button{width:100%;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:11px;font-weight:800;font-size:14px;cursor:pointer}
   .portalbox{margin-top:13px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+  .msec{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:#fff}
+  .msec>summary{cursor:pointer;padding:9px 12px;font-size:11.5px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;list-style:none}
+  .msec>summary::-webkit-details-marker{display:none}
+  .msec>summary::before{content:'▸ ';color:#9aa1ad}
+  .msec[open]>summary::before{content:'▾ '}
+  .msec>*:not(summary){padding:0 12px 10px}
+  .portalbox .pv{font-weight:700}
+  .portalbox .pv.bos{font-weight:400}
+  .portalbox .psoru{background:#fff7ee;border:1px solid #f5c489;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:12.5px}
   .portalbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#1c5fa8;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .portalbox .prow{display:grid;grid-template-columns:26px 1fr 150px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
   .portalbox .prow:last-child{border-bottom:0}
@@ -269,6 +278,7 @@
       <button class="mclose" onclick="closeMemo()">✕</button>
     </div>
     <div class="mbody">
+      <details class="msec" id="secNotlar"><summary>Görüşme notları</summary>
       <div class="fmtbar">
         <button class="fmtb b" onclick="fmt('bold')" title="Bold">B</button>
         <button class="fmtb i" onclick="fmt('italic')" title="Italic">I</button>
@@ -284,16 +294,19 @@
         <button class="fmtb" onclick="fmt('removeFormat')" title="Clear formatting">✕</button>
       </div>
       <div class="bigmemo" id="memoText" contenteditable="true" data-ph="Call / inquiry notes not in the list..."></div>
+      </details>
+      <details class="msec" id="secEk"><summary>📎 Attachments</summary>
       <div class="filebox">
-        <div class="fbh">📎 Attachments</div>
         <div class="filelist" id="memoFiles"></div>
         <label class="uploadbtn">Upload file<input type="file" multiple style="display:none" onchange="addFiles(event)"></label>
         <div class="fhint">Max 4 MB per file. Stored separately from the table, loaded only when opened.</div>
       </div>
+      </details>
+      <details class="msec" id="secAssess"><summary>⭑ Intro call assessment</summary>
       <div class="assessbox">
-        <div class="fbh">⭑ Intro call assessment</div>
         <div class="assessgrid" id="memoAssess"></div>
       </div>
+      </details>
       <div class="portalbox" id="memoPortal"></div>
     </div>
     <div class="mfoot"><button class="btn-save" onclick="saveMemo()">Save</button></div>
@@ -688,6 +701,18 @@ function submitTech(i){
   render();
 }
 
+/* Ana tabloda portal durumu: evraklar yuklendi mi, kac alan bos, kac soru yanitsiz.
+   Veri bir kez cekilir (PORTAL_OZET), sonra satirda rozet olarak durur. 17 Eylul 2026, Mustafa. */
+const PORTAL_OZET={};
+function portalRozet(c,i){
+  const o=PORTAL_OZET[c.portalUid];
+  if(o===undefined){PORTAL_OZET[c.portalUid]=null; if(firebase.database) firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(sn=>{const v=sn.val()||{};const bos=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).length;const ys=Object.values(v.sorular||{}).filter(q=>q.metin&&!q.yanit).length;const iade=Object.values(v.durum||{}).filter(x=>x==='eksik').length;PORTAL_OZET[c.portalUid]={g:!!(v.form||{}).gonderim,bos,ys,iade};const el=document.getElementById('pbadge-'+c.portalUid);if(el)el.outerHTML=portalRozet(c,i);}).catch(()=>{}); return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;}
+  if(!o) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;
+  if(!o.g) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#f4f5f8;color:#6b7280;border:1px solid var(--line)" title="Müşteri formu henüz göndermedi">form bekleniyor</span>`;
+  const p=[]; if(o.bos) p.push(o.bos+' alan boş'); if(o.ys) p.push(o.ys+' yanıt eksik'); if(o.iade) p.push(o.iade+' iade');
+  const renk=p.length?'#b26a00':'#1faa59';
+  return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:${renk}" title="Portal formu gönderildi">${p.length?'evrak geldi · '+p.join(' · '):'evraklar tam'}</span>`;
+}
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
   const callIc=hasP?`<a class="ic call" href="tel:${toTel(c.phone)}">${PHONE}</a>`:`<span class="ic call off">${PHONE}</span>`;
@@ -695,7 +720,7 @@ function rowHtml(c,i,pos){
   const mailIc=hasE?`<span class="ic mail" onclick="openMail('${esc(c.email)}')">${MAIL}</span>`:`<span class="ic mail off">${MAIL}</span>`;
   const hasW=(c.website||'').trim().length>3;
   const webIc=hasW?`<a class="ic web" href="${esc(toUrl(c.website))}" target="_blank" rel="noopener">${GLOBE}</a>`:`<span class="ic web off">${GLOBE}</span>`;
-  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('');
+  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('')+(c.portalUid?portalRozet(c,i):'');
   const noteChips=(c.notes||[]).map((t,j)=>{const cl=noteClass(t);const pre=cl==='note-red'?'⚠ ':'';return `<span class="chip ${cl}">${pre}${esc(t)}<span onclick="rm(${i},'notes',${j})">✕</span></span>`;}).join('');
   const techDone=(c.notes||[]).includes('Technical Call Done');
   const newActive=isNewActive(c);
@@ -903,7 +928,7 @@ function openMemo(i){
   renderFiles();renderAssess();renderPortal();
   document.getElementById('memoBg').classList.add('show');
 }
-function closeMemo(){document.getElementById('memoBg').classList.remove('show');memoIdx=-1;portalSonMesaj='';render();}
+function closeMemo(){document.getElementById('memoBg').classList.remove('show');if(memoIdx>=0&&data[memoIdx]&&data[memoIdx].portalUid)delete PORTAL_OZET[data[memoIdx].portalUid];memoIdx=-1;portalSonMesaj='';render();}
 function saveMemo(){
   if(memoIdx<0)return;
   data[memoIdx].memo=cleanRich(document.getElementById('memoText').innerHTML);
@@ -1034,7 +1059,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 20:10';
+const SURUM='2026-09-17 20:40';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1095,9 +1120,10 @@ function renderPortal(){
       const notGoster=d==='eksik'||nt;
       const notSatir=`<div class="pnot ${d==='eksik'?'eksik':''}" id="pnot-${k}" style="${notGoster?'':'display:none'}"><input id="pn-${k}" value="${esc(nt?nt.metin:'')}" placeholder="İade gerekçesi (müşteriye e-posta ile gider)" onkeydown="if(event.key==='Enter')portalIade('${k}')"><button class="pred" onclick="portalIade('${k}')">İade et</button><span class="pmeta" style="margin:0">${notGoster?ntDurum:''}</span></div>`;
       const dugmeler=`<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${d!=='onaylandi'?`<button class="pok" onclick="portalDurumSet('${k}','onaylandi')">✔ Onayla</button>`:''}${d!=='eksik'?`<button class="pred" onclick="portalIadeAc('${k}')">✖ İade</button>`:''}</div>`;
-      return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}${notSatir}</div><div style="text-align:right">${etiket}<div style="height:4px"></div>${dugmeler}</div></div>`;
+      const kSoru=Object.entries(v.sorular||{}).filter(([id,q])=>q.kalem===k).map(([id,q])=>`<div class="psoru">❓ <b>Müşteri sorusu</b> <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span><div style="white-space:pre-wrap;margin-top:2px">${esc(q.metin)}</div>${q.yanit?`<div style="margin-top:4px"><b style="color:#1faa59">Yanıt:</b> ${esc(q.yanit)} <span class="pmeta" style="margin:0">${q.yanit_gitti?'· gitti '+esc(portalTarih(q.yanit_gitti)):'· 17:00 mailiyle gidecek'}</span></div>`:`<div style="display:flex;gap:6px;margin-top:5px"><input id="yn-${esc(id)}" placeholder="Yanıt (müşteriye e-posta ile gider)" style="flex:1"><button class="pbtn" onclick="portalYanitla('${esc(id)}')">Yanıtla</button></div>`}</div>`).join('');
+      return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}${kSoru}${notSatir}</div><div style="text-align:right">${etiket}<div style="height:4px"></div>${dugmeler}</div></div>`;
     }).join('');
-    const sorular=Object.entries(v.sorular||{}).map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+    const sorular=Object.entries(v.sorular||{}).filter(([id,q])=>!q.kalem||q.kalem==='genel').map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
     const kalemAd=k=>k&&k!=='genel'?((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1]||k):'Genel';
     const soruBlok=!sorular.length?'':`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
       <div class="pmeta">Portalda soru kutusu 17 Eylül 2026'dan itibaren kapalı (Mustafa). Eski sorular burada durur; yeni soru gelmez, bildirim yalnızca deniz@ adresine (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
