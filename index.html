@@ -242,7 +242,7 @@
 </div>
 
 <footer>
-  <div>A NEW inquiry auto-moves to HOLD 5 business days after its 1st-meeting date. Tap the NEW badge to move it there straight away. SUBMIT buttons notify Kaan (intro) and Deniz (technical) via WhatsApp + email.</div>
+  <div>A NEW inquiry auto-moves to HOLD 5 business days after its 1st-meeting date. Tap the NEW badge to move it there straight away. SUBMIT buttons open a WhatsApp / e-mail draft to Kaan (intro) or Deniz (technical); nothing is sent automatically.</div>
   <div id="sync">● Local only on this device</div>
   <div style="display:flex;gap:8px;justify-content:center;opacity:.85">
     <button class="mini" onclick="exportData()">⬇ Backup (JSON)</button>
@@ -1034,7 +1034,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-15 21:30';
+const SURUM='2026-09-17 20:10';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1099,14 +1099,15 @@ function renderPortal(){
     }).join('');
     const sorular=Object.entries(v.sorular||{}).map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
     const kalemAd=k=>k&&k!=='genel'?((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1]||k):'Genel';
-    const soruBlok=`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
+    const soruBlok=!sorular.length?'':`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
       <div class="pmeta">Portalda soru kutusu 17 Eylül 2026'dan itibaren kapalı (Mustafa). Eski sorular burada durur; yeni soru gelmez, bildirim yalnızca deniz@ adresine (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
-      ${sorular.length?sorular.map(q=>`<div class="soru" id="soru-${esc(q.id)}"><div><b>${esc(kalemAd(q.kalem))}</b> · <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span></div><div style="white-space:pre-wrap;margin-top:3px">${esc(q.metin)}</div>
+      ${sorular.map(q=>`<div class="soru" id="soru-${esc(q.id)}"><div><b>${esc(kalemAd(q.kalem))}</b> · <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span></div><div style="white-space:pre-wrap;margin-top:3px">${esc(q.metin)}</div>
         <textarea id="yn-${esc(q.id)}" placeholder="Yanıt (müşteriye gider)">${esc(q.yanit||'')}</textarea>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, akşam 17:00 mailiyle gidecek'):''}</span></div></div>`).join(''):'<div class="pmeta">Henüz soru yok.</div>'}`;
+        <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, akşam 17:00 mailiyle gidecek'):''}</span></div></div>`).join('')}`;
     const mesajKutu=portalSonMesaj?`<div style="background:#fff7ee;border:1px solid #f5c489;border-radius:9px;padding:10px;margin-bottom:10px"><div class="pmeta" style="color:#b26a00;font-weight:800">Hesap açıldı. Şifre yalnızca burada görünür, kart kapanınca silinir; şimdi kopyalayıp müşteriye gönderin.</div><textarea id="portalMesaj" readonly style="width:100%;height:150px;font:12px/1.5 -apple-system,Arial,sans-serif;border:1px solid #cfd5df;border-radius:7px;padding:8px">${esc(portalSonMesaj)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="pbtn" onclick="portalMetniKopyala()">Metni kopyala (WhatsApp)</button><button class="pbtn" onclick="portalMailTaslagi()">E-posta taslağı aç (Gmail)</button></div><div class="pmeta" style="margin-top:4px">E-posta taslağı, tarayıcıda açık olan Gmail hesabından (sen: deniz@, Kaan: opr@) taslak olarak açılır; gönderilmez, Gönder'e sen basarsın.</div></div>`:'';
     box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="pbtn" title="Müşteri şifresini unuttuysa: yeni şifre üretir, formu ve dosyaları korur" onclick="portalYeniSifre()">Yeni şifre ver</button><button class="pbtn" style="background:#fdecea;border-color:#f5b7b1;color:#c0392b" title="Yanlışlıkla açıldıysa: hesabı kapatır, formu siler, kart 'Form oluştur' haline döner; aynı e-postayla yeniden açılabilir" onclick="portalGeriAl()">Portalı geri al</button></span></div>
       <div class="pmeta" style="background:#f4f5f8;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5"><b>Nasıl işler:</b> müşteri portalda formu doldurur, belgeleri yükler, "Formu gönder"e basar; gönderdiği anda cevaplar ve dosyalar tek mailde opr@ adresine düşer, burada da görünür. Bizim tarafta yazma yok, yalnızca inceleme: dosyayı <b>Görüntüle</b> ile burada aç; satırda <b>✔ Onayla</b> (yeşil tik, müşteri de görür) ya da <b>✖ İade</b> (gerekçe zorunlu, onay ister; müşteriye hemen e-posta gider: "… tarihli panele eklenen … dokümanı revize edilip tekrar yüklenmelidir", gövdede gerekçe; portalda "Eksik" görünür). <b>Yeni şifre ver</b> = müşteri şifresini unuttuysa yeni şifre üretir (form ve dosyalar korunur), kutudan kopyalayıp iletirsin; müşteri kendi şifresini portalda "Şifre değiştir" ile de değiştirebilir. <b>Portalı geri al</b> = yanlışlıkla açıldıysa hesabı kapatır, formu siler, kart "Form oluştur" haline döner; aynı e-postayla yeniden açılabilir (onay sorar).</div>${mesajKutu}
+      <div class="pmeta" style="margin-bottom:6px">${(()=>{const bos=PORTAL_KALEMLER.filter(([k,ad,tip])=>tip==='dosya'?!(v.dosyalar||{})[k]:!(v.form||{})[k]).map(([k,ad])=>(PORTAL_KALEMLER.findIndex(x=>x[0]===k)+1)+'. '+ad);const on=Object.values(v.durum||{}).filter(x=>x==='onaylandi').length;const ia=Object.values(v.durum||{}).filter(x=>x==='eksik').length;return `<b>${PORTAL_KALEMLER.length-bos.length}/${PORTAL_KALEMLER.length} kalem dolu</b>${bos.length?' · <b style="color:#b26a00">boş: '+esc(bos.join(', '))+'</b>':''} · onaylı ${on} · iade ${ia}`;})()}</div>
       <div class="pmeta">Hesap: <code>${esc(c.portalEmail||'')}</code> · Form: ${(v.form||{}).gonderim?'<b style="color:#1faa59">GÖNDERİLDİ '+esc(v.form.gonderim)+'</b>':'taslak, son kayıt '+esc(v.guncelleme||'henüz yok')} · Gizlilik onayı: ${esc((v.form||{}).onay||'henüz yok')} · Adres: <code>${esc(portalUrl())}</code></div>${rows}${soruBlok}`;
   }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
 }
