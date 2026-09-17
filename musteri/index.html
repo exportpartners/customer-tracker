@@ -96,9 +96,9 @@
       <p class="lead" style="margin:0 0 10px">Bu formda verdiğiniz bilgiler ve yüklediğiniz belgeler yalnızca FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu için kullanılır; yalnızca Export Partners ekibi görür, üçüncü kişiyle paylaşılmaz. Veriler Google Firebase altyapısında (Avrupa Birliği, Belçika) şifreli bağlantıyla saklanır. Kayıt tamamlandıktan sonra belgelerinizin silinmesini istediğinizde info@exportpartners.com.tr adresine yazmanız yeterlidir. Ayrıntı: <a href="https://www.exportpartners.com.tr/gizlilik-politikasi/" target="_blank" rel="noopener">Gizlilik Politikası</a>.</p>
       <label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer"><input type="checkbox" id="onayKutu" style="margin-top:4px" onchange="kirli=true"> <span>Bilgilerimin ve belgelerimin yukarıdaki amaçla işlenmesini kabul ediyorum. <span class="msg" id="onayTarih"></span></span></label>
     </div>
-    <div class="card" style="margin-top:16px" id="soruKart" hidden>
+    <div class="card" style="margin-top:16px" id="soruKart">
       <h2 style="margin-top:0">Sorularınız</h2>
-      <p class="lead" style="margin:0 0 10px">Bir kalemde takıldıysanız buradan sorabilirsiniz. Sorular her iş günü akşamı topluca ekibimize iletilir; yanıt genellikle bir iş günü içinde burada ve e-posta adresinizde görünür. Günde en fazla 3 soru.</p>
+      <p class="lead" style="margin:0 0 10px">Bir kalemde takıldıysanız buradan sorabilirsiniz. Yanıt bu sayfada, ilgili kalemin altında görünür; e-posta gönderilmez. Yanıtlanana kadar sorunuzu düzenleyebilirsiniz. Günde en fazla 3 soru.</p>
       <label for="soruKalem" style="font-weight:600">Hangi kalem hakkında</label>
       <select id="soruKalem" style="width:100%;border:1px solid #cfd5df;border-radius:9px;padding:9px 11px;font:inherit;font-size:14px;margin-bottom:8px"><option value="genel">Genel</option></select>
       <label for="soruMetin" style="font-weight:600">Sorunuz</label>
@@ -349,7 +349,7 @@ function ciz(sadeceRozet){
     }
     h.push(`<div class="row"><div class="num">${x.n}</div><div>
       <div class="top"><label for="in-${x.k}">${esc(x.ad)}${x.zorunlu?' <span style="color:var(--bad)" title="zorunlu">*</span>':' <span class="msg">(isteğe bağlı)</span>'}</label><span id="rz-${x.k}">${rozet(x.k)}</span></div>
-      <p class="hint">${esc(x.a)}</p>${alan}<div id="nt-${x.k}">${notKutu(x.k)}</div></div></div>`);
+      <p class="hint">${esc(x.a)}</p>${alan}<div id="nt-${x.k}">${notKutu(x.k)}</div>${soruKutu(x.k)}<a class="sorulink" onclick="soruAc('${x.k}')">Bu kalem için soru sor</a></div></div>`);
   });
   document.getElementById('alanlar').innerHTML=h.join('');
   const sel=document.getElementById('soruKalem'); if(sel&&sel.options.length<=1){KALEMLER.forEach(x=>{if(x.k){const o=document.createElement('option');o.value=x.k;o.textContent=x.n+'. '+x.ad;sel.appendChild(o);}});}
@@ -390,22 +390,34 @@ function soruAc(k){const sel=document.getElementById('soruKalem');if(sel)sel.val
 function bugunSoru(){const g=new Date().toISOString().slice(0,10);return Object.values(kayit.sorular||{}).filter(q=>(q.ts||'').slice(0,10)===g).length;}
 function soruCiz(){
   const L=document.getElementById('soruListe'); if(!L)return;
-  const arr=Object.entries(kayit.sorular||{}).map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
-  L.innerHTML=arr.length?arr.map(q=>`<div class="soruk"><div><b>${esc(kalemAdi(q.kalem))}</b> <span class="msg">${esc(tarihTr(q.ts))}</span></div><div class="q">${esc(q.metin)}</div>${q.yanit?`<div class="a"><b>Export Partners yanıtı</b> <span class="msg">${esc(tarihTr(q.yanit_ts))}</span><br>${esc(q.yanit)}</div>`:'<div class="msg" style="margin-top:6px">Yanıt bekleniyor; iletildikten sonra burada ve e-postanızda görünür.</div>'}</div>`).join(''):'';
+  const arr=Object.entries(kayit.sorular||{}).filter(([id,q])=>!q.kalem||q.kalem==='genel').map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+  L.innerHTML=arr.length?arr.map(q=>`<div class="soruk"><div><b>${esc(kalemAdi(q.kalem))}</b> <span class="msg">${esc(tarihTr(q.ts))}</span></div><div class="q">${esc(q.metin)}</div>${q.yanit?`<div class="a"><b>Export Partners yanıtı</b> <span class="msg">${esc(tarihTr(q.yanit_ts))}</span><br>${esc(q.yanit)}</div>`:'<div class="msg" style="margin-top:6px">Yanıt bekleniyor; yanıt burada görünecek.</div>'}</div>`).join(''):'';
   const s=document.getElementById('soruSayac'); if(s){const n=bugunSoru();s.textContent=n?('Bugün '+n+'/3 soru'):'';}
 }
+/* 17 Eylul 2026 gece, Mustafa: sorular panelde kalsin, her soruda e-posta gitmesin; musteri yanitlanana kadar sorusunu duzenleyebilir. */
+let duzenlenenSoru=null;
+function soruKutu(k){
+  const arr=Object.entries(kayit.sorular||{}).filter(([id,q])=>q.kalem===k).sort((a,b)=>(a[1].ts||'').localeCompare(b[1].ts||''));
+  return arr.map(([id,q])=>`<div class="soruk"><div><b>Sorunuz</b> <span class="msg">${esc(tarihTr(q.ts))}</span>${q.yanit?'':` · <a href="javascript:void(0)" onclick="soruDuzenle('${esc(id)}')">düzenle</a>`}</div><div class="q">${esc(q.metin)}</div>${q.yanit?`<div class="a"><b>Export Partners yanıtı</b> <span class="msg">${esc(tarihTr(q.yanit_ts))}</span><br>${esc(q.yanit)}</div>`:'<div class="msg" style="margin-top:6px">Yanıt bekleniyor; yanıt burada görünecek.</div>'}</div>`).join('');
+}
+function soruDuzenle(id){const q=(kayit.sorular||{})[id];if(!q||q.yanit)return;duzenlenenSoru=id;const sel=document.getElementById('soruKalem');if(sel)sel.value=q.kalem||'genel';const ta=document.getElementById('soruMetin');ta.value=q.metin||'';document.getElementById('soruBtn').textContent='Soruyu güncelle';document.getElementById('soruKart').scrollIntoView({behavior:'smooth',block:'center'});ta.focus();}
 function soruGonder(){
-  /* 17 Eylul 2026, Mustafa: musteri soru soramasin. Kart gizli, gonderim kapali; sorular icin e-posta ve WhatsApp. */
-  toast('Sorularınız için info@exportpartners.com.tr ya da WhatsApp.'); return;
   if(!uid)return;
   const ta=document.getElementById('soruMetin'); const metin=(ta.value||'').trim();
   if(metin.length<5){toast('Lütfen sorunuzu yazın.');ta.focus();return;}
   if(metin.length>600){toast('Soru en fazla 600 karakter olabilir.');return;}
-  if(bugunSoru()>=3){toast('Günlük soru sınırına ulaştınız (3). Yarın tekrar sorabilirsiniz.');return;}
   const kalem=document.getElementById('soruKalem').value||'genel';
   const btn=document.getElementById('soruBtn'); btn.disabled=true;
+  if(duzenlenenSoru){
+    const id=duzenlenenSoru; const eski=(kayit.sorular||{})[id]||{};
+    db.ref('musteri_portal/'+uid+'/sorular/'+id).set({metin:metin,kalem:kalem,ts:eski.ts||new Date().toISOString(),duzenlendi:new Date().toISOString()})
+      .then(()=>{ta.value='';duzenlenenSoru=null;btn.textContent='Soruyu gönder';toast('Sorunuz güncellendi.');})
+      .catch(e=>{toast('Güncellenemedi: '+String(e&&e.message||e));}).finally(()=>{btn.disabled=false;});
+    return;
+  }
+  if(bugunSoru()>=3){btn.disabled=false;toast('Günlük soru sınırına ulaştınız (3). Yarın tekrar sorabilirsiniz.');return;}
   db.ref('musteri_portal/'+uid+'/sorular').push({metin:metin,kalem:kalem,ts:new Date().toISOString()})
-    .then(()=>{ta.value='';toast('Sorunuz kaydedildi; akşam ekibimize iletilecek.');})
+    .then(()=>{ta.value='';toast('Sorunuz kaydedildi; yanıt bu sayfada görünecek.');})
     .catch(e=>{const m=String(e&&e.message||e);toast(m.includes('PERMISSION')||m.includes('permission')?'Soru kutusu henüz açık değil; lütfen info@exportpartners.com.tr adresine yazın.':'Gönderilemedi: '+m);})
     .finally(()=>{btn.disabled=false;});
 }

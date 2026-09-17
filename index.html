@@ -1060,7 +1060,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 21:35';
+const SURUM='2026-09-17 21:50';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1122,13 +1122,13 @@ function renderPortal(){
       const notSatir=`<div class="pnot ${d==='eksik'?'eksik':''}" id="pnot-${k}" style="${notGoster?'':'display:none'}"><input id="pn-${k}" value="${esc(nt?nt.metin:'')}" placeholder="İade gerekçesi (müşteriye e-posta ile gider)" onkeydown="if(event.key==='Enter')portalIade('${k}')">${d==='eksik'?`<button class="pbtn" onclick="portalIadeGeriAl('${k}')" title="İadeyi geri al: durum ve not silinir">Geri al</button>`:`<button class="pred" onclick="portalIade('${k}')">İade et</button><button class="fx" title="Vazgeç" onclick="portalIadeKapat('${k}')">✕</button>`}<span class="pmeta" style="margin:0">${notGoster?ntDurum:''}</span></div>`;
       const dolu=tip==='dosya'?!!(v.dosyalar||{})[k]:!!(v.form||{})[k];
       const dugmeler=!dolu?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${d!=='onaylandi'?`<button class="pok" onclick="portalDurumSet('${k}','onaylandi')">✔ Onayla</button>`:''}${d!=='eksik'?`<button class="pred" onclick="portalIadeAc('${k}')">✖ İade</button>`:''}</div>`;
-      const kSoru=Object.entries(v.sorular||{}).filter(([id,q])=>q.kalem===k).map(([id,q])=>`<div class="psoru">❓ <b>Müşteri sorusu</b> <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span><div style="white-space:pre-wrap;margin-top:2px">${esc(q.metin)}</div>${q.yanit?`<div style="margin-top:4px"><b style="color:#1faa59">Yanıt:</b> ${esc(q.yanit)} <span class="pmeta" style="margin:0">${q.yanit_gitti?'· gitti '+esc(portalTarih(q.yanit_gitti)):'· 17:00 mailiyle gidecek'}</span></div>`:`<div style="display:flex;gap:6px;margin-top:5px"><input id="yn-${esc(id)}" placeholder="Yanıt (müşteriye e-posta ile gider)" style="flex:1"><button class="pbtn" onclick="portalYanitla('${esc(id)}')">Yanıtla</button></div>`}</div>`).join('');
+      const kSoru=Object.entries(v.sorular||{}).filter(([id,q])=>q.kalem===k).map(([id,q])=>`<div class="psoru">❓ <b>Müşteri sorusu</b> <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span><div style="white-space:pre-wrap;margin-top:2px">${esc(q.metin)}</div>${q.yanit?`<div style="margin-top:4px"><b style="color:#1faa59">Yanıt:</b> ${esc(q.yanit)} <span class="pmeta" style="margin:0">· portalda görünüyor</span></div>`:`<div style="display:flex;gap:6px;margin-top:5px"><input id="yn-${esc(id)}" placeholder="Yanıt (müşteriye e-posta ile gider)" style="flex:1"><button class="pbtn" onclick="portalYanitla('${esc(id)}')">Yanıtla</button></div>`}</div>`).join('');
       return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}${kSoru}${notSatir}</div><div style="text-align:right">${etiket}<div style="height:4px"></div>${dugmeler}</div></div>`;
     }).join('');
     const sorular=Object.entries(v.sorular||{}).filter(([id,q])=>!q.kalem||q.kalem==='genel').map(([id,q])=>Object.assign({id},q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
     const kalemAd=k=>k&&k!=='genel'?((PORTAL_KALEMLER.find(x=>x[0]===k)||[])[1]||k):'Genel';
     const soruBlok=!sorular.length?'':`<div class="fbh" style="margin-top:14px"><span>❓ Müşteri soruları (${sorular.filter(q=>!q.yanit).length} yanıtsız)</span></div>
-      <div class="pmeta">Portalda soru kutusu 17 Eylül 2026'dan itibaren kapalı (Mustafa). Eski sorular burada durur; yeni soru gelmez, bildirim yalnızca deniz@ adresine (anlık bildirim yok). Yanıtı buraya yazarsın; müşteri portalda görür ve aynı akşam mailiyle alır.</div>
+      <div class="pmeta">Müşteri portalda soru sorar (kaleme bağlı sorular ilgili kalemin altında). Yanıtı buraya yazarsın; müşteri portalda görür, e-posta gitmez.</div>
       ${sorular.map(q=>`<div class="soru" id="soru-${esc(q.id)}"><div><b>${esc(kalemAd(q.kalem))}</b> · <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span></div><div style="white-space:pre-wrap;margin-top:3px">${esc(q.metin)}</div>
         <textarea id="yn-${esc(q.id)}" placeholder="Yanıt (müşteriye gider)">${esc(q.yanit||'')}</textarea>
         <div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap"><button class="pbtn" onclick="portalYanitla('${esc(q.id)}')">${q.yanit?'Yanıtı güncelle':'Yanıtla'}</button><span class="pmeta" style="margin:0">${q.yanit?(q.yanit_gitti?'yanıt maili gitti '+esc(portalTarih(q.yanit_gitti)):'yanıt kaydedildi, yalnızca portalda görünüyor'):''}</span></div></div>`).join('')}`;
@@ -1195,7 +1195,7 @@ function portalYanitla(id){
   const c=data[memoIdx]; if(!c||!c.portalUid)return;
   const ta=document.getElementById('yn-'+id); const metin=(ta?ta.value:'').trim();
   if(!metin){toast('Yanıt boş');return;}
-  if(!confirm('Yanıt portalda görünecek ve bugün 17:00 toplu mailiyle müşteriye gidecek. Devam?'))return;
+  
   firebase.database().ref('musteri_portal/'+c.portalUid+'/sorular/'+id).update({yanit:metin,yanit_ts:new Date().toISOString(),yanit_kim:portalKim(),yanit_gitti:null})
     .then(()=>{toast('Yanıt kaydedildi');renderPortal();}).catch(e=>toast('Yanıt yazılamadı: '+(e&&e.message||e)));
 }
