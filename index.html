@@ -167,7 +167,7 @@
   .portalbox .fbh{font-size:11.5px;font-weight:900;letter-spacing:.5px;color:#1c5fa8;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .portalbox .prow{display:grid;grid-template-columns:26px 1fr 150px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
   .portalbox .prow:last-child{border-bottom:0}
-  .portalbox .pn{color:#9aa1ad;font-weight:800}
+  .portalbox .pn{color:#E8821E;font-weight:800}
   .portalbox .pv{white-space:pre-wrap;word-break:break-word}
   .portalbox .pv.bos{color:#9aa1ad;font-style:italic}
   .portalbox .pnot{display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap}
@@ -277,7 +277,7 @@
 <div class="modal-bg" id="memoBg" onclick="if(event.target===this)closeMemo()">
   <div class="modal">
     <div class="mhead">
-      <div class="mtitle" id="memoTitle">Notes<small>MEMO</small></div>
+      <div class="mtitle" id="memoTitle">Müşteri<small>MÜŞTERİ FORMU · NOTLAR</small></div>
       <button class="mclose" onclick="closeMemo()">✕</button>
     </div>
     <div class="mbody">
@@ -713,8 +713,8 @@ function portalRozet(c,i){
   if(!o) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#e5e7eb;color:#6b7280">portal…</span>`;
   if(o.hata) return `<span class="chip" id="pbadge-${esc(c.portalUid)}" style="background:#fdecea;color:#c0392b" title="${esc(o.hata)}" onclick="delete PORTAL_OZET['${esc(c.portalUid)}'];render()">portal okunamadı ↻</span>`;
   const dolu=o.toplam-o.bos; const ek=[]; if(o.ys) ek.push(o.ys+' soru'); if(o.iade) ek.push(o.iade+' iade');
-  if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" title="Form onaylandı">✓ Form onaylandı</span>`;
-  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'}">${dolu}/${o.toplam} bilgi formda eklendi${ek.length?' · '+ek.join(' · '):''}</span>`;
+  if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="Form onaylandı · tıkla: müşteri formu">✓ Form onaylandı</span>`;
+  return `<span class="pblink" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${dolu}/${o.toplam} bilgi formda eklendi${ek.length?' · '+ek.join(' · '):''}</span>`;
 }
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
@@ -931,7 +931,7 @@ function dropToHold(i){
 let memoIdx=-1;
 function openMemo(i){
   memoIdx=i;
-  document.getElementById('memoTitle').innerHTML=esc(data[i].firm||'(no company)')+'<small>NOTES & FILES</small>';
+  document.getElementById('memoTitle').innerHTML=esc(data[i].firm||'(no company)')+'<small>'+(data[i].portalUid?'MÜŞTERİ FORMU · NOTLAR':'NOTLAR & DOSYALAR')+'</small>';
   document.getElementById('memoText').innerHTML=toRich(data[i].memo||'');
   renderFiles();renderAssess();renderPortal();
   document.getElementById('memoBg').classList.add('show');
@@ -1067,7 +1067,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 23:05';
+const SURUM='2026-09-17 23:15';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
