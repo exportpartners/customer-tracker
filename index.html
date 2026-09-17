@@ -1059,7 +1059,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 21:00';
+const SURUM='2026-09-17 21:15';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1119,7 +1119,8 @@ function renderPortal(){
       const etiket=d==='onaylandi'?'<span class="ptik">✔ Onaylandı</span>':d==='eksik'?'<span class="peksik">✖ İade edildi</span>':'';
       const notGoster=d==='eksik'||nt;
       const notSatir=`<div class="pnot ${d==='eksik'?'eksik':''}" id="pnot-${k}" style="${notGoster?'':'display:none'}"><input id="pn-${k}" value="${esc(nt?nt.metin:'')}" placeholder="İade gerekçesi (müşteriye e-posta ile gider)" onkeydown="if(event.key==='Enter')portalIade('${k}')"><button class="pred" onclick="portalIade('${k}')">İade et</button><span class="pmeta" style="margin:0">${notGoster?ntDurum:''}</span></div>`;
-      const dugmeler=`<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${d!=='onaylandi'?`<button class="pok" onclick="portalDurumSet('${k}','onaylandi')">✔ Onayla</button>`:''}${d!=='eksik'?`<button class="pred" onclick="portalIadeAc('${k}')">✖ İade</button>`:''}</div>`;
+      const dolu=tip==='dosya'?!!(v.dosyalar||{})[k]:!!(v.form||{})[k];
+      const dugmeler=!dolu?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${d!=='onaylandi'?`<button class="pok" onclick="portalDurumSet('${k}','onaylandi')">✔ Onayla</button>`:''}${d!=='eksik'?`<button class="pred" onclick="portalIadeAc('${k}')">✖ İade</button>`:''}</div>`;
       const kSoru=Object.entries(v.sorular||{}).filter(([id,q])=>q.kalem===k).map(([id,q])=>`<div class="psoru">❓ <b>Müşteri sorusu</b> <span class="pmeta" style="margin:0">${esc(portalTarih(q.ts))}</span><div style="white-space:pre-wrap;margin-top:2px">${esc(q.metin)}</div>${q.yanit?`<div style="margin-top:4px"><b style="color:#1faa59">Yanıt:</b> ${esc(q.yanit)} <span class="pmeta" style="margin:0">${q.yanit_gitti?'· gitti '+esc(portalTarih(q.yanit_gitti)):'· 17:00 mailiyle gidecek'}</span></div>`:`<div style="display:flex;gap:6px;margin-top:5px"><input id="yn-${esc(id)}" placeholder="Yanıt (müşteriye e-posta ile gider)" style="flex:1"><button class="pbtn" onclick="portalYanitla('${esc(id)}')">Yanıtla</button></div>`}</div>`).join('');
       return `<div class="prow"><span class="pn">${i+1}</span><div>${ad}<br>${pv}${kSoru}${notSatir}</div><div style="text-align:right">${etiket}<div style="height:4px"></div>${dugmeler}</div></div>`;
     }).join('');
