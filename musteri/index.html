@@ -161,7 +161,7 @@ const KALEMLER=[
   {k:"k11",zorunlu:true,n:11,ad:"Vergi levhası",a:"Kaşeli ve imzalı, PDF",dosya:true},
   {k:"k12",zorunlu:true,n:12,ad:"İmza sirküleri veya imza beyannamesi",a:"Sermaye şirketlerinde sirküler, şahıs işletmelerinde beyanname",dosya:true},
   {k:"k13",zorunlu:true,n:13,ad:"Şirket sahibinin kimlik fotokopisi",a:"PDF veya net fotoğraf",dosya:true},
-  {k:"k14",n:14,ad:"Certificate of Formation ve EIN Letter",a:"Yalnızca firma ABD'de kurulu ise",dosya:true}
+  {k:"k14",n:14,ad:"Certificate of Formation ve EIN Letter",a:"Yalnızca ABD'de kurulu şirketiniz varsa; Türkiye şirketi için gerekmez",dosya:true,abd:true}
 ];
 
 /* FDA Form 3537 (11/16) Bolum 9a ve 9b, birebir; Turkce aciklama parantezde. Kaynak: fda.gov/media/71632 */
@@ -329,6 +329,11 @@ function ciz(sadeceRozet){
   const h=[];
   KALEMLER.forEach(x=>{
     if(x.b){h.push(`<h2>${x.b}</h2>`);return;}
+    if(x.abd){ /* 17 Eylul 2026: Turk firmasindan EIN istenmez; kutu isaretlenirse acilir */
+      const acik=!!kayit.form.abd_sirket||!!kayit.dosyalar[x.k];
+      h.push(`<div class="item" style="margin-top:6px"><label style="display:flex;gap:8px;align-items:center;font-weight:600;cursor:pointer"><input type="checkbox" id="in-abd" ${acik?'checked':''} onchange="kayit.form.abd_sirket=this.checked;kirli=true;ciz(false)"> ABD'de kurulu bir şirketimiz var (Certificate of Formation ve EIN Letter yükleyeceğim)</label></div>`);
+      if(!acik) return;
+    }
     const val=kayit.form[x.k]||'';
     let alan;
     if(x.kategori){

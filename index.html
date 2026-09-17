@@ -1067,7 +1067,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-17 23:40';
+const SURUM='2026-09-17 23:55';
 function sertYenile(){ const u=new URL(location.href); u.searchParams.set('v',Date.now()); location.replace(u.toString()); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
 function girisKapisi(){
@@ -1121,8 +1121,9 @@ function renderPortal(){
     const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv"><span class="pmeta" style="margin:0">Müşterinin FDA tesis kaydı formunda işaretlediği ürün ve faaliyet kategorileri (kayıt sırasında Form 3537 Bölüm 9'a girilir).</span><br><b>Ürün, insan gıdası:</b> ${esc((K.insan||[]).map(x=>katAd('insan',x)).join(', ')||'-')}<br><b>Ürün, hayvan gıdası:</b> ${esc((K.hayvan||[]).map(x=>katAd('hayvan',x)).join(', ')||'-')}<br><b>Tesisin faaliyeti:</b> ${esc((K.faaliyet||[]).map(x=>katAd('faaliyet',x)).join(', ')||'-')}${K.diger?'<br><b>Müşterinin notu:</b> '+esc(K.diger):''}</span></div><span></span></div>`:'';
     const rows=katSatir+PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
       let pv;
-      if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span> <button class="pbtn" style="padding:3px 8px" onclick="portalOnizle('${k}')">Görüntüle</button> <button class="pbtn" style="padding:3px 8px" onclick="portalDosyaAc('${k}')">İndir</button><div id="pv-${k}" style="display:none;margin-top:6px"></div>`:`<span class="pv bos">yüklenmedi${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`;}
-      else{const t=(v.form||{})[k]; pv=t?`<span class="pv">${esc(t)}</span>`:`<span class="pv bos">boş${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`;}
+      if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span> <button class="pbtn" style="padding:3px 8px" onclick="portalOnizle('${k}')">Görüntüle</button> <button class="pbtn" style="padding:3px 8px" onclick="portalDosyaAc('${k}')">İndir</button><div id="pv-${k}" style="display:none;margin-top:6px"></div>`:(k==='k14'&&!(v.form||{}).abd_sirket?'<span class="pv bos">gerekmez (Türkiye şirketi; ABD şirketi yoksa istenmez)</span>':`<span class="pv bos">yüklenmedi${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`);}
+      else{const t=(v.form||{})[k]; if(!t&&k==='k04'){const em=(v.form||{}).k05||v.eposta||'';const dom=em.includes('@')?em.split('@')[1]:'';pv=dom?`<span class="pv">www.${esc(dom)}</span> <span class="pmeta" style="margin:0">(e-posta alanından, müşteri yazmadı)</span>`:'<span class="pv bos">boş (opsiyonel)</span>';}
+      else pv=t?`<span class="pv">${esc(t)}</span>`:`<span class="pv bos">boş${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`;}
       const d=(v.durum||{})[k]||'bekleniyor';
       const nt=(v.notlar||{})[k]||null;
       const ntDurum=!nt?'':(nt.gitti?`e-posta gitti ${esc(portalTarih(nt.gitti))}`:(nt.iade?`<b style="color:#b26a00">e-posta bekliyor (alttaki düğme)</b>`:(nt.mail?`<b style="color:#b26a00">yalnızca portalda görünüyor</b>`:'yalnızca portalda görünüyor')));
