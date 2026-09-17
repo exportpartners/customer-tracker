@@ -1082,7 +1082,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 01:35';
+const SURUM='2026-09-18 02:00';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
@@ -1284,14 +1284,25 @@ async function portalExcel(){
     z.file('xl/worksheets/sheet1.xml',sheet);z.file('xl/styles.xml',styles);
     const b=await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});blobIndir(b,guvenliAd(c.firm)+'-fda-evrak-formu.xlsx');toast('Excel indirildi');}catch(e){toast('Excel hatası: '+(e&&e.message||e));}
 }
-function portalOnizle(k){
+function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
+async function portalOnizle(k){
+  /* 18 Eylul 2026: Android Chrome/Samsung iframe icinde PDF acmiyor ("Ac" dugmesi cikiyordu, Kaan). PDF'ler pdf.js ile sayfa sayfa cizilir, her cihazda calisir. */
   const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k]; const kutu=document.getElementById('pv-'+k); if(!f||!f.veri||!kutu)return;
   if(kutu.style.display!=='none'){kutu.style.display='none';kutu.innerHTML='';return;}
-  /* data: URL'yi blob'a cevir: PDF'ler iframe icinde acilir, yeni sekmede de acilabilir */
-  try{const b=atob(f.veri.split(',')[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const url=URL.createObjectURL(new Blob([u],{type:f.tip||'application/octet-stream'}));
-    const img=(f.tip||'').startsWith('image/');
-    kutu.innerHTML=(img?`<img src="${url}" style="max-width:100%;max-height:520px;border:1px solid var(--line);border-radius:8px">`:`<iframe src="${url}" style="width:100%;height:520px;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe>`)+`<div style="margin-top:4px"><a href="${url}" target="_blank" rel="noopener">Yeni sekmede aç</a></div>`;
-    kutu.style.display='block';}catch(e){toast('Önizleme açılamadı: '+(e&&e.message||e));}
+  try{
+    const b=atob(f.veri.split(',')[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+    const tip=f.tip||''; const url=URL.createObjectURL(new Blob([u],{type:tip||'application/octet-stream'}));
+    kutu.style.display='block';
+    if(tip.startsWith('image/')){kutu.innerHTML=`<img src="${url}" style="max-width:100%;max-height:600px;border:1px solid var(--line);border-radius:8px">`;return;}
+    if(tip==='application/pdf'||/\.pdf$/i.test(f.ad||'')){
+      kutu.innerHTML='<div class="pmeta">PDF yükleniyor…</div>';
+      await pdfjsYukle(); const pdf=await window.pdfjsLib.getDocument({data:u}).promise; kutu.innerHTML='';
+      const gen=Math.min(kutu.clientWidth||700,900);
+      for(let n=1;n<=pdf.numPages;n++){const pg=await pdf.getPage(n);const v0=pg.getViewport({scale:1});const sc=gen/v0.width;const vp=pg.getViewport({scale:sc*(window.devicePixelRatio||1)});const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;cv.style.width='100%';cv.style.border='1px solid var(--line)';cv.style.borderRadius='8px';cv.style.marginBottom='6px';kutu.appendChild(cv);await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;}
+      kutu.insertAdjacentHTML('beforeend',`<div class="pmeta">${pdf.numPages} sayfa · <a href="${url}" target="_blank" rel="noopener">Yeni sekmede aç</a></div>`);
+      return;}
+    kutu.innerHTML=`<div class="pmeta">Bu dosya türü burada gösterilemiyor; <a href="${url}" target="_blank" rel="noopener">yeni sekmede aç</a> ya da İndir.</div>`;
+  }catch(e){kutu.innerHTML='';kutu.style.display='none';toast('Önizleme açılamadı: '+(e&&e.message||e));}
 }
 function portalDosyaAc(k){const f=portalVeri&&portalVeri.dosyalar&&portalVeri.dosyalar[k];if(!f||!f.veri)return;triggerDownload(f.veri,f.ad||'dosya');}
 function epostaAnahtari(e){return (e||'').trim().toLowerCase().replace(/[.#$\[\]\/]/g,ch=>'%'+ch.charCodeAt(0).toString(16));}
