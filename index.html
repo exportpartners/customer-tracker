@@ -1069,7 +1069,7 @@ async function boot(){
    veritabaninda musteri_portal/<uid> altina yazar; buradaki kutu onu okur,
    durumu isaretler ve musteri hesabi acar.
    ================================================================ */
-const SURUM='2026-09-18 00:25';
+const SURUM='2026-09-18 00:35';
 function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mustafa Cmd+Shift+R ile yeniledi); once dosya onbellek atlanarak cekilir, sonra sayfa yenilenir */
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
@@ -1126,8 +1126,7 @@ function renderPortal(){
     const rows=katSatir+PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
       let pv;
       if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span> <button class="pbtn" style="padding:3px 8px" onclick="portalOnizle('${k}')">Görüntüle</button> <button class="pbtn" style="padding:3px 8px" onclick="portalDosyaAc('${k}')">İndir</button><div id="pv-${k}" style="display:none;margin-top:6px"></div>`:(k==='k14'&&!(v.form||{}).abd_sirket?'<span class="pv bos">gerekmez (Türkiye şirketi; ABD şirketi yoksa istenmez)</span>':`<span class="pv bos">yüklenmedi${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`);}
-      else{const t=(v.form||{})[k]; if(!t&&k==='k04'){const em=(v.form||{}).k05||v.eposta||'';const dom=em.includes('@')?em.split('@')[1]:'';pv=dom?`<span class="pv">www.${esc(dom)}</span> <span class="pmeta" style="margin:0">(e-posta alanından, müşteri yazmadı)</span>`:'<span class="pv bos">boş (opsiyonel)</span>';}
-      else pv=t?`<span class="pv">${esc(t)}</span>`:`<span class="pv bos">boş${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`;}
+      else{const t=(v.form||{})[k]; pv=t?`<span class="pv">${esc(t)}</span>`:`<span class="pv bos">boş${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`;}
       const d=(v.durum||{})[k]||'bekleniyor';
       const nt=(v.notlar||{})[k]||null;
       const ntDurum=!nt?'':(nt.gitti?`e-posta gitti ${esc(portalTarih(nt.gitti))}`:(nt.iade?`<b style="color:#b26a00">e-posta bekliyor (alttaki düğme)</b>`:(nt.mail?`<b style="color:#b26a00">yalnızca portalda görünüyor</b>`:'yalnızca portalda görünüyor')));

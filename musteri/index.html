@@ -349,6 +349,10 @@ function ciz(sadeceRozet){
         <label class="upl">${f?'Değiştir':'Dosya yükle'}<input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="dosyaSec(event,'${x.k}')"></label></div>`;
     }else if(x.cok){
       alan=`<textarea id="in-${x.k}" placeholder="${esc(x.ph||'')}" oninput="kirli=true">${esc(val)}</textarea>`;
+    }else if(x.k==='k04'&&!val){
+      /* 18 Eylul 2026: web sitesi bossa e-posta alan adindan onerilir; musteri isterse siler ya da degistirir, yazdigi gecerlidir */
+      const em=(kayit.form.k05||document.getElementById('in-k05')?.value||kayit.eposta||'').trim(); const dom=em.includes('@')?em.split('@')[1]:'';
+      alan=`<input type="text" id="in-${x.k}" value="${dom?esc('www.'+dom):''}" placeholder="${esc(x.ph||'')}" oninput="kirli=true">${dom?'<p class="msg" style="margin:4px 0 0">E-posta adresinizden otomatik yazıldı; doğru değilse silin ya da düzeltin.</p>':''}`;
     }else{
       alan=`<input type="text" id="in-${x.k}" value="${esc(val)}" placeholder="${esc(x.ph||'')}" oninput="kirli=true">`;
     }
