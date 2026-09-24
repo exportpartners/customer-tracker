@@ -753,7 +753,13 @@ function rowHtml(c,i,pos){
   if(odemeAlindi){ /* 17 Eylul 2026, Mustafa: odeme alininca submit etiketleri gitsin, yerinde portal ilerlemesi yanip sonsun */
     if(c.portalUid) acts=portalRozet(c,i);
   } else {
-  const introDone=(c.notes||[]).includes('Intro Call Done');
+  /* 24 Eyl 2026, Mustafa: "Kaan'a mesaj atmak icin submit tusu gitmis;
+     'Technical Call Pending' deyince ciksin." On gorusme yapildiktan sonra
+     kayit cogu zaman dogrudan 'Technical Call Pending' isaretleniyor ve
+     'Intro Call Done' hic secilmiyordu; buton o yuzden gorunmuyordu.
+     Ikisinden biri yeterli. */
+  const introDone=(c.notes||[]).includes('Intro Call Done')
+                || (c.notes||[]).includes('Technical Call Pending');
   if(introDone && !c.fmSubmitted){
     acts+=`<button class="submit-btn" onclick="submitFM(${i})">SUBMIT<small>Intro → Kaan</small></button>`;
   } else if(c.fmSubmitted){
