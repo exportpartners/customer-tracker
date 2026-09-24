@@ -857,6 +857,19 @@ function render(){
   });
   const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
   kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
+  /* 24 Eyl 2026, Mustafa: "en latest inquiry en tepede olmali, New icinde."
+     NEW bandi temas tarihine gore TERS siralanir: en yeni gelen talep en
+     ustte. Tarih olarak once firstMeeting (ilk temas), yoksa issuedDate
+     (fatura tarihi) okunur; ikisi de bossa kayit en alta duser, cunku ne
+     zaman geldigi bilinmiyor. Diger bantlarin sirasi degismedi. */
+  const yeniTarih=(c)=>(c.firstMeeting||c.issuedDate||'');
+  kova.new.sort((a,b)=>{
+    const ta=yeniTarih(data[a]), tb=yeniTarih(data[b]);
+    if(ta&&tb) return tb.localeCompare(ta);
+    if(ta) return -1;
+    if(tb) return 1;
+    return 0;
+  });
   /* Mukerrerlik olcumu: her indeks tam bir bantta olmali. Bozulursa sessiz
      kalmaz, sayfanin ustunde uyari cikar. */
   const gorulen=new Set(); let mukerrer=0;
