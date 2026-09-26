@@ -963,19 +963,20 @@ function donusumCiz(){
     arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v}</title></circle>`;
     ofs+=len; });
   const disi=data.length-A;
-  const liste=(l)=>l.map(c=>esc((c.firm||'').split(' ').slice(0,2).join(' '))).join(', ');
+  /* 26 Eylul 2026, Mustafa: "baska firma ismi vs vs yazma, sade neat olsun veri."
+     Firma adi listesi kaldirildi; adlar zaten tablonun kendisinde satir satir
+     duruyor, burada ikinci kez yazilmasi ekrani uzatiyordu. Burada yalnizca
+     sayi var. */
   el.innerHTML=`<h3>Dönüşüm</h3>
-  <div class="dz-alt"><b>Google dönüşümü ${A}</b> · gelen her talep bir dönüşüm sayılır (New, Hold, In Progress, Completed, Not Converted).
-  <b>Bizim dönüşümümüz ${donusen.length}</b> · işin başladığı ya da bittiği kayıtlar (In Progress + Completed).
-  Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
+  <div class="dz-alt">Google dönüşümü: gelen her talep. Bizim dönüşümümüz: işin başladığı ya da bittiği kayıt. Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">BİZİM DÖNÜŞÜM</text></svg>
   <div class="dz-lejant">
     <i style="background:#1f6f3f"></i><b>Dönüşen</b><span>${donusen.length} kayıt</span><span class="m">%${Math.round(100*donusen.length/A)}</span>
     <i style="background:#d97706"></i><b>Açık</b><span>${acik.length} kayıt</span><span class="m">%${Math.round(100*acik.length/A)}</span>
     <i style="background:#6d3b9e"></i><b>Kaybedilen</b><span>${kayip.length} kayıt</span><span class="m">%${Math.round(100*kayip.length/A)}</span>
+    <i style="background:#c7cbd1"></i><b>Google dönüşümü</b><span>${A} kayıt</span><span class="m">toplam</span>
   </div>
-  ${reklamKutu(A,donusen.length)}</div>
-  <table><tr><th>Dönüşen</th><td>${liste(donusen)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kayip)}</td></tr></table>`;
+  ${reklamKutu(A,donusen.length)}</div>`;
 }
 /* Iki maliyet, iki paydasi da yukarida tanimlandi:
    1) Google donusumu basina: payda A, yani gelen her talep.
