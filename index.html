@@ -1007,7 +1007,7 @@ function dropToHold(i){
    Formdan gelen taleplerde siteye kurulan ep_kaynak cerezi kanali tasiyor;
    telefon ve WhatsApp'tan gelende burada elle seciliyor. Bos = bilinmiyor;
    gecmis 44 kayitta iz olmadigi icin hepsi bos basliyor ve tahmin yazilmiyor. */
-const KAYNAKLAR=['','Google reklam','Meta reklam','Organik arama','Yönlendirme','WhatsApp','Tavsiye','Fuar / etkinlik','Bilinmiyor'];
+const KAYNAKLAR=['','Google reklam','Organik arama','Google','Meta reklam','Yönlendirme','Tavsiye','Fuar / etkinlik','Bilinmiyor'];
 function kaynakSec(v){ if(memoIdx<0)return; data[memoIdx].kaynak=v; save(); toast(v?('Kaynak: '+v):'Kaynak silindi'); }
 let memoIdx=-1;
 function openMemo(i){
