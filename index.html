@@ -287,6 +287,13 @@
       <button class="mclose" onclick="closeMemo()">✕</button>
     </div>
     <div class="mbody">
+      <!-- 26 Eylul 2026: talebin hangi kanaldan geldigi. Formdan gelende
+           siteye kurulan ep_kaynak cerezi tasiyor; telefon ve WhatsApp'ta
+           elle secilir. Bilinmiyorsa bos birakilir, tahmin yazilmaz. -->
+      <div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:12px;color:#6b7280">
+        <b style="font-weight:700;letter-spacing:.4px;text-transform:uppercase;font-size:10.5px">Kaynak</b>
+        <select id="memoKaynak" onchange="kaynakSec(this.value)" style="flex:1;max-width:260px;padding:5px 8px;border:1px solid #e6e8ec;border-radius:7px;font:inherit;font-size:12px"></select>
+      </div>
       <details class="msec" id="secNotlar"><summary>Görüşme notları</summary>
       <div class="fmtbar">
         <button class="fmtb b" onclick="fmt('bold')" title="Bold">B</button>
@@ -428,7 +435,7 @@ function normalize(r){
   let notes=applySupersede((r.notes||[]).map(normNote));
   return {id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
-    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||''};
+    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||''};
 }
 let data=[];
 let dbRef=null;
@@ -995,11 +1002,21 @@ function dropToHold(i){
   if(!confirm('Move "'+firm+'" out of NEW into HOLD now?'))return;
   data[i].isNew=false;openSec.hold=true;save();render();toast('Moved to HOLD');
 }
+/* Talep kanali. 26 Eylul 2026, Mustafa: "Google'dan mi organik mi geldi
+   bilemiyoruz ama eger bir parametre olusturabiliyorsan hesapla."
+   Formdan gelen taleplerde siteye kurulan ep_kaynak cerezi kanali tasiyor;
+   telefon ve WhatsApp'tan gelende burada elle seciliyor. Bos = bilinmiyor;
+   gecmis 44 kayitta iz olmadigi icin hepsi bos basliyor ve tahmin yazilmiyor. */
+const KAYNAKLAR=['','Google reklam','Meta reklam','Organik arama','Yönlendirme','WhatsApp','Tavsiye','Fuar / etkinlik','Bilinmiyor'];
+function kaynakSec(v){ if(memoIdx<0)return; data[memoIdx].kaynak=v; save(); toast(v?('Kaynak: '+v):'Kaynak silindi'); }
 let memoIdx=-1;
 function openMemo(i){
   memoIdx=i;
   document.getElementById('memoTitle').innerHTML=esc(data[i].firm||'(no company)')+'<small>'+(data[i].portalUid?'MÜŞTERİ FORMU · NOTLAR':'NOTLAR & DOSYALAR')+'</small>';
   document.getElementById('memoText').innerHTML=toRich(data[i].memo||'');
+  var ks=document.getElementById('memoKaynak');
+  if(ks) ks.innerHTML=KAYNAKLAR.map(function(k){
+    return '<option value="'+esc(k)+'"'+((data[i].kaynak||'')===k?' selected':'')+'>'+(k||'— seçilmedi —')+'</option>';}).join('');
   renderFiles();renderAssess();renderPortal();
   document.getElementById('memoBg').classList.add('show');
 }
