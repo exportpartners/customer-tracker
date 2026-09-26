@@ -924,56 +924,69 @@ function fillTaskFilter(keep){
   sel.value=keep||'';
 }
 
-/* ---------- Donusum grafigi ---------- */
-/* Tanim olcum.md ile ayni: musteri dosyasindaki HER kayit bir temas. Kazanilan =
-   odemesi alinmis is (Completed, In Progress). Kaybedilen = Not Converted.
-   Acik = henuz karar yok (New, Hold, Import Refusal, Renewal). Donusum orani
-   yalnizca karari kesinlesmis kayitlar uzerinden: kazanilan / (kazanilan + kaybedilen). */
+/* ---------- Donusum ---------- */
+/* 26 Eylul 2026, Mustafa: "cok karmasik, 2 rasyo var."
+   Onceki hal uc dilimli pasta ve "karari kesinlesen kayitlar uzerinden" diye
+   ucuncu bir payda tasiyordu; faturali New/Hold kaydi da ayrica kazanilan
+   sayiliyordu. Uc ayri tanim, tek ekranda. Kaldirildi.
+
+   SIMDI IKI SAYI VAR, ikisi de ayni havuzdan:
+
+     A  = New + Hold + In Progress + Completed + Not Converted
+          Google'in donusum mantigi: gelen HER talep bir donusum.
+     Bizim donusumumuz = (In Progress + Completed) / A
+          Yani isin fiilen basladigi ya da bittigi kayitlar.
+
+   Bir kayit Hold'dan In Progress'e, oradan Completed'a gectiginde pay
+   kendiliginden buyur; elle sayilacak bir sey yok.
+
+   Havuzun disinda kalan uc bant ve sebepleri: IMPORT REFUSAL bize gelen talep
+   degil, bizim buldugumuz aday; RENEWAL mukerrer liste, ayni kayit zaten kendi
+   durumunda sayiliyor; OVER DUE karari belirsiz bir ara durum. */
+const DONUSUM_HAVUZ=['New','Hold','In Progress','Completed','Not Converted'];
+const DONUSEN=['In Progress','Completed'];
 /* Google Ads "FDA Belgesi" kampanyasi, arama terimleri raporundan. Elle
-   guncellenir; yeni export gelince tl, usd ve tarihler birlikte degisir.
-   USD, donem ortalama kuru (~45) ile. */
+   guncellenir; yeni export gelince tl, usd ve tarihler birlikte degisir. */
 const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
-  /* 11 Sep 2026, Mustafa: "refusal ve renewal haric bak; completed, not converted,
-     progress; Istanbul Sertifika da ok say, progress'e eklemeden." Yani:
-     IMPORT REFUSAL ve RENEWAL bantlari hesap disi (ilki aday havuzu, ikincisi
-     eski musterinin yenileme turu). Kazanilan = Completed, In Progress ve
-     faturasi kesilmis New/Hold kaydi (dosyalarinda Stripe faturasi olan).
-     Kaybedilen = Not Converted. Acik = kalan New/Hold. */
-  const renewalMi=c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'));
-  const havuz=data.filter(c=>c.status!=='Import Refusal'&&!renewalMi(c));
-  const faturali=c=>(c.files||[]).some(f=>/^Stripe-Fatura/.test(f.name||''));
-  const kaz=havuz.filter(c=>['Completed','In Progress'].includes(c.status)||(['New','Hold'].includes(c.status)&&faturali(c)));
-  const kay=havuz.filter(c=>c.status==='Not Converted');
-  const acik=havuz.filter(c=>!kaz.includes(c)&&!kay.includes(c));
-  /* Mustafa'nin tanimi, 11 Sep 2026: para giren is = Completed + In Progress.
-     Bant ayrimi yok; faturali New/Hold buraya girmez (o yalnizca pastanin kazanilani). */
-  const alinan=data.filter(c=>c.status==='Completed'||c.status==='In Progress');
-  const n=havuz.length; if(!n){el.innerHTML='';return;}
-  const dilim=[['Kazanılan',kaz.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],['Kaybedilen',kay.length,'#6d3b9e']];
-  const karar=kaz.length+kay.length; const oran=karar?Math.round(100*kaz.length/karar):0;
+  const havuz=data.filter(c=>DONUSUM_HAVUZ.includes(c.status));
+  const A=havuz.length; if(!A){el.innerHTML='';return;}
+  const donusen=havuz.filter(c=>DONUSEN.includes(c.status));
+  const kayip=havuz.filter(c=>c.status==='Not Converted');
+  const acik=havuz.filter(c=>c.status==='New'||c.status==='Hold');
+  const oran=Math.round(100*donusen.length/A);
   const R=58,C=2*Math.PI*R; let ofs=0; let arcs='';
-  dilim.forEach(([ad,v,renk])=>{ if(!v) return; const len=C*v/n;
-    arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v} (${Math.round(100*v/n)}%)</title></circle>`; ofs+=len; });
-  const disi=data.length-n;
+  [['Dönüşen',donusen.length,'#1f6f3f'],['Açık',acik.length,'#d97706'],
+   ['Kaybedilen',kayip.length,'#6d3b9e']].forEach(([ad,v,renk])=>{
+    if(!v) return; const len=C*v/A;
+    arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v}</title></circle>`;
+    ofs+=len; });
+  const disi=data.length-A;
   const liste=(l)=>l.map(c=>esc((c.firm||'').split(' ').slice(0,2).join(' '))).join(', ');
-  el.innerHTML=`<h3>Dönüşüm</h3><div class="dz-alt">${n} kayıt üzerinden (Import Refusal ve Renewal bantlarındaki ${disi} kayıt hesap dışı). Oran, kararı kesinleşen ${karar} kayıt üzerinden: kazanılan / (kazanılan + kaybedilen). Faturası kesilmiş New/Hold kaydı kazanılan sayılır.</div>
-  <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">DÖNÜŞÜM</text></svg>
-  <div class="dz-lejant">${dilim.map(([ad,v,renk])=>`<i style="background:${renk}"></i><b>${ad}</b><span>${v} kayıt</span><span class="m">%${Math.round(100*v/n)}</span>`).join('')}</div>
-  ${reklamKutu(data.length,alinan.length)}</div>
-  <table><tr><th>Kazanılan</th><td>${liste(kaz)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kay)}</td></tr></table>`;
+  el.innerHTML=`<h3>Dönüşüm</h3>
+  <div class="dz-alt"><b>Google dönüşümü ${A}</b> · gelen her talep bir dönüşüm sayılır (New, Hold, In Progress, Completed, Not Converted).
+  <b>Bizim dönüşümümüz ${donusen.length}</b> · işin başladığı ya da bittiği kayıtlar (In Progress + Completed).
+  Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
+  <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">BİZİM DÖNÜŞÜM</text></svg>
+  <div class="dz-lejant">
+    <i style="background:#1f6f3f"></i><b>Dönüşen</b><span>${donusen.length} kayıt</span><span class="m">%${Math.round(100*donusen.length/A)}</span>
+    <i style="background:#d97706"></i><b>Açık</b><span>${acik.length} kayıt</span><span class="m">%${Math.round(100*acik.length/A)}</span>
+    <i style="background:#6d3b9e"></i><b>Kaybedilen</b><span>${kayip.length} kayıt</span><span class="m">%${Math.round(100*kayip.length/A)}</span>
+  </div>
+  ${reklamKutu(A,donusen.length)}</div>
+  <table><tr><th>Dönüşen</th><td>${liste(donusen)}</td></tr><tr><th>Açık</th><td>${liste(acik)}</td></tr><tr><th>Kaybedilen</th><td>${liste(kayip)}</td></tr></table>`;
 }
-/* Reklam maliyeti, iki tip (Mustafa, 11 Sep 2026):
-   1) Google Ads mantigi: her inquiry bir donusum, payda dosyadaki BUTUN kayitlar.
-   2) Reel: para girmis is, payda Completed + In Progress (tum bantlar). */
-function reklamKutu(inquiry,paraGiren){
+/* Iki maliyet, iki paydasi da yukarida tanimlandi:
+   1) Google donusumu basina: payda A, yani gelen her talep.
+   2) Bizim donusumumuz basina: payda In Progress + Completed. */
+function reklamKutu(A,donusen){
   const tl=n=>n?Math.round(ADS.tl/n).toLocaleString('tr-TR'):'—';
   const usd=n=>n?Math.round(ADS.usd/n):'—';
   return `<div class="dz-reklam"><div class="dz-rb">Reklam maliyeti</div>
-  <div class="dz-rs"><b>${tl(inquiry)} TL</b><span>≈ ${usd(inquiry)} USD</span><em>inquiry başına, Google Ads mantığı (${inquiry} kayıt, bütün liste)</em></div>
-  <div class="dz-rs"><b>${tl(paraGiren)} TL</b><span>≈ ${usd(paraGiren)} USD</span><em>para giren iş başına (${paraGiren} Completed + In Progress)</em></div>
-  <div class="dz-rk">Google Ads FDA kampanyası ${ADS.bas} – ${ADS.bit}: ${ADS.tl.toLocaleString('tr-TR')} TL (~${ADS.usd.toLocaleString('tr-TR')} USD). Ağustos 2025 reklamsız.</div></div>`;
+  <div class="dz-rs"><b>${tl(donusen)} TL</b><span>≈ ${usd(donusen)} USD</span><em>bizim dönüşümümüz başına (${donusen} kayıt)</em></div>
+  <div class="dz-rs"><b>${tl(A)} TL</b><span>≈ ${usd(A)} USD</span><em>Google dönüşümü başına (${A} kayıt)</em></div>
+  <div class="dz-rk">Google Ads FDA kampanyası ${ADS.bas} – ${ADS.bit}: ${ADS.tl.toLocaleString('tr-TR')} TL (~${ADS.usd.toLocaleString('tr-TR')} USD). Ağustos 2025 reklamsız. Kaynak ayrımı (reklam / organik) kayıtlarda tutulmuyor, bu yüzden maliyet bütün talebe bölünüyor.</div></div>`;
 }
 function toggleSec(k){openSec[k]=!openSec[k];render();}
 function dropToHold(i){
