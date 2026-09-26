@@ -857,9 +857,19 @@ function render(){
   if(tsel) idx=idx.filter(i=>(data[i].tasks||[]).includes(tsel));
 
   const kova={}; BANTLAR.forEach(b=>kova[b.key]=[]);
+  /* 26 Eyl 2026, Mustafa: "completed olanlar hepsi completed'de dursun,
+     converted olmayanlar da not converted'da dursun; renewal ayrica EK olarak
+     yer versin, yani mukerrer olabilir."
+     Onceki kural "bir kayit tek banta girer" idi ve RENEWAL, COMPLETED'in
+     onunde oldugu icin biten bir musteri FDA RENEWAL gorevi tasidigi anda
+     COMPLETED'dan kayboluyordu. Artik kaydin ASIL yeri kendi durumu;
+     RENEWAL bunun USTUNE, ikinci bir liste olarak duruyor. Tek istisna
+     mukerrerlik RENEWAL'dir, oteki bantlar hala tek yer. */
   idx.forEach(i=>{
-    const b=BANTLAR.find(b=>b.uyar(data[i]));
-    kova[b.key].push(i);
+    const b=BANTLAR.filter(b=>b.key!=='renewal').find(b=>b.uyar(data[i]));
+    if(b) kova[b.key].push(i);
+    const r=BANTLAR.find(b=>b.key==='renewal');
+    if(r && r.uyar(data[i])) kova.renewal.push(i);
   });
   const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
   kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
@@ -887,7 +897,11 @@ function render(){
     const satirlar=kova[b.key];
     if(!satirlar.length) continue;
     const open=openSec[b.key];
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.label} (${satirlar.length})</button></td></tr>`;
+    /* 26 Eyl 2026, Mustafa: "renewal button ustunde sayi yazmasin."
+       RENEWAL artik mukerrer liste; oradaki sayi toplam kayit sayisiyla
+       toplanmiyor ve yanlis okunuyordu. Diger bantlarda sayi duruyor. */
+    const sayi=b.key==='renewal'?'':` (${satirlar.length})`;
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.label}${sayi}</button></td></tr>`;
     if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
