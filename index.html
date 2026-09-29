@@ -1452,7 +1452,8 @@ function sertifikaAlanlari(){
   const kat=[]; (K.faaliyet||[]).forEach(y=>kat.push(katAd('faaliyet',y)));
   (K.insan||[]).forEach(y=>kat.push(katAd('insan',y)));
   (K.hayvan||[]).forEach(y=>kat.push(katAd('hayvan',y)));
-  return {firma:c.firm||'', adres:form.k03||'', kayit:c.fdaNo||'', kategori:kat.join('\n'), duns:form.k06||''};
+  return {firma:c.fdaUnvan||c.firm||'', adres:c.fdaAdres||form.k03||'',
+          kayit:c.fdaNo||'', kategori:kat.join('\n'), duns:c.dunsNo||form.k06||''};
 }
 function sertifikaAc(){
   const a=sertifikaAlanlari();
@@ -1479,7 +1480,22 @@ function sertifikaAc(){
 async function sertifikaUret(){
   const g=id=>(document.getElementById(id)||{value:''}).value.trim();
   const firma=g('sfFirma'), adres=g('sfAdres'), kayit=g('sfKayit'), kat=g('sfKat'), duns=g('sfDuns');
-  if(!firma||!kayit){toast('Firma adı ve FDA kayıt numarası zorunlu');return;}
+  /* 29 Eylul 2026, Mustafa: "Firma adi ve kayit no zorunludur diyor, uretmedi."
+     Mesaj hangi alanin eksik oldugunu SOYLEMIYORDU ve alan isaretlenmiyordu;
+     ustelik kayit numarasi hicbir yerde tutulmadigi icin her seferinde bos
+     geliyordu. Ikisi de duzeltildi: eksik alan kirmiziya donuyor, adiyla
+     soyleniyor ve odaga geliyor; uretimden sonra numara ve Ingilizce
+     unvan/adres MUSTERI KARTINA yaziliyor, bir daha sorulmuyor. */
+  const eksik=[]; 
+  if(!firma) eksik.push(['sfFirma','Firma adı']);
+  if(!kayit) eksik.push(['sfKayit','FDA kayıt numarası']);
+  ['sfFirma','sfKayit'].forEach(id=>{const e=document.getElementById(id); if(e)e.style.borderColor='#d9dde3';});
+  if(eksik.length){
+    eksik.forEach(([id])=>{const e=document.getElementById(id); if(e)e.style.borderColor='#c0392b';});
+    const ilk=document.getElementById(eksik[0][0]); if(ilk){ilk.focus();}
+    toast('Eksik: '+eksik.map(x=>x[1]).join(' ve ')+'. FDA kayıt numarası kayıt tamamlandıktan sonra FDA sisteminden alınır.');
+    return;
+  }
   const bugun=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
   const sat=(et,en,deg)=>[{stack:[{text:et,style:'et'},{text:en,style:'en'}]},{text:deg||'—',style:deg?'deg':'bos'}];
   const dd={pageSize:'A4',pageMargins:[46,52,46,48],info:{title:firma+' FDA kayit sertifikasi'},
@@ -1521,7 +1537,17 @@ async function sertifikaUret(){
   try{await pdfmakeYukle();
     pdfMake.createPdf(dd).download(guvenliAd(firma)+'-fda-kayit-sertifikasi.pdf');
     const kk=document.getElementById('sertKutu'); if(kk)kk.remove();
-    toast('Sertifika indirildi');
+    /* Girilen degerler karta yazilir; ikinci sertifikada ve yenilemede hazir gelir.
+       Deneme kipinde yazma YOK, canli veriye dokunulmaz. */
+    if(!DEMO && data[memoIdx]){
+      const r=data[memoIdx]; let degisti=false;
+      if(r.fdaNo!==kayit){r.fdaNo=kayit;degisti=true;}
+      if(duns&&r.dunsNo!==duns){r.dunsNo=duns;degisti=true;}
+      if(adres&&r.fdaAdres!==adres){r.fdaAdres=adres;degisti=true;}
+      if(firma&&r.fdaUnvan!==firma){r.fdaUnvan=firma;degisti=true;}
+      if(degisti) save(()=>{});
+    }
+    toast('Sertifika indirildi'+(!DEMO?' · kayıt numarası karta yazıldı':''));
   }catch(e){toast('Sertifika hatası: '+(e&&e.message||e));}
 }
 function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
