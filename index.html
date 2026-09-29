@@ -1156,7 +1156,39 @@ function sertYenile(){ /* 18 Eylul 2026: ?v= parametresi onbellegi asmiyordu (Mu
   const u=new URL(location.href); u.searchParams.delete('v');
   fetch(u.pathname,{cache:'reload'}).catch(()=>{}).finally(()=>{location.replace(u.toString());}); }
 window.addEventListener('load',()=>{const e=document.getElementById('surumEtiketi'); if(e) e.textContent='sürüm '+SURUM;});
+/* DENEME KIPI (29 Eylul 2026, Mustafa: "Paneli nasil test ederim, musteri formu
+   doldurmus halini Kaan'in gozunden?"). Adresin sonuna ?demo=1 eklenince giris
+   istenmez, buluta HIC dokunulmaz ve asagidaki ORNEK kayit Kaan'in gordugu
+   ekranda acilir. Canli veriye yazmaz, okumaz; yalnizca gosterim.
+   Ornek, YENI form alanlariyla doludur; boylece degisiklikler gorunur. */
+const DEMO=new URLSearchParams(location.search).has('demo');
+const DEMO_MUSTERI={firm:"ÖRNEK GIDA SANAYİ VE TİCARET A.Ş. (DENEME)",contact:"Ahmet Yılmaz",
+  email:"export@ornekgida.com",portalUid:"demo",portalEmail:"export@ornekgida.com",
+  status:"In Progress",memo:"Deneme kaydı. Canlı veri değildir.",files:[],kaynak:"Web formu"};
+const DEMO_PORTAL={eposta:"export@ornekgida.com",
+  form:{gonderim:"29.09.2026 14:10",onay:"29.09.2026 14:02",abd_sirket:false,
+    k03:"Merkez Mah. Atatürk Cad. No:5 Kat:3, Şişli / İstanbul, Türkiye",
+    k04:"www.ornekgida.com", k05:"export@ornekgida.com", k06:"",
+    k07a:"Ahmet Yılmaz", k07b:"Bahçelievler Mah. Zafer Sok. No:11 D:4, Nilüfer / Bursa, Türkiye",
+    k07c:"+90 532 000 00 00",
+    k08a:"Ayşe Kaya", k08b:"Organize Sanayi Bölgesi 5. Cadde No:12, Nilüfer / Bursa, Türkiye",
+    k08c:"+90 533 000 00 00", k08e:"ayse@ornekgida.com",
+    kategori:{insan:["17c","26a"],hayvan:[],faaliyet:["9","10"],diger:""}},
+  dosyalar:{k11:{ad:"vergi-levhasi.pdf",boyut:131072,tarih:"2026-09-29"},
+            k12:{ad:"imza-sirkuleri.pdf",boyut:742400,tarih:"2026-09-29"},
+            k13:{ad:"kimlik.pdf",boyut:301056,tarih:"2026-09-29"}}};
+function demoBasla(){
+  data=[DEMO_MUSTERI]; try{render();}catch(e){}
+  openMemo(0);
+  const u=document.getElementById('girisBg'); if(u)u.classList.remove('show');
+  const b=document.createElement('div');
+  b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99999;background:#E8821E;color:#fff;'+
+    'font:700 13px system-ui;padding:7px 12px;text-align:center';
+  b.textContent='DENEME KİPİ · örnek doldurulmuş form, canlı veri değil · çıkmak için adresten ?demo=1 silin';
+  document.body.appendChild(b);
+}
 function girisKapisi(){
+  if(DEMO){ setTimeout(demoBasla,0); return; }
   if(!fbReady()||!firebase.auth){initData();return;}
   if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
   let basladi=false;
@@ -1214,8 +1246,9 @@ function renderPortal(){
     return;
   }
   box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu (müşteri portalı)</span><span class="pmeta">yükleniyor…</span></div>`;
-  if(!firebase.database){box.innerHTML+='<div class="pmeta">Bulut bağlantısı yok.</div>';return;}
-  firebase.database().ref('musteri_portal/'+c.portalUid).once('value').then(s=>{
+  if(!DEMO&&!firebase.database){box.innerHTML+='<div class="pmeta">Bulut bağlantısı yok.</div>';return;}
+  (DEMO?Promise.resolve({val:()=>DEMO_PORTAL})
+       :firebase.database().ref('musteri_portal/'+c.portalUid).once('value')).then(s=>{
     const v=s.val()||{}; portalVeri=v;
     const K=(v.form||{}).kategori||{};
     const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv"><span class="pmeta" style="margin:0">Müşterinin FDA tesis kaydı formunda işaretlediği ürün ve faaliyet kategorileri (kayıt sırasında Form 3537 Bölüm 9'a girilir).</span><br><b>Ürün, insan gıdası:</b> ${esc((K.insan||[]).map(x=>katAd('insan',x)).join(', ')||'-')}<br><b>Ürün, hayvan gıdası:</b> ${esc((K.hayvan||[]).map(x=>katAd('hayvan',x)).join(', ')||'-')}<br><b>Tesisin faaliyeti:</b> ${esc((K.faaliyet||[]).map(x=>katAd('faaliyet',x)).join(', ')||'-')}${K.diger?'<br><b>Müşterinin notu:</b> '+esc(K.diger):''}</span></div><span></span></div>`:'';
