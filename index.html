@@ -1495,8 +1495,37 @@ function kayitBlok(v){
      FDA numarasi sertifikanin PDF metninden, DUNS numarasi ekran
      goruntusunden OCR ile okunuyor (macOS Vision). Okunamazsa mail
      gitmiyor ve opr@ ile deniz@'ya sebebi yaziliyor. */
-  const okunan = (K.fdaNo || K.dunsNo)
-    ? `<div class="pmeta" style="margin-top:8px">Belgelerden okunan: ${K.fdaNo?('FDA '+esc(K.fdaNo)):''}${(K.fdaNo&&K.dunsNo)?' · ':''}${K.dunsNo?('DUNS '+esc(K.dunsNo)):''}</div>`
+  /* Kategoriler daha once okunmadiysa, yeniden yukleme beklemeden simdi
+     okunur ve kayda yazilir; blok yeniden cizilir. Tek seferlik. */
+  if(!DEMO && !v.__belgeOkunuyor && ((B.fda && (!K.kategoriler || !K.fdaNo)) || (B.duns && !K.dunsNo))){
+    v.__belgeOkunuyor = true;
+    (async ()=>{
+      const c=data[memoIdx], y={};
+      if(B.fda && !K.kategoriler){ const kat=await kategorileriCek(B.fda.veri||''); if(kat.length) y.kategoriler=kat.join('; '); }
+      if(B.fda && !K.fdaNo){ const n=await kayitNoCek('fda', B.fda.veri||'', B.fda.ad||''); if(n) y.fdaNo=n.deger; }
+      if(B.duns && !K.dunsNo){
+        const n=await kayitNoCek('duns', B.duns.veri||'', B.duns.ad||'');
+        if(n){ y.dunsNo=n.deger; }
+        else { const firma = B.fda ? await fdaFirmaAdi(B.fda.veri||'') : '';
+               const r = dunsOku(await ocrMetni(B.duns.veri||''), firma);
+               if(r.no) y.dunsNo=r.no; else y.dunsNot=r.sebep; }
+      }
+      if(Object.keys(y).length){
+        try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit').update(y); renderPortal(); }catch(e){}
+      }
+    })();
+  }
+  const satirlar = [];
+  if(K.fdaNo) satirlar.push('FDA '+esc(K.fdaNo));
+  if(K.dunsNo) satirlar.push('DUNS '+esc(K.dunsNo));
+  const kategoriKutusu = K.kategoriler
+    ? `<div class="pmeta" style="margin-top:6px"><b>Kayıt yapılan kategoriler:</b><br>${
+        K.kategoriler.split(';').map(x=>esc(x.trim())).filter(Boolean).join('<br>')}</div>`
+    : (B.fda ? '<div class="pmeta" style="margin-top:6px">Kategoriler belgeden okunuyor…</div>' : '');
+  if(K.dunsNot && !K.dunsNo) satirlar.push('DUNS okunamadı: '+esc(K.dunsNot));
+  const okunan = (satirlar.length || kategoriKutusu)
+    ? `<div style="margin-top:8px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfd">
+         <div class="pmeta">Belgelerden okunan: ${satirlar.join(' · ') || '—'}</div>${kategoriKutusu}</div>`
     : '';
   const gonderildi = K.gonder;
   return `<div style="margin-top:14px"><div class="fbh" style="margin-bottom:8px"><span>🗂 KAYIT SONRASI BELGELER</span></div>
@@ -1551,8 +1580,105 @@ async function kayitBelgeYukle(t,inp){
      (dbRef.set), disaridan yazilan alan bir sonraki kayitta ucuyor. 29 Eylul'de
      olculdu, dort alan birden gitti. Portal dugumu o yazmanin disinda kaliyor. */
   if(no){ try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/'+no.alan).set(no.deger); }catch(e){} }
+  if(t==='fda'){ const kat=await kategorileriCek(veri);
+    if(kat.length){ try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/kategoriler').set(kat.join('; ')); }catch(e){} } }
   renderPortal();
   toast(no?('Yüklendi · '+no.etiket+' okundu: '+no.deger):'Yüklendi · numara okunamadı, sertifikada elle yazılacak');
+}
+/* FDA kayit ciktisindaki Section 9a tablosu: kayitli kategoriler ve her
+   birinin isaretli faaliyeti. Kutu glifi yazi tipine gore degisiyor
+   (2. sayfada ¤/¡, 4. sayfada þ/¨), ucu de sayiliyor. Ceviri YAPILMAZ:
+   sertifika Ingilizce ve kategori adi FDA'nin kendi yazdigi bicimde kalir. */
+const ISARETLI='þ¤\u2611', BOS='¨¡\u2610';
+const FAALIYET=["Ambient Food Storage Warehouse / Holding Facility",
+  "Refrigerated Food Storage Warehouse / Holding Facility",
+  "Frozen Food Storage Warehouse / Holding Facility",
+  "Acidified Food Processor","Low-Acid Food Processor",
+  "Interstate Conveyance Caterer / Catering Point","Contract Sterilizer",
+  "Labeler / Relabeler","Manufacturer / Processor","Packer / Repacker",
+  "Salvage Operator (Reconditioner)","Farm Mixed-Type Facility",
+  "Other Activity Conducted"];
+function kategorileriOku(t){
+  const i=(t||'').indexOf('Section 9a'); if(i<0) return [];
+  let g=t.slice(i); const son=g.indexOf('Section 9b'); if(son>0) g=g.slice(0,son);
+  const cikti=[]; const re=/(\d{1,2})\.([A-Z][A-Z0-9 ,\-\/&'\n]+?)\[21 CFR/g; let m;
+  while((m=re.exec(g))){
+    const ad=m[2].split(/\s+/).filter(Boolean).join(' ')
+      .toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())
+      .replace(/ And /g,' and ').replace(/ Or /g,' or ');
+    const kutular=[...g.slice(re.lastIndex)].filter(c=>ISARETLI.includes(c)||BOS.includes(c)).slice(0,FAALIYET.length);
+    const isler=FAALIYET.filter((_,j)=>ISARETLI.includes(kutular[j]));
+    cikti.push(m[1]+'. '+ad+(isler.length?(' ('+isler.join(', ')+')'):''));
+  }
+  return cikti;
+}
+async function kategorileriCek(dataUrl){
+  if(!/^data:application\/pdf/i.test(dataUrl||'')) return [];
+  try{
+    await pdfjsYukle();
+    const pdf=await pdfjsLib.getDocument({data:atob(dataUrl.split(',')[1])}).promise;
+    let metin='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const s=await (await pdf.getPage(i)).getTextContent();
+      metin+='\n'+s.items.map(x=>x.str).join(' ');
+    }
+    return kategorileriOku(metin);
+  }catch(e){ return []; }
+}
+/* DUNS ekrani goruntu olarak geliyor, metni yok. Tarayicida OCR:
+   tesseract.js YALNIZCA gerektiginde yukleniyor (bir musteride bir kez).
+   Okunan numara uydurma degil, belgenin uzerinde yazan sey; yine de tek
+   basina kanit sayilmaz, asagida iki capraz kontrolden geciyor. */
+function tesseractYukle(){return new Promise((res,rej)=>{if(window.Tesseract)return res();
+  const sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js';
+  sc.onload=()=>res(); sc.onerror=()=>rej(new Error('OCR yüklenemedi'));
+  document.head.appendChild(sc);});}
+async function ocrMetni(dataUrl){
+  if(!/^data:image/i.test(dataUrl||'')) return '';
+  try{ await tesseractYukle();
+    const r=await Tesseract.recognize(dataUrl,'eng');
+    return (r&&r.data&&r.data.text)||'';
+  }catch(e){ return ''; }
+}
+/* OCR harf karistirir: TPSI -> "TPS!". Firma adi karsilastirmasi birebir
+   yapilirsa dogru belge reddediliyor (29 Eylul'de sahada goruldu).
+   Karistirilan karakterler esitlenip benzerlik orani olculuyor. */
+function adNormal(s){
+  return (s||'').toUpperCase().replace(/[!|1İIL]/g,'I').replace(/0/g,'O')
+    .replace(/5/g,'S').replace(/[^A-Z0-9]/g,'');
+}
+function adBenzerligi(a,b){
+  a=adNormal(a); b=adNormal(b);
+  if(!a||!b) return 0;
+  const n=Math.min(a.length,b.length); let ayni=0;
+  for(let i=0;i<n;i++) if(a[i]===b[i]) ayni++;
+  return ayni/Math.max(a.length,b.length);
+}
+function dunsOku(metin, firmaBeklenen){
+  if(!metin) return {no:'', sebep:'OCR boş döndü'};
+  const adaylar=(metin.replace(/-/g,'').match(/\b\d{9}\b/g)||[]);
+  if(!adaylar.length) return {no:'', sebep:'ekranda 9 haneli numara bulunamadı'};
+  const say={}; adaylar.forEach(x=>say[x]=(say[x]||0)+1);
+  const no=Object.keys(say).sort((a,b)=>say[b]-say[a])[0];
+  if(say[no]<2) return {no:'', sebep:'numara ekranda yalnızca bir kez geçiyor, doğrulanamadı'};
+  if(firmaBeklenen){
+    const m=metin.match(/Company Name[:\s]+(.+)/);
+    const okunan=m?m[1].trim():'';
+    if(okunan && adBenzerligi(okunan, firmaBeklenen) < 0.85)
+      return {no:'', sebep:'ekrandaki firma adı sertifikayla örtüşmüyor ('+okunan.slice(0,40)+')'};
+  }
+  return {no:no, sebep:''};
+}
+/* Sertifikanin ilk sayfalarindan firma adi; DUNS capraz kontrolu icin. */
+async function fdaFirmaAdi(dataUrl){
+  try{ await pdfjsYukle();
+    const pdf=await pdfjsLib.getDocument({data:atob(dataUrl.split(',')[1])}).promise;
+    let t=''; for(let i=1;i<=Math.min(pdf.numPages,3);i++){
+      const s=await (await pdf.getPage(i)).getTextContent();
+      t+='\n'+s.items.map(x=>x.str).join(' ');}
+    const m=t.match(/Facility Name\s*\n?(.{0,70})/); return m?m[1].trim():'';
+  }catch(e){ return ''; }
 }
 async function kayitNoCek(t,dataUrl,ad){
   /* PDF degilse metin yoktur, cekilemez. Goruntuden okuma (OCR) yapilmiyor;
@@ -1562,7 +1688,7 @@ async function kayitNoCek(t,dataUrl,ad){
     await pdfjsYukle();
     const gorev=pdfjsLib.getDocument({data:atob(dataUrl.split(',')[1])});
     const pdf=await gorev.promise; let metin='';
-    for(let i=1;i<=Math.min(pdf.numPages,3);i++){
+    for(let i=1;i<=pdf.numPages;i++){
       const s=await (await pdf.getPage(i)).getTextContent();
       metin+=' '+s.items.map(x=>x.str).join(' ');
     }
