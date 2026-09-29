@@ -1534,6 +1534,10 @@ function kayitBlok(v){
         else { const firma = B.fda ? await fdaFirmaAdi(B.fda.veri||'') : '';
                const r = dunsOku(await ocrMetni(B.duns.veri||''), firma);
                if(r.no) y.dunsNo=r.no; else y.dunsNot=r.sebep; }
+        /* Onceki turdan kalan hata notu, numara okununca SILINIR. Yoksa
+           duzeltilmis bir kontrolden sonra bile eski sebep ekranda kaliyor
+           (29 Eylul'de sahada goruldu: katı karsilastirmanin yazdigi not). */
+        if(y.dunsNo) y.dunsNot=null;
       }
       if(Object.keys(y).length){
         try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit').update(y); renderPortal(); }catch(e){}
