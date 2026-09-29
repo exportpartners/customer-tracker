@@ -1478,11 +1478,13 @@ function kayitBlok(v){
      gitmiyor ve opr@ ile deniz@'ya sebebi yaziliyor. */
   /* Kategoriler daha once okunmadiysa, yeniden yukleme beklemeden simdi
      okunur ve kayda yazilir; blok yeniden cizilir. Tek seferlik. */
-  if(!DEMO && !v.__belgeOkunuyor && ((B.fda && (!K.kategoriler || !K.fdaNo)) || (B.duns && !K.dunsNo))){
+  if(!DEMO && !v.__belgeOkunuyor && ((B.fda && (!K.kategoriler || !K.fdaNo || !K.unvan || !K.adres)) || (B.duns && !K.dunsNo))){
     v.__belgeOkunuyor = true;
     (async ()=>{
       const c=data[memoIdx], y={};
       if(B.fda && !K.kategoriler){ const kat=await kategorileriCek(B.fda.veri||''); if(kat.length) y.kategoriler=kat.join('; '); }
+      if(B.fda && (!K.unvan || !K.adres)){ const kn=await fdaKunye(B.fda.veri||'');
+        if(kn.ad && !K.unvan) y.unvan=kn.ad; if(kn.adres && !K.adres) y.adres=kn.adres; }
       if(B.fda && !K.fdaNo){ const n=await kayitNoCek('fda', B.fda.veri||'', B.fda.ad||''); if(n) y.fdaNo=n.deger; }
       if(B.duns && !K.dunsNo){
         const n=await kayitNoCek('duns', B.duns.veri||'', B.duns.ad||'');
@@ -1651,16 +1653,23 @@ function dunsOku(metin, firmaBeklenen){
   }
   return {no:no, sebep:''};
 }
-/* Sertifikanin ilk sayfalarindan firma adi; DUNS capraz kontrolu icin. */
-async function fdaFirmaAdi(dataUrl){
+/* FDA kayit ciktisinin ilk sayfalarindan tesis adi ve adresi. Alan adlari
+   sabit ve deger etiketin hemen ardinda duruyor. */
+async function fdaKunye(dataUrl){
   try{ await pdfjsYukle();
     const pdf=await pdfjsLib.getDocument({data:atob(dataUrl.split(',')[1])}).promise;
     let t=''; for(let i=1;i<=Math.min(pdf.numPages,3);i++){
       const s=await (await pdf.getPage(i)).getTextContent();
-      t+='\n'+s.items.map(x=>x.str).join(' ');}
-    const m=t.match(/Facility Name\s*\n?(.{0,70})/); return m?m[1].trim():'';
-  }catch(e){ return ''; }
+      t+='\n'+s.items.map(x=>x.str).join('\n');}
+    const al=e=>{const m=t.match(new RegExp(e.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*\\n(.{0,70})'));
+                 return m?m[1].trim():'';};
+    const p=[al('Facility Street Address, Line 1'),al('Facility Street Address, Line 2'),
+             al('City'),al('Zip Code (Postal Code)'),al('Country/Area')]
+            .filter(x=>x && x.toUpperCase()!=='NONE');
+    return {ad: al('Facility Name'), adres: p.join(', ')};
+  }catch(e){ return {ad:'', adres:''}; }
 }
+async function fdaFirmaAdi(dataUrl){ return (await fdaKunye(dataUrl)).ad; }
 async function kayitNoCek(t,dataUrl,ad){
   /* PDF degilse metin yoktur, cekilemez. Goruntuden okuma (OCR) yapilmiyor;
      yanlis numara uretmektense bos birakip elle yazdirmak dogru. */
@@ -1752,110 +1761,49 @@ function sertifikaAlanlari(){
   (K.hayvan||[]).forEach(y=>kat.push(katAd('hayvan',y)));
   /* Once PORTAL dugumu, sonra kart. Kart alanlari save() ile toptan eziliyor. */
   const K2=v.kayit||{};
+  /* Kategoride de belge kazanir: form musterinin SECTIGINI, FDA ciktisi
+     KAYITLI olani gosteriyor; ikisi ayrilabilir. */
+  const belgeKat=(K2.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean);
   return {firma:K2.unvan||c.fdaUnvan||c.firm||'', adres:K2.adres||c.fdaAdres||form.k03||'',
-          kayit:K2.fdaNo||c.fdaNo||'', kategori:kat.join('\n'), duns:K2.dunsNo||c.dunsNo||form.k06||''};
+          kayit:K2.fdaNo||c.fdaNo||'',
+          kategori:(belgeKat.length?belgeKat:kat).join('\n'),
+          duns:K2.dunsNo||c.dunsNo||form.k06||''};
 }
+/* 29 Eylul 2026. Burada IKINCI BIR SERTIFIKA vardi: pdfmake ile cizilen duz
+   bir belge, alanlari da yuklenen belgelerden degil musterinin doldurdugu
+   FORMDAN aliyordu. Yani ayni sertifika iki yerde, iki ayri tasarimla ve iki
+   ayri veri kaynagiyla uretiliyordu; hangisinin gecerli oldugu belirsizdi.
+   (panel.md > "Ayni ekranda duran iki sayi ayni tanimi kullanir" ile ayni sinif.)
+   Gecerli sertifika Export Partners tasarimidir; Chrome ile basiliyor, tarayici
+   icinde uretilemiyor. Bu yuzden tus artik BELGELERDEN OKUNAN degerleri
+   gosteriyor ve uretimi "Belgeleri gonder" akisina birakiyor. */
 function sertifikaAc(){
-  const a=sertifikaAlanlari();
-  const q=(id,et,deg,ipucu,cok)=>`<label style="display:block;margin:10px 0 3px;font-weight:700;font-size:12px">${et}</label>`+
-    (cok?`<textarea id="${id}" rows="${cok}" style="width:100%;padding:7px 9px;border:1px solid #d9dde3;border-radius:7px;font:inherit">${esc(deg)}</textarea>`
-        :`<input id="${id}" value="${esc(deg)}" placeholder="${esc(ipucu||'')}" style="width:100%;padding:7px 9px;border:1px solid #d9dde3;border-radius:7px;font:inherit">`);
+  const v=portalVeri||{}, K=v.kayit||{}, B=v.kayit_belgeleri||{};
+  const sat=(et,deg,kaynak)=>`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #eef1f4">
+      <div style="width:150px;flex:none;font-size:12px;color:#5a6472">${esc(et)}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${deg?esc(deg):'<span style="color:#c0392b;font-weight:500">okunamadı</span>'}</div>
+        <div style="font-size:11px;color:#9aa4b0">${esc(kaynak)}</div></div></div>`;
+  const kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean);
   const k=document.createElement('div');
   k.id='sertKutu';
   k.style.cssText='position:fixed;inset:0;background:rgba(15,20,28,.55);z-index:99998;display:flex;align-items:center;justify-content:center;padding:18px';
-  k.innerHTML=`<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px">
-    <div style="font-weight:800;font-size:15px;margin-bottom:2px">FDA Kayıt Sertifikası</div>
-    <div style="font-size:12px;color:#5a6472;margin-bottom:6px">Alanlar formdan geldiği kadar dolduruldu. Firma adı ve adres vergi levhasındaki İngilizce yazımla girilmeli; kayıt numarası FDA kaydı tamamlandıktan sonra elinizdedir.</div>
-    ${q('sfFirma','Firma adı (İngilizce)',a.firma,'ORNEK GIDA SANAYI VE TICARET A.S.')}
-    ${q('sfAdres','Adresi (İngilizce)',a.adres,'Organize Sanayi Bolgesi 5. Cadde No:12, Nilufer / Bursa, Turkiye',2)}
-    ${q('sfKayit','FDA kayıt numarası',a.kayit,'11 haneli')}
-    ${q('sfKat','Kayıt yapılan kategoriler',a.kategori,'',4)}
-    ${q('sfDuns','DUNS numarası',a.duns,'12-345-6789')}
+  k.innerHTML=`<div style="background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px">
+    <div style="font-weight:800;font-size:15px">FDA Kayıt Sertifikası</div>
+    <div style="font-size:12px;color:#5a6472;margin:3px 0 12px">Sertifikaya girecek bilgiler, yüklenen belgelerden okunur. Elle yazılmaz.</div>
+    ${sat('Firma adı', K.unvan||'', 'FDA kayıt çıktısı, Facility Name')}
+    ${sat('Adres', K.adres||'', 'FDA kayıt çıktısı, Facility Address')}
+    ${sat('FDA kayıt no', K.fdaNo||'', 'FDA kayıt çıktısı, Registration Number')}
+    ${sat('DUNS no', K.dunsNo||'', 'DUNS ekran görüntüsü, OCR ile')}
+    ${sat('Kayıt yapılan kategoriler', kat.join(' · '), 'FDA kayıt çıktısı, Bölüm 9a')}
+    <div style="margin-top:14px;font-size:12px;color:#5a6472;background:#f7f9fb;border:1px solid #eef1f4;border-radius:9px;padding:10px 12px">
+      ${(B.fda&&B.duns)
+        ? 'Sertifikayı <b>Belgeleri gönder</b> tuşu üretir: Export Partners tasarımıyla basılır, opr@\'ye bilgi maili gider ve müşteri maili deniz@ taslaklarına düşer. Gönder tuşu Mustafa\'da kalır.'
+        : 'Önce iki belge yüklenmeli: FDA Registration Certificate ve DUNS kayıt ekranı.'}
+    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-      <button class="pbtn" onclick="document.getElementById('sertKutu').remove()">Vazgeç</button>
-      <button class="pbtn" style="background:#E8821E;border-color:#E8821E;color:#fff" onclick="sertifikaUret()">PDF üret</button>
+      <button class="pbtn" onclick="document.getElementById('sertKutu').remove()">Kapat</button>
     </div></div>`;
   document.body.appendChild(k);
-}
-async function sertifikaUret(){
-  const g=id=>(document.getElementById(id)||{value:''}).value.trim();
-  const firma=g('sfFirma'), adres=g('sfAdres'), kayit=g('sfKayit'), kat=g('sfKat'), duns=g('sfDuns');
-  /* 29 Eylul 2026, Mustafa: "Firma adi ve kayit no zorunludur diyor, uretmedi."
-     Mesaj hangi alanin eksik oldugunu SOYLEMIYORDU ve alan isaretlenmiyordu;
-     ustelik kayit numarasi hicbir yerde tutulmadigi icin her seferinde bos
-     geliyordu. Ikisi de duzeltildi: eksik alan kirmiziya donuyor, adiyla
-     soyleniyor ve odaga geliyor; uretimden sonra numara ve Ingilizce
-     unvan/adres MUSTERI KARTINA yaziliyor, bir daha sorulmuyor. */
-  /* 29 Eylul 2026: kayit sonrasi iki belge yuklenmeden sertifika uretilmez. */
-  const belgeEksik=kayitBelgeEksik();
-  if(belgeEksik.length){
-    toast('Dosya yüklemeniz gerekmektedir: '+belgeEksik.join(' ve ')+'. Kart içindeki "Kayıt sonrası belgeler" bölümünden yükleyin.');
-    return;
-  }
-  const eksik=[]; 
-  if(!firma) eksik.push(['sfFirma','Firma adı']);
-  if(!kayit) eksik.push(['sfKayit','FDA kayıt numarası']);
-  ['sfFirma','sfKayit'].forEach(id=>{const e=document.getElementById(id); if(e)e.style.borderColor='#d9dde3';});
-  if(eksik.length){
-    eksik.forEach(([id])=>{const e=document.getElementById(id); if(e)e.style.borderColor='#c0392b';});
-    const ilk=document.getElementById(eksik[0][0]); if(ilk){ilk.focus();}
-    toast('Eksik: '+eksik.map(x=>x[1]).join(' ve ')+'. FDA kayıt numarası kayıt tamamlandıktan sonra FDA sisteminden alınır.');
-    return;
-  }
-  const bugun=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
-  const sat=(et,en,deg)=>[{stack:[{text:et,style:'et'},{text:en,style:'en'}]},{text:deg||'—',style:deg?'deg':'bos'}];
-  const dd={pageSize:'A4',pageMargins:[46,52,46,48],info:{title:firma+' FDA kayit sertifikasi'},
-    content:[
-      {columns:[{text:'EXPORT PARTNERS LLC',style:'marka'},
-                {text:'US Agent · San Antonio, Texas',style:'markaSag',alignment:'right'}]},
-      {canvas:[{type:'line',x1:0,y1:0,x2:503,y2:0,lineWidth:2.5,lineColor:'#E8821E'}],margin:[0,8,0,22]},
-      {text:'FDA FOOD FACILITY REGISTRATION',style:'ust'},
-      {text:'FDA Tesis Kaydı Sertifikası',style:'ustTr'},
-      {text:' ',margin:[0,10,0,0]},
-      {table:{widths:[168,'*'],body:[
-        sat('Firma Adı','Facility Name',firma),
-        sat('Adresi','Facility Address',adres),
-        sat('FDA Kayıt Numarası','FDA Registration Number',kayit),
-        sat('Kayıt Yapılan Kategoriler','Registered Categories',kat),
-        sat('DUNS Numarası','DUNS Number',duns)]},
-       layout:{hLineWidth:(i,n)=>(i===0||i===n.table.body.length)?0:0.7,vLineWidth:()=>0,
-               hLineColor:()=>'#e2e6ea',paddingTop:()=>10,paddingBottom:()=>10,paddingLeft:()=>0,paddingRight:()=>10}},
-      {text:' ',margin:[0,14,0,0]},
-      {text:'Yukarıdaki tesis, ABD Gıda ve İlaç Dairesi (FDA) nezdinde gıda tesisi olarak kayıtlıdır. '+
-            'Yabancı tesisler için zorunlu olan ABD temsilciliği (US Agent) görevi Export Partners LLC tarafından yürütülmektedir.',style:'p'},
-      {text:' ',margin:[0,16,0,0]},
-      {columns:[{text:'Düzenleme tarihi: '+bugun,style:'alt'},
-                {text:'Export Partners LLC · exportpartners.com.tr',style:'alt',alignment:'right'}]},
-      /* 29 Eylul 2026, Mustafa: "En alta cok kucuk not dursun, tabii ki bu
-         sertifika bize ait, FDA uretmiyor vs dursun, silme." Not KALDIRILMAZ;
-         yalnizca en alta indi ve kuculdu. Gerekcesi degismedi: kendi hizmet
-         sayfamiz FDA'nin belge vermedigini soyluyor, belge onunla celismemeli. */
-      {canvas:[{type:'line',x1:0,y1:0,x2:503,y2:0,lineWidth:0.5,lineColor:'#e2e6ea'}],margin:[0,14,0,6]},
-      {text:'FDA kayıt için ayrıca bir sertifika düzenlemez; bu belge Export Partners LLC tarafından, '+
-            'kaydın ve kayıt numarasının özeti olarak hazırlanmıştır. Kaydın güncel durumu FDA sisteminden '+
-            'kayıt numarası ve PIN ile doğrulanabilir.',style:'uyari'}
-    ],
-    styles:{marka:{fontSize:12,bold:true,color:'#1b2330',characterSpacing:0.6},
-      markaSag:{fontSize:9,color:'#5a6472',margin:[0,3,0,0]},
-      ust:{fontSize:19,bold:true,color:'#1b2330'},
-      ustTr:{fontSize:11.5,color:'#5a6472',margin:[0,3,0,0]},
-      et:{fontSize:10.5,bold:true,color:'#1b2330'},en:{fontSize:8,color:'#8a929c'},
-      deg:{fontSize:11,color:'#111'},bos:{fontSize:11,color:'#9aa2ad',italics:true},
-      p:{fontSize:9.5,color:'#333',lineHeight:1.4},
-      uyari:{fontSize:6.5,color:'#9aa2ad',lineHeight:1.3},
-      alt:{fontSize:8,color:'#9aa2ad'}},
-    defaultStyle:{fontSize:10,lineHeight:1.25}};
-  try{await pdfmakeYukle();
-    pdfMake.createPdf(dd).download(guvenliAd(firma)+'-fda-kayit-sertifikasi.pdf');
-    const kk=document.getElementById('sertKutu'); if(kk)kk.remove();
-    /* Girilen degerler karta yazilir; ikinci sertifikada ve yenilemede hazir gelir.
-       Deneme kipinde yazma YOK, canli veriye dokunulmaz. */
-    if(!DEMO && data[memoIdx] && data[memoIdx].portalUid){
-      const y={}; if(kayit)y.fdaNo=kayit; if(duns)y.dunsNo=duns; if(adres)y.adres=adres; if(firma)y.unvan=firma;
-      if(Object.keys(y).length) firebase.database().ref('musteri_portal/'+data[memoIdx].portalUid+'/kayit').update(y).catch(()=>{});
-    }
-    toast('Sertifika indirildi'+(!DEMO?' · numaralar kayda yazıldı':''));
-  }catch(e){toast('Sertifika hatası: '+(e&&e.message||e));}
 }
 function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
 async function portalOnizle(k){
