@@ -1287,7 +1287,7 @@ function renderPortal(){
       if(g&&!bekleyen.length){ if(onay) h+=`<div style="margin-top:12px;padding:10px 12px;border:1px solid #b7e4c7;background:#e6f4ea;border-radius:10px"><b style="color:#1faa59">✔ Form onaylandı</b> <span class="pmeta" style="margin:0">${esc(portalTarih(onay.ts))} · ${onay.gitti?'müşteriye e-posta gitti '+esc(portalTarih(onay.gitti)):'müşteri e-postası 15 dk içinde gider'}</span></div>`;
         else if(acikIade) h+=`<div class="pmeta" style="margin-top:12px;padding:8px 12px;border:1px dashed var(--line);border-radius:10px">İade edilmiş kalem var; müşteri tamamlayınca form onaylanabilir.</div>`;
         else h+=`<div style="margin-top:12px;padding:10px 12px;border:1px solid #b7e4c7;background:#f2faf5;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="pmeta" style="margin:0">Belgeler tamamsa formu onayla; müşteriye "belgeleriniz alındı, süreç başladı" e-postası gider.</span><button class="pok" onclick="portalFormOnayla()">✔ Formu onayla</button></div>`;}
-      return h;})()}${soruBlok}`;
+      return h;})()}${kayitBlok(v)}${soruBlok}`;
   }).catch(e=>{box.innerHTML=`<div class="fbh"><span>📋 FDA Evrak Formu</span></div><div class="pmeta">Okunamadı: ${esc(e&&e.message||e)}</div>`;});
 }
 const ONAY_KONU='FDA kayıt süreciniz başladı';
@@ -1447,6 +1447,84 @@ async function portalPdf(){
    DURUSTLUK NOTU, belgenin icinde de yazili: FDA kayit sertifikasi VERMEZ; bu
    belgeyi Export Partners LLC US Agent sifatiyla duzenler. Sitedeki hizmet
    sayfamiz da ayni seyi soyluyor, belge onunla celismemeli. */
+/* KAYIT SONRASI BELGELER (29 Eylul 2026, Mustafa: "Iki belge var, Kaan bunlardan
+   veri cekip musteriye mail atiyordu. Biri FDA Registration Certificate, oteki
+   DUNS numara kaydi ekran goruntusu. Bu ikisinin yuklemesi icin panele bir yer
+   ac; DUNS numarasini oradan, FDA kayit numarasini otekinden ceksin. Dosya
+   yuklenmedikce submit edilemesin, uyari versin.")
+
+   Numarayi CEKME: PDF ise metni pdf.js ile okunup duzenli ifadeyle bulunur
+   (uc gercek sertifikada sinandi, ucunde de "Registration Number: ..." cikti).
+   GORUNTU (png/jpg) ise metin YOKTUR, cekilemez; o zaman alan elle doldurulur
+   ve bu acikca soylenir. Uydurma yapilmaz. */
+const KAYIT_BELGE=[
+  ["fda","FDA Registration Certificate","FDA sisteminden inen kayit ciktisi (PDF). Kayit numarasi buradan cekilir."],
+  ["duns","DUNS kayit ekrani","D-U-N-S numarasinin gorundugu ekran (PDF ya da goruntu). PDF ise numara cekilir."]];
+function kayitBlok(v){
+  const B=v.kayit_belgeleri||{};
+  const kutu=(t,ad,acik)=>{const f=B[t];
+    return `<div style="flex:1 1 260px;border:1px solid ${f?'#b7e4c7':'var(--line)'};background:${f?'#f2faf5':'#fff'};border-radius:10px;padding:10px 12px">
+      <div style="font-weight:700;font-size:12.5px">${esc(ad)}</div>
+      <div class="pmeta" style="margin:2px 0 7px">${esc(acik)}</div>
+      ${f?`<div style="font-size:12.5px">📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span></div>
+           <div style="margin-top:6px;display:flex;gap:6px"><button class="pbtn" onclick="kayitBelgeIndir('${t}')">İndir</button><button class="pbtn" onclick="kayitBelgeSil('${t}')">Kaldır</button></div>`
+        :`<input type="file" accept=".pdf,image/*" onchange="kayitBelgeYukle('${t}',this)" style="font-size:12px">`}
+    </div>`;};
+  return `<div style="margin-top:14px"><div class="fbh" style="margin-bottom:8px"><span>🗂 KAYIT SONRASI BELGELER</span></div>
+    <div class="pmeta" style="margin-bottom:8px">Kayıt tamamlanınca bu iki belge yüklenir. Sertifika ve müşteri maili bu belgeler yüklenmeden üretilmez.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${KAYIT_BELGE.map(([t,ad,ac])=>kutu(t,ad,ac)).join('')}</div></div>`;
+}
+function kayitBelgeEksik(){
+  const B=(portalVeri||{}).kayit_belgeleri||{};
+  return KAYIT_BELGE.filter(([t])=>!B[t]).map(([t,ad])=>ad);
+}
+function kayitBelgeIndir(t){const f=((portalVeri||{}).kayit_belgeleri||{})[t]; if(!f||!f.veri)return;
+  const a=document.createElement('a');a.href=f.veri;a.download=f.ad||t;document.body.appendChild(a);a.click();a.remove();}
+function kayitBelgeSil(t){ if(!confirm('Belge kaldırılsın mı?'))return;
+  const c=data[memoIdx]; if(DEMO){toast('Deneme kipinde silinmez');return;}
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit_belgeleri/'+t).remove()
+    .then(()=>{renderPortal();toast('Kaldırıldı');}).catch(e=>toast('Kaldırılamadı: '+(e&&e.message||e)));}
+async function kayitBelgeYukle(t,inp){
+  const f=inp&&inp.files&&inp.files[0]; if(!f)return;
+  if(f.size>7*1024*1024){toast('Dosya 7 MB sınırını aşıyor, sıkıştırıp yeniden deneyin');inp.value='';return;}
+  const oku=()=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f);});
+  toast('Yükleniyor…');
+  const veri=await oku();
+  const kayit={ad:f.name,boyut:f.size,tarih:new Date().toISOString().slice(0,10),veri:veri};
+  const no=await kayitNoCek(t,veri,f.name);
+  if(DEMO){ portalVeri.kayit_belgeleri=portalVeri.kayit_belgeleri||{}; portalVeri.kayit_belgeleri[t]=kayit;
+            renderPortal(); toast(no?('Yüklendi · '+no.etiket+': '+no.deger):'Yüklendi (deneme kipi, buluta yazılmadı)'); return; }
+  const c=data[memoIdx];
+  try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit_belgeleri/'+t).set(kayit); }
+  catch(e){ toast('Yüklenemedi: '+(e&&e.message||e)); return; }
+  if(no){ const r=data[memoIdx];
+    if(no.alan==='fdaNo') r.fdaNo=no.deger; else r.dunsNo=no.deger;
+    save(()=>{}); }
+  renderPortal();
+  toast(no?('Yüklendi · '+no.etiket+' okundu: '+no.deger):'Yüklendi · numara okunamadı, sertifikada elle yazılacak');
+}
+async function kayitNoCek(t,dataUrl,ad){
+  /* PDF degilse metin yoktur, cekilemez. Goruntuden okuma (OCR) yapilmiyor;
+     yanlis numara uretmektense bos birakip elle yazdirmak dogru. */
+  if(!/^data:application\/pdf/i.test(dataUrl||'')) return null;
+  try{
+    await pdfjsYukle();
+    const gorev=pdfjsLib.getDocument({data:atob(dataUrl.split(',')[1])});
+    const pdf=await gorev.promise; let metin='';
+    for(let i=1;i<=Math.min(pdf.numPages,3);i++){
+      const s=await (await pdf.getPage(i)).getTextContent();
+      metin+=' '+s.items.map(x=>x.str).join(' ');
+    }
+    if(t==='fda'){
+      const m=metin.match(/Registration\s*Number\s*[:\s]\s*([0-9]{8,12})/i);
+      if(m) return {alan:'fdaNo',etiket:'FDA kayıt numarası',deger:m[1]};
+    }else{
+      const m=metin.match(/D\W?U\W?N\W?S[^0-9]{0,24}([0-9][0-9\- ]{7,13})/i);
+      if(m) return {alan:'dunsNo',etiket:'DUNS numarası',deger:m[1].trim()};
+    }
+  }catch(e){}
+  return null;
+}
 function sertifikaAlanlari(){
   const c=data[memoIdx]||{}; const v=portalVeri||{}; const form=v.form||{}; const K=form.kategori||{};
   const kat=[]; (K.faaliyet||[]).forEach(y=>kat.push(katAd('faaliyet',y)));
@@ -1486,6 +1564,12 @@ async function sertifikaUret(){
      geliyordu. Ikisi de duzeltildi: eksik alan kirmiziya donuyor, adiyla
      soyleniyor ve odaga geliyor; uretimden sonra numara ve Ingilizce
      unvan/adres MUSTERI KARTINA yaziliyor, bir daha sorulmuyor. */
+  /* 29 Eylul 2026: kayit sonrasi iki belge yuklenmeden sertifika uretilmez. */
+  const belgeEksik=kayitBelgeEksik();
+  if(belgeEksik.length){
+    toast('Dosya yüklemeniz gerekmektedir: '+belgeEksik.join(' ve ')+'. Kart içindeki "Kayıt sonrası belgeler" bölümünden yükleyin.');
+    return;
+  }
   const eksik=[]; 
   if(!firma) eksik.push(['sfFirma','Firma adı']);
   if(!kayit) eksik.push(['sfKayit','FDA kayıt numarası']);
