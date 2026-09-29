@@ -358,10 +358,13 @@ const GLOBE='<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-
    Renewal'in altina kondu, digerlerinin birbirine gore sirasi bozulmadi. */
 const STATUSES=['New','Renewal','In Progress','Hold','Import Refusal','Over Due','Completed','Not Converted'];
 const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP','PROCESS AUTHORITY LETTER'];
-const NOTES=['Awaiting Intro Call','Intro Email Sent','Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted','Quote In Preparation'];
+const NOTES=['Awaiting Intro Call','Intro Email Sent','Pricing Email Sent','Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted','Quote In Preparation'];
 const RED_NOTES=['Payment Not Received','Technical Call Pending'];
 const ORANGE_NOTES=['Proforma Invoice Sent'];
-const GREEN_NOTES=['Payment Received'];
+/* Pricing Email Sent: fiyat PDF teklif ya da proforma ile degil, mailin
+   icinde yazili gitti. Cogu zaman gosterge niteliginde ve nakliye
+   kalemi iceriyor. 'Proposal Sent' ile ayni sey DEGIL, yerini almaz. */
+const GREEN_NOTES=['Payment Received','Pricing Email Sent'];
 const BURGUNDY_NOTES=['Technical Call Done'];
 const PURPLE_NOTES=['Proposal Sent'];
 const LILAC_NOTES=['Video Meeting Planned'];
