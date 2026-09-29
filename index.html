@@ -32,6 +32,13 @@
   .firmcell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%}
   .firmrow{display:flex;align-items:center;gap:6px;width:100%}
   .sub{display:flex;align-items:center;gap:6px;padding-left:4px}
+  .urunler{margin-top:2px}
+  .urunler>div{font-size:11.5px;font-weight:600;color:#6b7280;line-height:1.5}
+  .urunler>div>span{color:#b3bac5;font-weight:500}
+  .urun-duzenle{border:none;background:transparent;color:#b3bac5;font-size:10.5px;cursor:pointer;padding:1px 0}
+  .urunler.acik .urun-duzenle{display:none}
+  .urun-giris{display:none}
+  .urunler.acik .urun-giris{display:block}
   .product{border:none;background:transparent;outline:none;font-size:11.5px;font-weight:600;color:#6b7280;width:100%;min-width:130px;padding:1px 3px;font-style:italic}
   .product::placeholder{color:#b3bac5;font-style:normal;font-weight:500}
   .product:focus{border-bottom:1.5px solid var(--gold);font-style:normal;color:var(--text)}
@@ -746,6 +753,18 @@ function rowHtml(c,i,pos){
   const newActive=isNewActive(c);
   const light=c.status==='In Progress'?'<span class="light green"></span>':c.status==='Hold'?'<span class="light red"></span>':'';
   const badge=newActive?`<button class="badge-new" onclick="dropToHold(${i})" title="Move to HOLD now">NEW<span class="dn">↓</span></button>`:'';
+  /* Bir kayitta birden fazla urun olabiliyor (ornek: ajans, uc musterisi icin
+     uc ayri urun). Tek satirlik kutuya sigmiyor; noktali virgulle ayrilan
+     urunler firma adinin altinda "Product name:" satirlari olarak listelenir.
+     Kutu duzenleme icin duruyor, cift gorunmesin diye gizli. */
+  function urunHucresi(i, urun){
+    const giris = `<input class="product" value="${esc(urun||'')}" placeholder="Product name" onchange="upd(${i},'product',this.value)">`;
+    const p = (urun||'').split(';').map(x=>x.trim()).filter(Boolean);
+    if(p.length < 2) return giris;
+    return `<div class="urunler">${p.map(x=>`<div><span>Product name:</span> ${esc(x)}</div>`).join('')}`+
+           `<button class="urun-duzenle" onclick="this.parentNode.classList.add('acik')">✎ düzenle</button>`+
+           `<div class="urun-giris">${giris}</div></div>`;
+  }
   const sub=(light||badge)?`<div class="sub">${light}${badge}</div>`:'';
   const nFiles=(c.files||[]).length;
   const memoHas=(c.memo||'').trim()||nFiles>0||(c.assess||[]).length>0;
@@ -782,7 +801,7 @@ function rowHtml(c,i,pos){
   }
   const alt=pos%2?'alt':'';
   return `<tr class="${alt}">
-    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${sub}</div></td>
+    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="del" onclick="del(${i})" title="Delete row">✕</button></div>${urunHucresi(i,c.product)}${sub}</div></td>
     <td><div class="chips">${taskChips}<select class="add-sel add-task" onchange="addItem(${i},'tasks',this.value);this.selectedIndex=0">${addOpts(TASKS,c.tasks||[],'+ Task')}</select></div></td>
     <td><select class="pill ${SC[c.status]||'s-hold'}" onchange="upd(${i},'status',this.value);render()">${statusOpts(c.status)}</select></td>
     <td><input class="contact" value="${esc(c.contact)}" placeholder="—" onchange="upd(${i},'contact',this.value)"><input class="title" value="${esc(c.title)}" placeholder="Title" onchange="upd(${i},'title',this.value)"></td>
@@ -1471,44 +1490,31 @@ function kayitBlok(v){
         :`<input type="file" accept=".pdf,image/*" onchange="kayitBelgeYukle('${t}',this)" style="font-size:12px">`}
     </div>`;};
   const K=v.kayit||{}, eksik=KAYIT_BELGE.filter(([t])=>!B[t]).length;
-  /* DUNS ekrani cogu zaman GORUNTU olarak geliyor ve numara cekilemiyor
-     (OCR yapilmiyor: yanlis numara uretmektense bos birakmak dogru).
-     O yuzden elle yazilacak bir alan var ve MUSTERI_PORTAL altina yaziliyor;
-     kart alanlari panelin save() islevi tarafindan toptan eziliyor. */
-  const no=(alan,ad,ipucu)=>`<div style="flex:1 1 220px">
-      <div style="font-weight:700;font-size:12.5px">${esc(ad)}</div>
-      <div class="pmeta" style="margin:2px 0 5px">${esc(ipucu)}</div>
-      <input value="${esc(K[alan]||'')}" placeholder="—" onchange="kayitNoYaz('${alan}',this.value)"
-             style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-size:13px"></div>`;
-  const gonderildi=K.gonder;
+  /* 29 Eylul 2026, Mustafa: "Bu olmaz, numaralar buraya akacak zaten
+     belgelerden." Elle yazilan FDA ve DUNS alanlari ve DUNS kapisi KALKTI.
+     FDA numarasi sertifikanin PDF metninden, DUNS numarasi ekran
+     goruntusunden OCR ile okunuyor (macOS Vision). Okunamazsa mail
+     gitmiyor ve opr@ ile deniz@'ya sebebi yaziliyor. */
+  const okunan = (K.fdaNo || K.dunsNo)
+    ? `<div class="pmeta" style="margin-top:8px">Belgelerden okunan: ${K.fdaNo?('FDA '+esc(K.fdaNo)):''}${(K.fdaNo&&K.dunsNo)?' · ':''}${K.dunsNo?('DUNS '+esc(K.dunsNo)):''}</div>`
+    : '';
+  const gonderildi = K.gonder;
   return `<div style="margin-top:14px"><div class="fbh" style="margin-bottom:8px"><span>🗂 KAYIT SONRASI BELGELER</span></div>
-    <div class="pmeta" style="margin-bottom:8px">Kayıt tamamlanınca bu iki belge yüklenir. Sertifika ve müşteri maili bu belgeler yüklenmeden üretilmez.</div>
+    <div class="pmeta" style="margin-bottom:8px">Kayıt tamamlanınca bu iki belge yüklenir. Numaralar belgelerden okunur; sertifika ve müşteri maili bu belgeler yüklenmeden üretilmez.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${KAYIT_BELGE.map(([t,ad,ac])=>kutu(t,ad,ac)).join('')}</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-      ${no('fdaNo','FDA kayıt numarası','Sertifikadan okunuyor; okunamadıysa elle yazın')}
-      ${no('dunsNo','DUNS numarası','Ekran görüntüsünden okunamaz, elle yazın')}</div>
+    ${okunan}
     <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button class="pbtn" style="background:${eksik||!K.dunsNo?'#eee':'#1F3864'};border-color:${eksik||!K.dunsNo?'var(--line)':'#1F3864'};color:${eksik||!K.dunsNo?'#888':'#fff'};font-weight:700;padding:8px 16px"
+      <button class="pbtn" style="background:${eksik?'#eee':'#1F3864'};border-color:${eksik?'var(--line)':'#1F3864'};color:${eksik?'#888':'#fff'};font-weight:700;padding:8px 16px"
               onclick="kayitGonder()">✉ Belgeleri gönder</button>
       <span class="pmeta">${gonderildi
-        ? 'Gönder tuşuna basıldı: '+esc(gonderildi)+' · opr@\'ye bilgi maili ve müşteri taslağı en geç 15 dakika içinde hazırlanır.'
+        ? 'Gönder tuşuna basıldı: '+esc(gonderildi)+' · opr@ maili ve müşteri taslağı en geç 15 dakika içinde hazırlanır.'
         : (eksik ? 'Önce '+eksik+' belge yüklenmeli.'
-                 : (!K.dunsNo ? 'DUNS numarası yazılmadan gönderilemez.'
-                              : 'Basınca opr@\'ye bilgi maili gider, müşteri maili deniz@ taslaklarına düşer. Gönder tuşuna Mustafa basar.'))}</span>
+                 : 'Basınca opr@\'ye bilgi maili gider, müşteri maili deniz@ taslaklarına düşer. Gönder tuşuna Mustafa basar.')}</span>
     </div></div>`;
-}
-function kayitNoYaz(alan,deger){
-  deger=(deger||'').trim();
-  if(DEMO){ portalVeri.kayit=portalVeri.kayit||{}; portalVeri.kayit[alan]=deger; renderPortal(); return; }
-  const c=data[memoIdx];
-  firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/'+alan).set(deger)
-    .then(()=>{renderPortal();toast('Kaydedildi');}).catch(e=>toast('Yazılamadı: '+(e&&e.message||e)));
 }
 function kayitGonder(){
   const eksik=kayitBelgeEksik();
   if(eksik.length){ toast('Dosya yüklemeniz gerekmektedir: '+eksik.join(' ve ')); return; }
-  const K=(portalVeri||{}).kayit||{};
-  if(!K.dunsNo){ toast('DUNS numarası yazılmadan gönderilemez: ekran görüntüsünden okunamıyor, alanı doldurun'); return; }
   if(!confirm('opr@\'ye bilgi maili gidecek, müşteri maili deniz@ taslaklarına düşecek. Gönderilsin mi?')) return;
   if(DEMO){ portalVeri.kayit.gonder=new Date().toISOString().slice(0,16).replace('T',' '); renderPortal();
             toast('Deneme kipi: gerçek mail gitmedi'); return; }
