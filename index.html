@@ -80,6 +80,9 @@
   .chip.note-burgundy{background:#7d1935;box-shadow:0 1px 4px rgba(125,25,53,.35)}
   .chip.note-purple{background:#6d3b9e;box-shadow:0 1px 4px rgba(109,59,158,.35)}
   .chip.note-lilac{background:#dfccf7;color:#4a2a72;border:1px solid #c9adf0}
+  .tasi{border:none;background:transparent;color:#c2c8d0;cursor:pointer;font-size:10px;padding:0 1px;line-height:1}
+  .tasi:hover{color:#1F3864}
+  .chip.note-blue{background:#cfeafc;color:#0f4c66;border:1px solid #a3d8f7}
   .add-sel{border-radius:12px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none}
   .add-task{border:1px solid #bcdcf6;background:#e7f2fc;color:#1c5fa8}
   .add-note{border:1px dashed #d8c596;background:#f7f1e3;color:#8a6d22}
@@ -354,13 +357,15 @@ const GLOBE='<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-
    Renewal'in altina kondu, digerlerinin birbirine gore sirasi bozulmadi. */
 const STATUSES=['New','Renewal','In Progress','Hold','Import Refusal','Over Due','Completed','Not Converted'];
 const TASKS=['FDA&DUNS','FDA RENEWAL','LABEL REVIEW','USDA/APHIS REGISTRATION','USDA ADDITIONAL PRODUCT REG.','VS PERMIT FEE','US CUSTOMS','CUSTOMS REG.','CUSTOMS BOND','SID','FCE','US IMPORT','CANADA IMPORT','COSMETICS PRODUCT REG.','AMAZON','SHIPMENT','TRADEMARK','LLC FORMATION','SHORT CONSULTING','PARTNERSHIP','PROCESS AUTHORITY LETTER'];
-const NOTES=['Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted','Quote In Preparation'];
+const NOTES=['Awaiting Intro Call','Proposal Sent','Proforma Invoice Sent','Payment Not Received','Technical Call Pending','Technical Call Done','Intro Call Done','Video Meeting Planned','Awaiting Client Info','Renewal Contacted','Quote In Preparation'];
 const RED_NOTES=['Payment Not Received','Technical Call Pending'];
 const ORANGE_NOTES=['Proforma Invoice Sent'];
 const GREEN_NOTES=['Payment Received'];
 const BURGUNDY_NOTES=['Technical Call Done'];
 const PURPLE_NOTES=['Proposal Sent'];
 const LILAC_NOTES=['Video Meeting Planned'];
+/* Meta'dan yeni lead dustugunde otomatik konur: ilk gorusme bekleniyor. */
+const BLUE_NOTES=['Awaiting Intro Call'];
 const ASSESS_POS=['Highly likely (needs match our services)','Solid corporate contact','Urgent, wants to move fast'];
 const ASSESS=[
   'Highly likely (needs match our services)',
@@ -372,7 +377,7 @@ const ASSESS=[
   'No urgency',
   'Undecided, technical call could turn it positive'
 ];
-const SUPERSEDE={'Payment Received':'Proforma Invoice Sent','Technical Call Done':'Technical Call Pending'};
+const SUPERSEDE={'Payment Received':'Proforma Invoice Sent','Technical Call Done':'Technical Call Pending','Intro Call Done':'Awaiting Intro Call'};
 /* 10 Sep 2026: 'Not Started' was in here, so eleven customers whose work
    had not begun were drawn under a heading that said COMPLETED. The
    comment on isNewActive already describes the intended behaviour, "sends
@@ -433,7 +438,9 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function ensureIds(arr){let ch=false;arr.forEach(r=>{if(!r.id){r.id=genId();ch=true;}});return ch;}
 function normalize(r){
   let notes=applySupersede((r.notes||[]).map(normNote));
-  return {id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
+  /* sira: elle tasima. normalize() bilinmeyen alani DUSURUYOR; burada
+     sayilmazsa tasima bir sonraki okumada kayboluyordu. */
+  return {id:r.id||'',firm:r.firm||'',product:r.product||'',sira:(typeof r.sira==='number'?r.sira:undefined),title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
     memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||''};
 }
@@ -494,7 +501,7 @@ function initData(){
 
 function statusOpts(sel){return STATUSES.map(s=>`<option ${s===sel?'selected':''}>${s}</option>`).join('');}
 function addOpts(list,existing,label){return `<option value="">${label}</option>`+list.filter(t=>!existing.includes(t)).map(t=>`<option value="${esc(t)}">${t}</option>`).join('');}
-function noteClass(n){if(LILAC_NOTES.includes(n))return 'note-lilac';if(PURPLE_NOTES.includes(n))return 'note-purple';if(BURGUNDY_NOTES.includes(n))return 'note-burgundy';if(RED_NOTES.includes(n))return 'note-red';if(ORANGE_NOTES.includes(n))return 'note-orange';if(GREEN_NOTES.includes(n))return 'note-green';return 'note';}
+function noteClass(n){if(BLUE_NOTES.includes(n))return 'note-blue';if(LILAC_NOTES.includes(n))return 'note-lilac';if(PURPLE_NOTES.includes(n))return 'note-purple';if(BURGUNDY_NOTES.includes(n))return 'note-burgundy';if(RED_NOTES.includes(n))return 'note-red';if(ORANGE_NOTES.includes(n))return 'note-orange';if(GREEN_NOTES.includes(n))return 'note-green';return 'note';}
 function openMail(e){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(e),'_blank');}
 
 /* NEW band membership: only a still-Hold new inquiry within 5 business days of its
@@ -782,7 +789,7 @@ function rowHtml(c,i,pos){
   }
   const alt=pos%2?'alt':'';
   return `<tr class="${alt}">
-    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${sub}</div></td>
+    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="tasi" onclick="satirTasi(${i},-1)" title="Bir üste taşı">▲</button><button class="tasi" onclick="satirTasi(${i},1)" title="Bir alta taşı">▼</button><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${sub}</div></td>
     <td><div class="chips">${taskChips}<select class="add-sel add-task" onchange="addItem(${i},'tasks',this.value);this.selectedIndex=0">${addOpts(TASKS,c.tasks||[],'+ Task')}</select></div></td>
     <td><select class="pill ${SC[c.status]||'s-hold'}" onchange="upd(${i},'status',this.value);render()">${statusOpts(c.status)}</select></td>
     <td><input class="contact" value="${esc(c.contact)}" placeholder="—" onchange="upd(${i},'contact',this.value)"><input class="title" value="${esc(c.title)}" placeholder="Title" onchange="upd(${i},'title',this.value)"></td>
@@ -893,6 +900,14 @@ function render(){
     if(tb) return 1;
     return 0;
   });
+  /* Elle tasima yapilmis bantlar: bandin TAMAMI sira tasiyorsa o siraya
+     uyulur. Bir kismi tasiyorsa bandin kendi siralamasi gecerli kalir,
+     yoksa sirasizlar rastgele yere duserdi. */
+  Object.keys(kova).forEach(anahtar=>{
+    const l=kova[anahtar];
+    if(l.length>1 && l.every(i=>typeof data[i].sira==='number'))
+      l.sort((x,y)=>data[x].sira-data[y].sira);
+  });
   /* Mukerrerlik olcumu: her indeks tam bir bantta olmali. Bozulursa sessiz
      kalmaz, sayfanin ustunde uyari cikar. */
   const gorulen=new Set(); let mukerrer=0;
@@ -919,6 +934,33 @@ function render(){
    task that exists in the records is always selectable even if someone
    forgot to add it to the list. Counts are shown because the question is
    usually "how many are in this pile", not "does this task exist". */
+/* 29 Eylul 2026, Mustafa: "Panelde satirlari asagi yukari almak icin bir
+   sistem kurabilir misin, tasiyarak ya da okla."
+   Ok secildi: tablo bantlara bolunmus ve surukleme bant sinirinda bozuluyor.
+   Sira KULLANICININ GORDUGU dizilimden turetiliyor (DOM), cunku bantlarin
+   kendi siralamalari var (NEW tarihe gore, RENEWAL duruma gore); ayni
+   mantigi ikinci kez yazmak ayrisma uretirdi.
+   Tasima yapilinca o bandin BUTUN satirlarina sira yaziliyor; render bir
+   bandin tamami sira tasiyorsa o siraya uyar, yoksa kendi siralamasini
+   kullanir. Tarih ya da durum alanina DOKUNULMAZ. */
+function satirTasi(i, yon){
+  const tr=[...document.querySelectorAll('#rows tr')];
+  const k=tr.findIndex(r=>r.querySelector('.firm[data-i="'+i+'"]'));
+  if(k<0) return;
+  let bas=k, son=k;
+  while(bas>0 && !tr[bas-1].classList.contains('sep')) bas--;
+  while(son<tr.length-1 && !tr[son+1].classList.contains('sep')) son++;
+  const hedef=yon<0?k-1:k+1;
+  if(hedef<bas || hedef>son){ toast(yon<0?'Bölümün en üstünde':'Bölümün en altında'); return; }
+  const dizi=[];
+  for(let x=bas;x<=son;x++){ const e=tr[x].querySelector('.firm'); if(e) dizi.push(+e.dataset.i); }
+  const hedefI=+tr[hedef].querySelector('.firm').dataset.i;
+  const a=dizi.indexOf(i), b=dizi.indexOf(hedefI);
+  if(a<0||b<0) return;
+  dizi.splice(b,0,dizi.splice(a,1)[0]);
+  dizi.forEach((idx,n)=>{ data[idx].sira=n; });
+  save(()=>render());
+}
 function fillTaskFilter(keep){
   const sel=document.getElementById('taskFilter'); if(!sel) return;
   const sayim={};
