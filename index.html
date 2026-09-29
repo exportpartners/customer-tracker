@@ -1470,9 +1470,53 @@ function kayitBlok(v){
            <div style="margin-top:6px;display:flex;gap:6px"><button class="pbtn" onclick="kayitBelgeIndir('${t}')">İndir</button><button class="pbtn" onclick="kayitBelgeSil('${t}')">Kaldır</button></div>`
         :`<input type="file" accept=".pdf,image/*" onchange="kayitBelgeYukle('${t}',this)" style="font-size:12px">`}
     </div>`;};
+  const K=v.kayit||{}, eksik=KAYIT_BELGE.filter(([t])=>!B[t]).length;
+  /* DUNS ekrani cogu zaman GORUNTU olarak geliyor ve numara cekilemiyor
+     (OCR yapilmiyor: yanlis numara uretmektense bos birakmak dogru).
+     O yuzden elle yazilacak bir alan var ve MUSTERI_PORTAL altina yaziliyor;
+     kart alanlari panelin save() islevi tarafindan toptan eziliyor. */
+  const no=(alan,ad,ipucu)=>`<div style="flex:1 1 220px">
+      <div style="font-weight:700;font-size:12.5px">${esc(ad)}</div>
+      <div class="pmeta" style="margin:2px 0 5px">${esc(ipucu)}</div>
+      <input value="${esc(K[alan]||'')}" placeholder="—" onchange="kayitNoYaz('${alan}',this.value)"
+             style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-size:13px"></div>`;
+  const gonderildi=K.gonder;
   return `<div style="margin-top:14px"><div class="fbh" style="margin-bottom:8px"><span>🗂 KAYIT SONRASI BELGELER</span></div>
     <div class="pmeta" style="margin-bottom:8px">Kayıt tamamlanınca bu iki belge yüklenir. Sertifika ve müşteri maili bu belgeler yüklenmeden üretilmez.</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">${KAYIT_BELGE.map(([t,ad,ac])=>kutu(t,ad,ac)).join('')}</div></div>`;
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${KAYIT_BELGE.map(([t,ad,ac])=>kutu(t,ad,ac)).join('')}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      ${no('fdaNo','FDA kayıt numarası','Sertifikadan okunuyor; okunamadıysa elle yazın')}
+      ${no('dunsNo','DUNS numarası','Ekran görüntüsünden okunamaz, elle yazın')}</div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="pbtn" style="background:${eksik||!K.dunsNo?'#eee':'#1F3864'};border-color:${eksik||!K.dunsNo?'var(--line)':'#1F3864'};color:${eksik||!K.dunsNo?'#888':'#fff'};font-weight:700;padding:8px 16px"
+              onclick="kayitGonder()">✉ Belgeleri gönder</button>
+      <span class="pmeta">${gonderildi
+        ? 'Gönder tuşuna basıldı: '+esc(gonderildi)+' · opr@\'ye bilgi maili ve müşteri taslağı en geç 15 dakika içinde hazırlanır.'
+        : (eksik ? 'Önce '+eksik+' belge yüklenmeli.'
+                 : (!K.dunsNo ? 'DUNS numarası yazılmadan gönderilemez.'
+                              : 'Basınca opr@\'ye bilgi maili gider, müşteri maili deniz@ taslaklarına düşer. Gönder tuşuna Mustafa basar.'))}</span>
+    </div></div>`;
+}
+function kayitNoYaz(alan,deger){
+  deger=(deger||'').trim();
+  if(DEMO){ portalVeri.kayit=portalVeri.kayit||{}; portalVeri.kayit[alan]=deger; renderPortal(); return; }
+  const c=data[memoIdx];
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/'+alan).set(deger)
+    .then(()=>{renderPortal();toast('Kaydedildi');}).catch(e=>toast('Yazılamadı: '+(e&&e.message||e)));
+}
+function kayitGonder(){
+  const eksik=kayitBelgeEksik();
+  if(eksik.length){ toast('Dosya yüklemeniz gerekmektedir: '+eksik.join(' ve ')); return; }
+  const K=(portalVeri||{}).kayit||{};
+  if(!K.dunsNo){ toast('DUNS numarası yazılmadan gönderilemez: ekran görüntüsünden okunamıyor, alanı doldurun'); return; }
+  if(!confirm('opr@\'ye bilgi maili gidecek, müşteri maili deniz@ taslaklarına düşecek. Gönderilsin mi?')) return;
+  if(DEMO){ portalVeri.kayit.gonder=new Date().toISOString().slice(0,16).replace('T',' '); renderPortal();
+            toast('Deneme kipi: gerçek mail gitmedi'); return; }
+  const c=data[memoIdx];
+  firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/gonder')
+    .set(new Date().toISOString().slice(0,16).replace('T',' '))
+    .then(()=>{renderPortal();toast('Kuyruğa alındı, en geç 15 dakika içinde gider');})
+    .catch(e=>toast('Yazılamadı: '+(e&&e.message||e)));
 }
 function kayitBelgeEksik(){
   const B=(portalVeri||{}).kayit_belgeleri||{};
@@ -1497,9 +1541,10 @@ async function kayitBelgeYukle(t,inp){
   const c=data[memoIdx];
   try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit_belgeleri/'+t).set(kayit); }
   catch(e){ toast('Yüklenemedi: '+(e&&e.message||e)); return; }
-  if(no){ const r=data[memoIdx];
-    if(no.alan==='fdaNo') r.fdaNo=no.deger; else r.dunsNo=no.deger;
-    save(()=>{}); }
+  /* Numara KARTA yazilmaz: panelin save() islevi butun listeyi birden yaziyor
+     (dbRef.set), disaridan yazilan alan bir sonraki kayitta ucuyor. 29 Eylul'de
+     olculdu, dort alan birden gitti. Portal dugumu o yazmanin disinda kaliyor. */
+  if(no){ try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit/'+no.alan).set(no.deger); }catch(e){} }
   renderPortal();
   toast(no?('Yüklendi · '+no.etiket+' okundu: '+no.deger):'Yüklendi · numara okunamadı, sertifikada elle yazılacak');
 }
@@ -1592,8 +1637,10 @@ function sertifikaAlanlari(){
   const kat=[]; (K.faaliyet||[]).forEach(y=>kat.push(katAd('faaliyet',y)));
   (K.insan||[]).forEach(y=>kat.push(katAd('insan',y)));
   (K.hayvan||[]).forEach(y=>kat.push(katAd('hayvan',y)));
-  return {firma:c.fdaUnvan||c.firm||'', adres:c.fdaAdres||form.k03||'',
-          kayit:c.fdaNo||'', kategori:kat.join('\n'), duns:c.dunsNo||form.k06||''};
+  /* Once PORTAL dugumu, sonra kart. Kart alanlari save() ile toptan eziliyor. */
+  const K2=v.kayit||{};
+  return {firma:K2.unvan||c.fdaUnvan||c.firm||'', adres:K2.adres||c.fdaAdres||form.k03||'',
+          kayit:K2.fdaNo||c.fdaNo||'', kategori:kat.join('\n'), duns:K2.dunsNo||c.dunsNo||form.k06||''};
 }
 function sertifikaAc(){
   const a=sertifikaAlanlari();
@@ -1690,15 +1737,11 @@ async function sertifikaUret(){
     const kk=document.getElementById('sertKutu'); if(kk)kk.remove();
     /* Girilen degerler karta yazilir; ikinci sertifikada ve yenilemede hazir gelir.
        Deneme kipinde yazma YOK, canli veriye dokunulmaz. */
-    if(!DEMO && data[memoIdx]){
-      const r=data[memoIdx]; let degisti=false;
-      if(r.fdaNo!==kayit){r.fdaNo=kayit;degisti=true;}
-      if(duns&&r.dunsNo!==duns){r.dunsNo=duns;degisti=true;}
-      if(adres&&r.fdaAdres!==adres){r.fdaAdres=adres;degisti=true;}
-      if(firma&&r.fdaUnvan!==firma){r.fdaUnvan=firma;degisti=true;}
-      if(degisti) save(()=>{});
+    if(!DEMO && data[memoIdx] && data[memoIdx].portalUid){
+      const y={}; if(kayit)y.fdaNo=kayit; if(duns)y.dunsNo=duns; if(adres)y.adres=adres; if(firma)y.unvan=firma;
+      if(Object.keys(y).length) firebase.database().ref('musteri_portal/'+data[memoIdx].portalUid+'/kayit').update(y).catch(()=>{});
     }
-    toast('Sertifika indirildi'+(!DEMO?' · kayıt numarası karta yazıldı':''));
+    toast('Sertifika indirildi'+(!DEMO?' · numaralar kayda yazıldı':''));
   }catch(e){toast('Sertifika hatası: '+(e&&e.message||e));}
 }
 function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
