@@ -32,13 +32,6 @@
   .firmcell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%}
   .firmrow{display:flex;align-items:center;gap:6px;width:100%}
   .sub{display:flex;align-items:center;gap:6px;padding-left:4px}
-  .urunler{margin-top:2px}
-  .urunler>div{font-size:11.5px;font-weight:600;color:#6b7280;line-height:1.5}
-  .urunler>div>span{color:#b3bac5;font-weight:500}
-  .urun-duzenle{border:none;background:transparent;color:#b3bac5;font-size:10.5px;cursor:pointer;padding:1px 0}
-  .urunler.acik .urun-duzenle{display:none}
-  .urun-giris{display:none}
-  .urunler.acik .urun-giris{display:block}
   .product{border:none;background:transparent;outline:none;font-size:11.5px;font-weight:600;color:#6b7280;width:100%;min-width:130px;padding:1px 3px;font-style:italic}
   .product::placeholder{color:#b3bac5;font-style:normal;font-weight:500}
   .product:focus{border-bottom:1.5px solid var(--gold);font-style:normal;color:var(--text)}
@@ -753,18 +746,6 @@ function rowHtml(c,i,pos){
   const newActive=isNewActive(c);
   const light=c.status==='In Progress'?'<span class="light green"></span>':c.status==='Hold'?'<span class="light red"></span>':'';
   const badge=newActive?`<button class="badge-new" onclick="dropToHold(${i})" title="Move to HOLD now">NEW<span class="dn">↓</span></button>`:'';
-  /* Bir kayitta birden fazla urun olabiliyor (ornek: ajans, uc musterisi icin
-     uc ayri urun). Tek satirlik kutuya sigmiyor; noktali virgulle ayrilan
-     urunler firma adinin altinda "Product name:" satirlari olarak listelenir.
-     Kutu duzenleme icin duruyor, cift gorunmesin diye gizli. */
-  function urunHucresi(i, urun){
-    const giris = `<input class="product" value="${esc(urun||'')}" placeholder="Product name" onchange="upd(${i},'product',this.value)">`;
-    const p = (urun||'').split(';').map(x=>x.trim()).filter(Boolean);
-    if(p.length < 2) return giris;
-    return `<div class="urunler">${p.map(x=>`<div><span>Product name:</span> ${esc(x)}</div>`).join('')}`+
-           `<button class="urun-duzenle" onclick="this.parentNode.classList.add('acik')">✎ düzenle</button>`+
-           `<div class="urun-giris">${giris}</div></div>`;
-  }
   const sub=(light||badge)?`<div class="sub">${light}${badge}</div>`:'';
   const nFiles=(c.files||[]).length;
   const memoHas=(c.memo||'').trim()||nFiles>0||(c.assess||[]).length>0;
@@ -801,7 +782,7 @@ function rowHtml(c,i,pos){
   }
   const alt=pos%2?'alt':'';
   return `<tr class="${alt}">
-    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="del" onclick="del(${i})" title="Delete row">✕</button></div>${urunHucresi(i,c.product)}${sub}</div></td>
+    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${sub}</div></td>
     <td><div class="chips">${taskChips}<select class="add-sel add-task" onchange="addItem(${i},'tasks',this.value);this.selectedIndex=0">${addOpts(TASKS,c.tasks||[],'+ Task')}</select></div></td>
     <td><select class="pill ${SC[c.status]||'s-hold'}" onchange="upd(${i},'status',this.value);render()">${statusOpts(c.status)}</select></td>
     <td><input class="contact" value="${esc(c.contact)}" placeholder="—" onchange="upd(${i},'contact',this.value)"><input class="title" value="${esc(c.title)}" placeholder="Title" onchange="upd(${i},'title',this.value)"></td>
