@@ -1,6 +1,6 @@
 {
- "name": "Export Partners Customer Tracker",
- "short_name": "Tracker",
+ "name": "EP FDA Tracker",
+ "short_name": "EP FDA Tracker",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
