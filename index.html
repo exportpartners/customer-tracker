@@ -841,7 +841,7 @@ const BANTLAR=[
   /* 5 Ekim 2026, Mustafa: "bu gonderdigimiz mailleri cold email diye acik kahverengi bir baslik koy, tracker'da
      oraya gitsin." Cold email ile acilan kayit, cevap gelip baska bir not (Intro Call, Proposal...) ya da durum
      degisikligi olana kadar burada durur; boylece NEW bandi soguk adaylarla dolmaz. */
-  {key:'cold',       label:'COLD EMAIL',     cls:'sec-cold',         uyar:c=>isCold(c)},
+  {key:'cold',       label:'COLD EMAIL · SERTİFİKASYON', cls:'sec-cold', uyar:c=>isCold(c)},  /* gida firmalari sistemi kurulunca ayri bant: COLD EMAIL · GIDA */
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
