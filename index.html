@@ -1559,13 +1559,13 @@ function kayitBlok(v){
      nesneyle okumayi bastan baslatiyordu: sonsuz dongu. Artik okuma her musteri icin oturumda BIR KEZ
      kosar ve yalnizca DEGISEN alan yazilir. */
   const _uid = (data[memoIdx]||{}).portalUid;
-  if(!DEMO && _uid && !BELGE_OKUNDU.has(_uid) && ((B.fda && (!K.kategoriler || !K.fdaNo || !K.unvan || !K.adres)) || (B.duns && !K.dunsNo))){
+  if(!DEMO && _uid && !BELGE_OKUNDU.has(_uid) && ((B.fda && (!K.kategoriler || !K.fdaNo || !K.unvan || !K.adres || !K.olusturma)) || (B.duns && !K.dunsNo))){
     BELGE_OKUNDU.add(_uid);
     (async ()=>{
       const c=data[memoIdx], y={};
       if(B.fda && !K.kategoriler){ const kat=await kategorileriCek(B.fda.veri||''); if(kat.length) y.kategoriler=kat.join('; '); }
-      if(B.fda && (!K.unvan || !K.adres)){ const kn=await fdaKunye(B.fda.veri||'');
-        if(kn.ad && !K.unvan) y.unvan=kn.ad; if(kn.adres && !K.adres) y.adres=kn.adres; }
+      if(B.fda && (!K.unvan || !K.adres || !K.olusturma)){ const kn=await fdaKunye(B.fda.veri||'');
+        if(kn.ad && !K.unvan) y.unvan=kn.ad; if(kn.adres && !K.adres) y.adres=kn.adres; if(kn.olusturma && !K.olusturma) y.olusturma=kn.olusturma; }
       if(B.fda && !K.fdaNo){ const n=await kayitNoCek('fda', B.fda.veri||'', B.fda.ad||''); if(n) y.fdaNo=n.deger; }
       if(B.duns && !K.dunsNo){
         const n=await kayitNoCek('duns', B.duns.veri||'', B.duns.ad||'');
@@ -1757,8 +1757,9 @@ async function fdaKunye(dataUrl){
     const p=[al('Facility Street Address, Line 1'),al('Facility Street Address, Line 2'),
              al('City'),al('Zip Code (Postal Code)'),al('Country/Area')]
             .filter(x=>x && x.toUpperCase()!=='NONE');
-    return {ad: al('Facility Name'), adres: p.join(', ')};
-  }catch(e){ return {ad:'', adres:''}; }
+    const olus=(t.match(/Created Date\s*\n?\s*(\d{4}-\d{2}-\d{2})/)||[])[1]||'';
+    return {ad: al('Facility Name'), adres: p.join(', '), olusturma: olus};
+  }catch(e){ return {ad:'', adres:'', olusturma:''}; }
 }
 async function fdaFirmaAdi(dataUrl){ return (await fdaKunye(dataUrl)).ad; }
 async function kayitNoCek(t,dataUrl,ad){
@@ -1805,7 +1806,7 @@ function kayitMailiAc(){
     '  Adres            : '+(a.adres||'—'),
     '  D-U-N-S numarası : '+(a.duns||'—'),
     '  FDA kayıt no     : '+(a.kayit||'—'),'',
-    'US Agent hizmetinizin yenilemesi '+(new Date().getMonth()>=9?new Date().getFullYear()+1:new Date().getFullYear())+' yılı Ekim-Aralık döneminde yapılır; hatırlatmalar hizmete dahildir.','',
+    'US Agent hizmetinizin yenilemesi '+(()=>{const o=((portalVeri||{}).kayit||{}).olusturma; const t=o?new Date(o+'T12:00:00'):new Date(); return t.getMonth()>=9?t.getFullYear()+1:t.getFullYear();})()+' yılı Ekim-Aralık döneminde yapılır; hatırlatmalar hizmete dahildir.','',
     'Tüm süreç boyunca iş birliğiniz için teşekkür eder, kayıt bilgilerinizin güvenliği açısından bu uyarının dikkate alınmasını rica ederiz.',
     'Herhangi bir sorunuz olursa bizimle her zaman iletişime geçebilirsiniz.','',
     'İyi çalışmalar dileriz.','',
@@ -1906,7 +1907,9 @@ function sertifikaAc(){
 async function sertifikaOnizle(indir){
   const v=portalVeri||{}, K=v.kayit||{}; const yer=document.getElementById('sertOnizleme'); if(!yer)return;
   const AY=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const b=new Date(), yil=b.getFullYear();
+  /* 5 Ekim 2026: Date of Issue ve donem satiri FDA kayit evrakinin Created Date alanindan; okunmamissa evraktan simdi okunur, yoksa bugun. */
+  let olus=K.olusturma||''; if(!olus && (v.kayit_belgeleri||{}).fda){ try{ olus=(await fdaKunye(v.kayit_belgeleri.fda.veri||'')).olusturma||''; }catch(e){} }
+  const b=olus?new Date(olus+'T12:00:00'):new Date(), yil=b.getFullYear();
   const kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean).join('; ');
   const alan={FIRMA:K.unvan||(data[memoIdx]||{}).firm||'',ADRES:K.adres||'',FDA_NO:K.fdaNo||'',DUNS_NO:K.dunsNo||'—',
     KATEGORILER:kat||'Human Food',TARIH:b.getDate()+' '+AY[b.getMonth()]+' '+yil,SERTIFIKA_NO:'EP-FDA-'+yil+'-'+String(K.fdaNo||'0000').slice(-4)};
