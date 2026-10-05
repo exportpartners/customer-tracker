@@ -162,9 +162,15 @@
         <div style="font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A99A8; font-weight: 600;">Registered Categories</div>
         <div id="epKat" style="font-size: 12.5px; font-weight: 600; color: #33475B;">{{KATEGORILER}}</div>
       </div>
-      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 7px 0; text-align: left;">
-        <div style="font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A99A8; font-weight: 600;">Valid Until</div>
-        <div style="font-size: 12.5px; font-weight: 600; color: #33475B;">{{GECERLILIK}}</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 7px 0; text-align: left;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+          <div style="font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A99A8; font-weight: 600;">FDA Registration Expires</div>
+          <div style="font-size: 12.5px; font-weight: 600; color: #33475B;">{{FDA_BITIS}}</div>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+          <div style="font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A99A8; font-weight: 600;">U.S. Agent Valid Until</div>
+          <div style="font-size: 12.5px; font-weight: 600; color: #33475B;">{{GECERLILIK}}</div>
+        </div>
       </div>
     </div>
 
@@ -259,7 +265,7 @@
     </div>
 
     <sc-if value="{{ showDisclaimer }}" hint-placeholder-val="{{ true }}">
-      <div style="margin-top: auto; padding-bottom: 108px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 9.5px; line-height: 1.5; color: #55697D; font-style: italic; text-align: center; max-width: 660px; text-wrap: pretty;">It is hereby affirmed that the facility named above holds an effective registration with the U.S. Food and Drug Administration under the Federal Food, Drug and Cosmetic Act, including the amendments introduced by the Bioterrorism Act of 2002 and the FDA Food Safety Modernization Act. Export Partners LLC has independently confirmed the standing of this registration as of the date of issue and will, upon request and presentation of this certificate, re-confirm that standing at any time through {{GECERLILIK}}, provided the registration has not meanwhile been cancelled or withdrawn. This document is issued solely for the benefit of the certificate holder named herein; no warranty, express or implied, is extended to any other party, and Export Partners LLC accepts no liability arising from reliance upon it by third parties. Registration of a food facility does not constitute approval or endorsement of the facility or its products; the U.S. Food and Drug Administration neither issues nor recognizes certificates of registration, and Export Partners LLC is an independent consultancy with no affiliation to that agency.</div>
+      <div style="margin-top: auto; padding-bottom: 108px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 9.5px; line-height: 1.5; color: #55697D; font-style: italic; text-align: center; max-width: 660px; text-wrap: pretty;">It is hereby affirmed that the facility named above holds an effective registration with the U.S. Food and Drug Administration under the Federal Food, Drug and Cosmetic Act, including the amendments introduced by the Bioterrorism Act of 2002 and the FDA Food Safety Modernization Act. Export Partners LLC has independently confirmed the standing of this registration as of the date of issue and will, upon request and presentation of this certificate, re-confirm that standing under the U.S. Agent service at any time through {{GECERLILIK}}, provided the registration has not meanwhile been cancelled or withdrawn. This document is issued solely for the benefit of the certificate holder named herein; no warranty, express or implied, is extended to any other party, and Export Partners LLC accepts no liability arising from reliance upon it by third parties. Registration of a food facility does not constitute approval or endorsement of the facility or its products; the U.S. Food and Drug Administration neither issues nor recognizes certificates of registration, and Export Partners LLC is an independent consultancy with no affiliation to that agency.</div>
     </sc-if>
 
   </div>

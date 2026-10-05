@@ -1570,8 +1570,8 @@ function kayitBlok(v){
     (async ()=>{
       const c=data[memoIdx], y={};
       if(B.fda && !K.kategoriler){ const kat=await kategorileriCek(B.fda.veri||''); if(kat.length) y.kategoriler=kat.join('; '); }
-      if(B.fda && (!K.unvan || !K.adres || !K.olusturma)){ const kn=await fdaKunye(B.fda.veri||'');
-        if(kn.ad && !K.unvan) y.unvan=kn.ad; if(kn.adres && !K.adres) y.adres=kn.adres; if(kn.olusturma && !K.olusturma) y.olusturma=kn.olusturma; }
+      if(B.fda && (!K.unvan || !K.adres || !K.olusturma || !K.fdaBitis)){ const kn=await fdaKunye(B.fda.veri||'');
+        if(kn.ad && !K.unvan) y.unvan=kn.ad; if(kn.adres && !K.adres) y.adres=kn.adres; if(kn.olusturma && !K.olusturma) y.olusturma=kn.olusturma; if(kn.fdaBitis && !K.fdaBitis) y.fdaBitis=kn.fdaBitis; }
       if(B.fda && !K.fdaNo){ const n=await kayitNoCek('fda', B.fda.veri||'', B.fda.ad||''); if(n) y.fdaNo=n.deger; }
       if(B.duns && !K.dunsNo){
         const n=await kayitNoCek('duns', B.duns.veri||'', B.duns.ad||'');
@@ -1764,8 +1764,9 @@ async function fdaKunye(dataUrl){
              al('City'),al('Zip Code (Postal Code)'),al('Country/Area')]
             .filter(x=>x && x.toUpperCase()!=='NONE');
     const olus=(t.match(/Created Date\s*\n?\s*(\d{4}-\d{2}-\d{2})/)||[])[1]||'';
-    return {ad: al('Facility Name'), adres: p.join(', '), olusturma: olus};
-  }catch(e){ return {ad:'', adres:'', olusturma:''}; }
+    const fdaBitis=(t.match(/Registration Expiration Date\s*\n?\s*(\d{4}-\d{2}-\d{2})/)||[])[1]||'';
+    return {ad: al('Facility Name'), adres: p.join(', '), olusturma: olus, fdaBitis: fdaBitis};
+  }catch(e){ return {ad:'', adres:'', olusturma:'', fdaBitis:''}; }
 }
 async function fdaFirmaAdi(dataUrl){ return (await fdaKunye(dataUrl)).ad; }
 async function kayitNoCek(t,dataUrl,ad){
@@ -1812,7 +1813,7 @@ function kayitMailiAc(){
     '  Adres            : '+(a.adres||'—'),
     '  D-U-N-S numarası : '+(a.duns||'—'),
     '  FDA kayıt no     : '+(a.kayit||'—'),'',
-    'US Agent hizmetinizin yenileme tarihi '+(()=>{const AYT=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']; const o=((portalVeri||{}).kayit||{}).olusturma; const t=o?new Date(o+'T12:00:00'):new Date(); return t.getMonth()>=9 ? t.getDate()+' '+AYT[t.getMonth()]+' '+(t.getFullYear()+1) : '31 Aralık '+t.getFullYear();})()+'; hatırlatmalar hizmete dahildir.','',
+    (()=>{const fb=((portalVeri||{}).kayit||{}).fdaBitis; if(!fb) return ''; const AYT=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']; const t=new Date(fb+'T12:00:00'); return 'FDA tesis kaydınız '+t.getDate()+' '+AYT[t.getMonth()]+' '+t.getFullYear()+' tarihine kadar geçerlidir (FDA kayıtları iki yılda bir, çift yıllarda yenilenir). ';})()+'US Agent hizmetinizin yenileme tarihi '+(()=>{const AYT=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']; const o=((portalVeri||{}).kayit||{}).olusturma; const t=o?new Date(o+'T12:00:00'):new Date(); return t.getMonth()>=9 ? t.getDate()+' '+AYT[t.getMonth()]+' '+(t.getFullYear()+1) : '31 Aralık '+t.getFullYear();})()+'; hatırlatmalar hizmete dahildir.','',
     'Tüm süreç boyunca iş birliğiniz için teşekkür eder, kayıt bilgilerinizin güvenliği açısından bu uyarının dikkate alınmasını rica ederiz.',
     'Herhangi bir sorunuz olursa bizimle her zaman iletişime geçebilirsiniz.','',
     'İyi çalışmalar dileriz.','',
@@ -1914,7 +1915,7 @@ async function sertifikaOnizle(indir){
   const v=portalVeri||{}, K=v.kayit||{}; const yer=document.getElementById('sertOnizleme'); if(!yer)return;
   const AY=['January','February','March','April','May','June','July','August','September','October','November','December'];
   /* 5 Ekim 2026: Date of Issue ve donem satiri FDA kayit evrakinin Created Date alanindan; okunmamissa evraktan simdi okunur, yoksa bugun. */
-  let olus=K.olusturma||''; if(!olus && (v.kayit_belgeleri||{}).fda){ try{ olus=(await fdaKunye(v.kayit_belgeleri.fda.veri||'')).olusturma||''; }catch(e){} }
+  let olus=K.olusturma||'', fdaBitis=K.fdaBitis||''; if((!olus||!fdaBitis) && (v.kayit_belgeleri||{}).fda){ try{ const kn=await fdaKunye(v.kayit_belgeleri.fda.veri||''); olus=olus||kn.olusturma||''; fdaBitis=fdaBitis||kn.fdaBitis||''; }catch(e){} }
   const b=olus?new Date(olus+'T12:00:00'):new Date(), yil=b.getFullYear();
   let kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean).join('; ');
   if(kat.length>140) kat=kat.replace(/\s*\([^)]*\)/g,''); /* uzunsa yalniz kategori adlari (sertifika-uret.py ile ayni) */
@@ -1925,6 +1926,7 @@ async function sertifikaOnizle(indir){
   Object.entries(alan).forEach(([a,d])=>{ h=h.split('{{'+a+'}}').join(String(d).replace(/&/g,'&amp;').replace(/</g,'&lt;')); });
   /* 5 Ekim 2026: Valid Until, Created Date Ocak-Eylul ise ayni yilin, Ekim-Aralik ise ertesi yilin 31 Aralik'i
      (ep-seo/sertifika-uret.py > gecerlilik ile ayni kural). */
+  h=h.split('{{FDA_BITIS}}').join(fdaBitis?(d=>d.getDate()+' '+AY[d.getMonth()]+' '+d.getFullYear())(new Date(fdaBitis+'T12:00:00')):'see FDA registration record');
   h=h.split('{{GECERLILIK}}').join(b.getMonth()>=9 ? (b.getDate()+' '+AY[b.getMonth()]+' '+(yil+1)) : ('31 December '+yil)); /* Kaan 5 Ekim: Ekim-Aralik kaydi ertesi yilin ayni gunu */
   const taban=location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'')+'sertifika/';
   h=h.replace('<head>','<head><base href="'+taban+'"><style>@page{size:850px 1100px;margin:0}@media print{body{background:none!important}body>div{box-shadow:none!important}}</style>');
