@@ -1,0 +1,5 @@
+/* Export Partners — Webfonts
+   Display face (Montserrat) is the nearest Google Fonts match to the heavy
+   geometric wordmark in the logo. Body/UI face is Inter. Flagged as a
+   substitution — swap for the licensed brand font if one exists. */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Inter:wght@400;500;600;700&display=swap');

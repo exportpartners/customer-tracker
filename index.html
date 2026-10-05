@@ -1888,13 +1888,39 @@ function sertifikaAc(){
     ${sat('Kayıt yapılan kategoriler', kat.join(' · '), 'FDA kayıt çıktısı, Bölüm 9a')}
     <div style="margin-top:14px;font-size:12px;color:#5a6472;background:#f7f9fb;border:1px solid #eef1f4;border-radius:9px;padding:10px 12px">
       ${(B.fda&&B.duns)
-        ? 'Sertifikayı <b>Belgeleri gönder</b> tuşu üretir: Export Partners tasarımıyla basılır, opr@\'ye bilgi maili gider ve müşteri maili deniz@ taslaklarına düşer. Gönder tuşu Mustafa\'da kalır.'
+        ? 'Önce <b>👁 Önizle</b> ile kontrol edin, gerekirse <b>⬇ PDF indir</b> ile kaydedin. Gönderilecek sertifikayı <b>Belgeleri gönder</b> tuşu aynı tasarımla basar: opr@\'ye bilgi maili gider, müşteri maili deniz@ taslaklarına düşer. Gönder tuşu Mustafa\'da kalır.'
         : 'Önce iki belge yüklenmeli: FDA Registration Certificate ve DUNS kayıt ekranı.'}
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <div id="sertOnizleme" style="display:none;margin-top:12px;border:1px solid #eef1f4;border-radius:9px;overflow:hidden;background:#E9EDF2"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
+      <button class="pbtn" onclick="sertifikaOnizle(false)">👁 Önizle</button>
+      <button class="pbtn" onclick="sertifikaOnizle(true)">⬇ PDF indir</button>
       <button class="pbtn" onclick="document.getElementById('sertKutu').remove()">Kapat</button>
     </div></div>`;
   document.body.appendChild(k);
+}
+/* 5 Ekim 2026, Mustafa: "Sertifikayi Belgeleri gonder demeden onizleyelim; indirilebilir de olsun."
+   Sunucudaki betigin (ep-seo/sertifika-uret.py) kullandigi sablonun AYNISI sertifika/ altinda; alanlar ayni
+   kurallarla doldurulur (DUNS yoksa "—", kategori yoksa "Human Food", sertifika no EP-FDA-<yil>-<FDA son 4>).
+   PDF indir, tarayicinin yazdirma penceresini acar: "PDF olarak kaydet" secilir; metin gercek metin olarak kalir. */
+async function sertifikaOnizle(indir){
+  const v=portalVeri||{}, K=v.kayit||{}; const yer=document.getElementById('sertOnizleme'); if(!yer)return;
+  const AY=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const b=new Date(), yil=b.getFullYear();
+  const kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean).join('; ');
+  const alan={FIRMA:K.unvan||(data[memoIdx]||{}).firm||'',ADRES:K.adres||'',FDA_NO:K.fdaNo||'',DUNS_NO:K.dunsNo||'—',
+    KATEGORILER:kat||'Human Food',TARIH:b.getDate()+' '+AY[b.getMonth()]+' '+yil,SERTIFIKA_NO:'EP-FDA-'+yil+'-'+String(K.fdaNo||'0000').slice(-4)};
+  let h;
+  try{ h=await (await fetch('sertifika/sablon.html',{cache:'no-store'})).text(); }catch(e){ toast('Şablon okunamadı: '+(e&&e.message||e)); return; }
+  Object.entries(alan).forEach(([a,d])=>{ h=h.split('{{'+a+'}}').join(String(d).replace(/&/g,'&amp;').replace(/</g,'&lt;')); });
+  const taban=location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'')+'sertifika/';
+  h=h.replace('<head>','<head><base href="'+taban+'"><style>@page{size:850px 1100px;margin:0}@media print{body{background:none!important}body>div{box-shadow:none!important}}</style>');
+  yer.style.display='block';
+  const olcek=Math.min(1,(yer.clientWidth||560)/850);
+  yer.innerHTML=`<div style="width:${850*olcek}px;height:${1100*olcek}px;margin:0 auto;overflow:hidden"><iframe id="sertIframe" style="width:850px;height:1100px;border:0;transform:scale(${olcek});transform-origin:0 0;background:#fff"></iframe></div>`;
+  const fr=document.getElementById('sertIframe');
+  fr.onload=()=>{ if(indir) setTimeout(()=>{ try{ fr.contentWindow.document.title=((alan.FIRMA||'firma').replace(/[^\p{L}\p{N}]+/gu,'-').slice(0,40))+'-FDA-sertifika'; fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ toast('Yazdırma açılamadı: '+(e&&e.message||e)); } }, 1200); };
+  fr.srcdoc=h;
 }
 function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
 async function portalOnizle(k){
