@@ -69,6 +69,9 @@
   /* Renewal acik yesil, Mustafa'nin istegi. Acik zeminde beyaz yazi
      okunmuyor, o yuzden bu ikisinde yazi rengi koyu. */
   .sec-renewal{background:#F5C518;color:#3d2e00;box-shadow:0 2px 6px rgba(245,197,24,.45)}
+  /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
+  .sec-meta{background:#1877F2;box-shadow:0 2px 6px rgba(24,119,242,.4)}
+  .sec-cold{background:#C9A27E;color:#3b2a1a;box-shadow:0 2px 6px rgba(201,162,126,.45)}
   .sec-importrefusal{background:#6d3b9e;box-shadow:0 2px 6px rgba(109,59,158,.4)}
   .sec-notconverted{background:#6b6f76;box-shadow:0 2px 6px rgba(107,111,118,.4)}
 
@@ -412,7 +415,7 @@ const HOLD_AFTER_BIZ_DAYS=5;
 /* 11 Sep 2026, Mustafa: "dosya ilk acildiginda sectionlar kapali gelsin."
    Her bant baslikta sayisiyla durur, tiklayinca acilir. Listede olmayan
    bir bant anahtari kapali sayilir. */
-let openSec={new:false,hold:false,renewal:false,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:false};
+let openSec={cold:false,meta:false,new:false,hold:false,renewal:false,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:false};
 
 function toTel(r){let d=(r||'').replace(/[^\d]/g,'');if(d.startsWith('90'))d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);return '+90'+d;}
 function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -832,8 +835,13 @@ function rowHtml(c,i,pos){
 
    SON BANT her zaman en altta durur ve hicbir kosula uymayan kaydi
    yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
+function isCold(c){ return (c.kaynak||'')==='Cold email' && c.status==='New' && (c.notes||[]).every(n=>n==='Intro Email Sent'); }
 const BANTLAR=[
   /* 11 Sep 2026, Mustafa: HOLD always right under NEW; IN PROGRESS above RENEWAL (16:30 istegi). */
+  /* 5 Ekim 2026, Mustafa: "bu gonderdigimiz mailleri cold email diye acik kahverengi bir baslik koy, tracker'da
+     oraya gitsin." Cold email ile acilan kayit, cevap gelip baska bir not (Intro Call, Proposal...) ya da durum
+     degisikligi olana kadar burada durur; boylece NEW bandi soguk adaylarla dolmaz. */
+  {key:'cold',       label:'COLD EMAIL',     cls:'sec-cold',         uyar:c=>isCold(c)},
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
@@ -855,6 +863,9 @@ const BANTLAR=[
      bir kayit FDA RENEWAL gorevi tasisa da OVER DUE'da durur, renewal
      gorevi satirdaki etiketten okunur (Molu Et bu yuzden kaybolmustu). */
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
+  /* 5 Ekim 2026, Mustafa: "Meta'dan gelenleri Meta diye bir baslik ac, nasil Renewal var." RENEWAL gibi EK liste:
+     kayit kendi durum bandinda kalir, META ustune ikinci liste olarak gosterir. */
+  {key:'meta',       label:'META',           cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')},
   {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
@@ -890,10 +901,10 @@ function render(){
      RENEWAL bunun USTUNE, ikinci bir liste olarak duruyor. Tek istisna
      mukerrerlik RENEWAL'dir, oteki bantlar hala tek yer. */
   idx.forEach(i=>{
-    const b=BANTLAR.filter(b=>b.key!=='renewal').find(b=>b.uyar(data[i]));
+    const EK=['renewal','meta'];
+    const b=BANTLAR.filter(b=>!EK.includes(b.key)).find(b=>b.uyar(data[i]));
     if(b) kova[b.key].push(i);
-    const r=BANTLAR.find(b=>b.key==='renewal');
-    if(r && r.uyar(data[i])) kova.renewal.push(i);
+    EK.forEach(k=>{ const r=BANTLAR.find(x=>x.key===k); if(r && r.uyar(data[i])) kova[k].push(i); });
   });
   const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
   kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
@@ -921,7 +932,7 @@ function render(){
   /* Mukerrerlik olcumu: her indeks tam bir bantta olmali. Bozulursa sessiz
      kalmaz, sayfanin ustunde uyari cikar. */
   const gorulen=new Set(); let mukerrer=0;
-  Object.values(kova).forEach(l=>l.forEach(i=>{ if(gorulen.has(i)) mukerrer++; gorulen.add(i); }));
+  Object.entries(kova).forEach(([k,l])=>{ if(k==='renewal'||k==='meta') return; l.forEach(i=>{ if(gorulen.has(i)) mukerrer++; gorulen.add(i); }); });
   if(mukerrer) toast('UYARI: '+mukerrer+' kayit iki bantta birden gorunuyor');
 
   let html='';
@@ -1059,7 +1070,7 @@ function dropToHold(i){
    Formdan gelen taleplerde siteye kurulan ep_kaynak cerezi kanali tasiyor;
    telefon ve WhatsApp'tan gelende burada elle seciliyor. Bos = bilinmiyor;
    gecmis 44 kayitta iz olmadigi icin hepsi bos basliyor ve tahmin yazilmiyor. */
-const KAYNAKLAR=['','Google reklam','Organik arama','Google','Meta reklam','Yönlendirme','Tavsiye','Fuar / etkinlik','Bilinmiyor'];
+const KAYNAKLAR=['','Google reklam','Organik arama','Google','Meta reklam','Cold email','Yönlendirme','Tavsiye','Fuar / etkinlik','Bilinmiyor'];
 function kaynakSec(v){ if(memoIdx<0)return; data[memoIdx].kaynak=v; save(); toast(v?('Kaynak: '+v):'Kaynak silindi'); }
 let memoIdx=-1;
 function openMemo(i){
