@@ -1910,7 +1910,8 @@ async function sertifikaOnizle(indir){
   /* 5 Ekim 2026: Date of Issue ve donem satiri FDA kayit evrakinin Created Date alanindan; okunmamissa evraktan simdi okunur, yoksa bugun. */
   let olus=K.olusturma||''; if(!olus && (v.kayit_belgeleri||{}).fda){ try{ olus=(await fdaKunye(v.kayit_belgeleri.fda.veri||'')).olusturma||''; }catch(e){} }
   const b=olus?new Date(olus+'T12:00:00'):new Date(), yil=b.getFullYear();
-  const kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean).join('; ');
+  let kat=(K.kategoriler||'').split(';').map(x=>x.trim()).filter(Boolean).join('; ');
+  if(kat.length>140) kat=kat.replace(/\s*\([^)]*\)/g,''); /* uzunsa yalniz kategori adlari (sertifika-uret.py ile ayni) */
   const alan={FIRMA:K.unvan||(data[memoIdx]||{}).firm||'',ADRES:K.adres||'',FDA_NO:K.fdaNo||'',DUNS_NO:K.dunsNo||'—',
     KATEGORILER:kat||'Human Food',TARIH:b.getDate()+' '+AY[b.getMonth()]+' '+yil,SERTIFIKA_NO:'EP-FDA-'+yil+'-'+String(K.fdaNo||'0000').slice(-4)};
   let h;
@@ -1925,7 +1926,13 @@ async function sertifikaOnizle(indir){
   const olcek=Math.min(1,(yer.clientWidth||560)/850);
   yer.innerHTML=`<div style="width:${850*olcek}px;height:${1100*olcek}px;margin:0 auto;overflow:hidden"><iframe id="sertIframe" style="width:850px;height:1100px;border:0;transform:scale(${olcek});transform-origin:0 0;background:#fff"></iframe></div>`;
   const fr=document.getElementById('sertIframe');
-  fr.onload=()=>{ if(indir) setTimeout(()=>{ try{ fr.contentWindow.document.title=((alan.FIRMA||'firma').replace(/[^\p{L}\p{N}]+/gu,'-').slice(0,40))+'-FDA-sertifika'; fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ toast('Yazdırma açılamadı: '+(e&&e.message||e)); } }, 1200); };
+  /* 5 Ekim 2026, Kaan: "layout problemi, her seferinde sayfaya sigdir". sertifika-uret.py > SIGDIR_JS ile ayni adimlar. */
+  const sigdir=(doc)=>{const alt=()=>{let m=0;doc.querySelectorAll('body *').forEach(e=>{if(e.closest('svg')||e.children.length||!e.textContent.trim())return;m=Math.max(m,e.getBoundingClientRect().bottom);});return m;};
+    for(const [id,bas,min,lh] of [['epKat',12.5,10,1.3],['epGovde',16.5,14,1.5],['epFirma',26,20,1.2]]){const e=doc.getElementById(id);if(!e)continue;let fs=bas;
+      while(alt()>1101&&fs>min){fs-=0.5;e.style.fontSize=fs+'px';e.style.lineHeight=String(lh);}}
+    return alt();};
+  fr.onload=()=>{ setTimeout(()=>{ try{ const a=sigdir(fr.contentDocument); if(a>1101) toast('UYARI: sertifika sayfaya sığmıyor ('+Math.round(a)+' px)'); }catch(e){} }, 900);
+    if(indir) setTimeout(()=>{ try{ fr.contentWindow.document.title=((alan.FIRMA||'firma').replace(/[^\p{L}\p{N}]+/gu,'-').slice(0,40))+'-FDA-sertifika'; fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ toast('Yazdırma açılamadı: '+(e&&e.message||e)); } }, 1200); };
   fr.srcdoc=h;
 }
 function pdfjsYukle(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}res();};sc.onerror=()=>rej(new Error('PDF görüntüleyici yüklenemedi'));document.head.appendChild(sc);});}
