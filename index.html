@@ -71,6 +71,7 @@
   .sec-renewal{background:#F5C518;color:#3d2e00;box-shadow:0 2px 6px rgba(245,197,24,.45)}
   /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
   .sec-meta{background:#1877F2;box-shadow:0 2px 6px rgba(24,119,242,.4)}
+  .sec-alt{margin-left:28px}
   .sec-cold{background:#C9A27E;color:#3b2a1a;box-shadow:0 2px 6px rgba(201,162,126,.45)}
   .sec-importrefusal{background:#6d3b9e;box-shadow:0 2px 6px rgba(109,59,158,.4)}
   .sec-notconverted{background:#6b6f76;box-shadow:0 2px 6px rgba(107,111,118,.4)}
@@ -936,7 +937,11 @@ function render(){
   if(mukerrer) toast('UYARI: '+mukerrer+' kayit iki bantta birden gorunuyor');
 
   let html='';
-  for(const b of BANTLAR){
+  /* 5 Ekim 2026, Mustafa: "cold email NEW'in altinda section olacak." Siniflandirma sirasi degismedi (cold once
+     eslesir, boylece NEW'e ikinci kez dusmez); yalnizca CIZIM sirasinda COLD EMAIL, NEW'in hemen altinda girintili
+     alt bolum olarak durur. */
+  const CIZIM=BANTLAR.filter(b=>b.key!=='cold'); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,BANTLAR.find(b=>b.key==='cold'));
+  for(const b of CIZIM){
     const satirlar=kova[b.key];
     if(!satirlar.length) continue;
     const open=openSec[b.key];
@@ -944,7 +949,7 @@ function render(){
        RENEWAL artik mukerrer liste; oradaki sayi toplam kayit sayisiyla
        toplanmiyor ve yanlis okunuyordu. Diger bantlarda sayi duruyor. */
     const sayi=b.key==='renewal'?'':` (${satirlar.length})`;
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.label}${sayi}</button></td></tr>`;
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${b.key==='cold'?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.key==='cold'?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
     if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
