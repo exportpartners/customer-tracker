@@ -1916,9 +1916,9 @@ async function sertifikaOnizle(indir){
   let h;
   try{ h=await (await fetch('sertifika/sablon.html',{cache:'no-store'})).text(); }catch(e){ toast('Şablon okunamadı: '+(e&&e.message||e)); return; }
   Object.entries(alan).forEach(([a,d])=>{ h=h.split('{{'+a+'}}').join(String(d).replace(/&/g,'&amp;').replace(/</g,'&lt;')); });
-  /* 5 Ekim 2026: Ekim-Aralik arasinda basilan sertifikada muafiyet satiri (ep-seo/sertifika-uret.py > donem_notu ile ayni) */
-  const donem = b.getMonth()>=9 ? '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:7px 0;text-align:left;border-top:1px solid rgba(35,47,62,0.12);"><div style="font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8A99A8;font-weight:600;">Registration Period</div><div style="font-size:11.5px;font-weight:600;color:#33475B;text-align:right;max-width:420px;">Completed within the October 1 &ndash; December 31, '+yil+' registration period; no separate renewal is required for this period.</div></div>' : '';
-  h=h.split('{{DONEM_NOTU}}').join(donem);
+  /* 5 Ekim 2026: Valid Until, Created Date Ocak-Eylul ise ayni yilin, Ekim-Aralik ise ertesi yilin 31 Aralik'i
+     (ep-seo/sertifika-uret.py > gecerlilik ile ayni kural). */
+  h=h.split('{{GECERLILIK}}').join('31 December '+(b.getMonth()>=9?yil+1:yil));
   const taban=location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'')+'sertifika/';
   h=h.replace('<head>','<head><base href="'+taban+'"><style>@page{size:850px 1100px;margin:0}@media print{body{background:none!important}body>div{box-shadow:none!important}}</style>');
   yer.style.display='block';
