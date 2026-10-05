@@ -1706,8 +1706,13 @@ async function ocrMetni(dataUrl){
 /* OCR harf karistirir: TPSI -> "TPS!". Firma adi karsilastirmasi birebir
    yapilirsa dogru belge reddediliyor (29 Eylul'de sahada goruldu).
    Karistirilan karakterler esitlenip benzerlik orani olculuyor. */
+/* 5 Ekim 2026: Kuzey Guney'de dogru DUNS ekrani reddedildi. Iki sebep: (1) Turkce harfler (U, S, G, C, O)
+   [^A-Z0-9] suzgecinde siliniyordu, "GUNEY" ile "GNEY" kayiyor ve butun karakterler hizadan cikiyordu;
+   (2) DUNS ekrani uzun unvani kirpiyor ("...GIDA VE S"). Turkce harf once Latin karsiligina cevrilir;
+   kisa olan en az 20 karakterse karsilastirma kisa olanin uzunlugunda yapilir (kirpilmis unvan). */
 function adNormal(s){
-  return (s||'').toUpperCase().replace(/[!|1İIL]/g,'I').replace(/0/g,'O')
+  const tr={'Ç':'C','Ğ':'G','Ö':'O','Ş':'S','Ü':'U','İ':'I','ç':'C','ğ':'G','ö':'O','ş':'S','ü':'U','ı':'I'};
+  return (s||'').replace(/[ÇĞÖŞÜİçğöşüı]/g,ch=>tr[ch]).toUpperCase().replace(/[!|1IL]/g,'I').replace(/0/g,'O')
     .replace(/5/g,'S').replace(/[^A-Z0-9]/g,'');
 }
 function adBenzerligi(a,b){
@@ -1715,7 +1720,7 @@ function adBenzerligi(a,b){
   if(!a||!b) return 0;
   const n=Math.min(a.length,b.length); let ayni=0;
   for(let i=0;i<n;i++) if(a[i]===b[i]) ayni++;
-  return ayni/Math.max(a.length,b.length);
+  return ayni/(n>=20 ? n : Math.max(a.length,b.length));
 }
 function dunsOku(metin, firmaBeklenen){
   if(!metin) return {no:'', sebep:'OCR boş döndü'};
