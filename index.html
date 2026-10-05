@@ -1319,7 +1319,12 @@ function renderPortal(){
        :firebase.database().ref('musteri_portal/'+c.portalUid).once('value')).then(s=>{
     const v=s.val()||{}; portalVeri=v;
     const K=(v.form||{}).kategori||{};
-    const katSatir=(K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv"><span class="pmeta" style="margin:0">Müşterinin FDA tesis kaydı formunda işaretlediği ürün ve faaliyet kategorileri (kayıt sırasında Form 3537 Bölüm 9'a girilir).</span><br><b>Ürün, insan gıdası:</b> ${esc((K.insan||[]).map(x=>katAd('insan',x)).join(', ')||'-')}<br><b>Ürün, hayvan gıdası:</b> ${esc((K.hayvan||[]).map(x=>katAd('hayvan',x)).join(', ')||'-')}<br><b>Tesisin faaliyeti:</b> ${esc((K.faaliyet||[]).map(x=>katAd('faaliyet',x)).join(', ')||'-')}${K.diger?'<br><b>Müşterinin notu:</b> '+esc(K.diger):''}</span></div><span></span></div>`:'';
+    /* 5 Ekim 2026, Kaan: "bu kismi ingilizce goster ve formda da ingilizce bas". FDA kayit evragi yuklendiyse
+       kategoriler evrakin KENDI Ingilizce metninden (kayit.kategoriler, Section 9a; sertifikayla ayni kaynak);
+       ceviri yapilmaz. Evrak yoksa musterinin formda isaretledigi Turkce liste. */
+    const katEn=(((v.kayit||{}).kategoriler)||'').split(';').map(x=>x.trim()).filter(Boolean);
+    const katSatir=katEn.length?`<div class="prow"><span class="pn"></span><div>FDA product categories (Form 3537, Section 9a)<br><span class="pv"><span class="pmeta" style="margin:0">From the uploaded FDA registration document; same source as the certificate.</span><br>${katEn.map(x=>'<b>'+esc(x)+'</b>').join('<br>')}</span></div><span></span></div>`:
+      (K.insan||[]).length||(K.hayvan||[]).length||(K.faaliyet||[]).length?`<div class="prow"><span class="pn"></span><div>FDA ürün kategorisi (Form 3537 Bölüm 9)<br><span class="pv"><span class="pmeta" style="margin:0">Müşterinin FDA tesis kaydı formunda işaretlediği ürün ve faaliyet kategorileri (kayıt sırasında Form 3537 Bölüm 9'a girilir).</span><br><b>Ürün, insan gıdası:</b> ${esc((K.insan||[]).map(x=>katAd('insan',x)).join(', ')||'-')}<br><b>Ürün, hayvan gıdası:</b> ${esc((K.hayvan||[]).map(x=>katAd('hayvan',x)).join(', ')||'-')}<br><b>Tesisin faaliyeti:</b> ${esc((K.faaliyet||[]).map(x=>katAd('faaliyet',x)).join(', ')||'-')}${K.diger?'<br><b>Müşterinin notu:</b> '+esc(K.diger):''}</span></div><span></span></div>`:'';
     const rows=katSatir+PORTAL_KALEMLER.map(([k,ad,tip],i)=>{
       let pv;
       if(tip==='dosya'){const f=(v.dosyalar||{})[k]; pv=f?`📎 ${esc(f.ad)} <span class="pmeta">${Math.round((f.boyut||0)/1024)} KB · ${esc(f.tarih||'')}</span> <button class="pbtn" style="padding:3px 8px" onclick="portalOnizle('${k}')">Görüntüle</button> <button class="pbtn" style="padding:3px 8px" onclick="portalDosyaAc('${k}')">İndir</button><div id="pv-${k}" style="display:none;margin-top:6px"></div>`:(k==='k14'&&!(v.form||{}).abd_sirket?'<span class="pv bos">gerekmez (Türkiye şirketi; ABD şirketi yoksa istenmez)</span>':`<span class="pv bos">yüklenmedi${PORTAL_OPSIYONEL.has(k)?' (müşteri için opsiyonel)':''}</span>`);}
@@ -1484,7 +1489,8 @@ async function portalPdf(blobIste){
   });
   /* Eski formdan kalan, artik sorulmayan alanlar yalnizca DOLUYSA basilir. */
   const eski=[]; (typeof PORTAL_ESKI!=='undefined'?PORTAL_ESKI:[]).forEach(([k,ad])=>{ if(form[k]) eski.push(satir(ad,form[k])); });
-  const kat=[satir('Tesis faaliyeti',(K.faaliyet||[]).map(y=>katAd('faaliyet',y)).join('\n')),
+  const katEnPdf=(((v.kayit||{}).kategoriler)||'').split(';').map(x=>x.trim()).filter(Boolean);
+  const kat=katEnPdf.length?katEnPdf.map((x,i)=>satir(i?'':'Section 9a (from FDA document)',x)):[satir('Tesis faaliyeti',(K.faaliyet||[]).map(y=>katAd('faaliyet',y)).join('\n')),
              satir('Bölüm 9a, insan gıdası',(K.insan||[]).map(y=>katAd('insan',y)).join('\n')),
              satir('Bölüm 9b, hayvan gıdası',(K.hayvan||[]).map(y=>katAd('hayvan',y)).join('\n')),
              satir('Müşterinin notu',K.diger)];
@@ -1501,7 +1507,7 @@ async function portalPdf(blobIste){
       {canvas:[{type:'line',x1:0,y1:0,x2:519,y2:0,lineWidth:2,lineColor:'#E8821E'}],margin:[0,6,0,12]},
       tablo(ust),
       {text:'FORM CEVAPLARI',style:'bolum'}, tablo(alanlar),
-      {text:'FDA FORM 3537: FAALİYET VE ÜRÜN KATEGORİLERİ',style:'bolum'}, tablo(kat)
+      {text:katEnPdf.length?'FDA FORM 3537: PRODUCT CATEGORIES (SECTION 9A)':'FDA FORM 3537: FAALİYET VE ÜRÜN KATEGORİLERİ',style:'bolum'}, tablo(kat)
     ],
     styles:{baslik:{fontSize:17,bold:true,color:'#1b2330'},firma:{fontSize:12.5,color:'#5a6472',margin:[0,3,0,0]},
       bolum:{fontSize:11,bold:true,color:'#E8821E',margin:[0,16,0,6]},
