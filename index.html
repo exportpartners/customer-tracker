@@ -1806,7 +1806,7 @@ function kayitMailiAc(){
     '  Adres            : '+(a.adres||'—'),
     '  D-U-N-S numarası : '+(a.duns||'—'),
     '  FDA kayıt no     : '+(a.kayit||'—'),'',
-    'US Agent hizmetinizin yenilemesi '+(()=>{const o=((portalVeri||{}).kayit||{}).olusturma; const t=o?new Date(o+'T12:00:00'):new Date(); return t.getMonth()>=9?t.getFullYear()+1:t.getFullYear();})()+' yılı Ekim-Aralık döneminde yapılır; hatırlatmalar hizmete dahildir.','',
+    'US Agent hizmetinizin yenileme tarihi '+(()=>{const AYT=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']; const o=((portalVeri||{}).kayit||{}).olusturma; const t=o?new Date(o+'T12:00:00'):new Date(); return t.getMonth()>=9 ? t.getDate()+' '+AYT[t.getMonth()]+' '+(t.getFullYear()+1) : '31 Aralık '+t.getFullYear();})()+'; hatırlatmalar hizmete dahildir.','',
     'Tüm süreç boyunca iş birliğiniz için teşekkür eder, kayıt bilgilerinizin güvenliği açısından bu uyarının dikkate alınmasını rica ederiz.',
     'Herhangi bir sorunuz olursa bizimle her zaman iletişime geçebilirsiniz.','',
     'İyi çalışmalar dileriz.','',
