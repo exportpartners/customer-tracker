@@ -1918,7 +1918,7 @@ async function sertifikaOnizle(indir){
   Object.entries(alan).forEach(([a,d])=>{ h=h.split('{{'+a+'}}').join(String(d).replace(/&/g,'&amp;').replace(/</g,'&lt;')); });
   /* 5 Ekim 2026: Valid Until, Created Date Ocak-Eylul ise ayni yilin, Ekim-Aralik ise ertesi yilin 31 Aralik'i
      (ep-seo/sertifika-uret.py > gecerlilik ile ayni kural). */
-  h=h.split('{{GECERLILIK}}').join('31 December '+(b.getMonth()>=9?yil+1:yil));
+  h=h.split('{{GECERLILIK}}').join(b.getMonth()>=9 ? (b.getDate()+' '+AY[b.getMonth()]+' '+(yil+1)) : ('31 December '+yil)); /* Kaan 5 Ekim: Ekim-Aralik kaydi ertesi yilin ayni gunu */
   const taban=location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'')+'sertifika/';
   h=h.replace('<head>','<head><base href="'+taban+'"><style>@page{size:850px 1100px;margin:0}@media print{body{background:none!important}body>div{box-shadow:none!important}}</style>');
   yer.style.display='block';
