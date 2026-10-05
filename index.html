@@ -1301,7 +1301,7 @@ const PORTAL_ESKI=[["k01","Firma tam unvanı (eski form)"],["k02","Üretim tesis
   ["k07","Şirket sahibi: ad, adres, telefon (eski form)"],["k08","FDA muhatabı (eski form)"],
   ["k09","Ürün listesi (eski form)"],["k10","Ambalaj tipi (eski form)"]];
 const PORTAL_DURUM=[["bekleniyor","Bekleniyor"],["alindi","Alındı"],["eksik","Eksik"],["onaylandi","Onaylandı"]];
-let portalVeri=null; let portalSonMesaj='';
+let portalVeri=null; let portalSonMesaj=''; const BELGE_OKUNDU=new Set();
 function portalUrl(){return location.origin+location.pathname.replace(/[^/]*$/,'')+'musteri/';}
 function renderPortal(){
   const box=document.getElementById('memoPortal'); if(!box||memoIdx<0)return;
@@ -1546,8 +1546,14 @@ function kayitBlok(v){
      gitmiyor ve opr@ ile deniz@'ya sebebi yaziliyor. */
   /* Kategoriler daha once okunmadiysa, yeniden yukleme beklemeden simdi
      okunur ve kayda yazilir; blok yeniden cizilir. Tek seferlik. */
-  if(!DEMO && !v.__belgeOkunuyor && ((B.fda && (!K.kategoriler || !K.fdaNo || !K.unvan || !K.adres)) || (B.duns && !K.dunsNo))){
-    v.__belgeOkunuyor = true;
+  /* 5 Ekim 2026: Kuzey Guney kartinda form "yukleniyor" ile dolu hali arasinda surekli yanip sondu.
+     Isaret (v.__belgeOkunuyor) her cizimde yeni okunan nesneye konuyordu; okunamayan bir alan kalinca
+     (DUNS ya da kunye) tur ayni notu tekrar yaziyor, yazi renderPortal'i tetikliyor, renderPortal yeni
+     nesneyle okumayi bastan baslatiyordu: sonsuz dongu. Artik okuma her musteri icin oturumda BIR KEZ
+     kosar ve yalnizca DEGISEN alan yazilir. */
+  const _uid = (data[memoIdx]||{}).portalUid;
+  if(!DEMO && _uid && !BELGE_OKUNDU.has(_uid) && ((B.fda && (!K.kategoriler || !K.fdaNo || !K.unvan || !K.adres)) || (B.duns && !K.dunsNo))){
+    BELGE_OKUNDU.add(_uid);
     (async ()=>{
       const c=data[memoIdx], y={};
       if(B.fda && !K.kategoriler){ const kat=await kategorileriCek(B.fda.veri||''); if(kat.length) y.kategoriler=kat.join('; '); }
@@ -1565,6 +1571,7 @@ function kayitBlok(v){
            (29 Eylul'de sahada goruldu: katı karsilastirmanin yazdigi not). */
         if(y.dunsNo) y.dunsNot=null;
       }
+      Object.keys(y).forEach(a=>{ if((K[a]??null)===(y[a]??null)) delete y[a]; });
       if(Object.keys(y).length){
         try{ await firebase.database().ref('musteri_portal/'+c.portalUid+'/kayit').update(y); renderPortal(); }catch(e){}
       }
