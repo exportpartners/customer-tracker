@@ -948,7 +948,9 @@ function render(){
   /* 5 Ekim 2026, Mustafa: "cold email NEW'in altinda section olacak." Siniflandirma sirasi degismedi (cold once
      eslesir, boylece NEW'e ikinci kez dusmez); yalnizca CIZIM sirasinda COLD EMAIL, NEW'in hemen altinda girintili
      alt bolum olarak durur. */
-  const CIZIM=BANTLAR.filter(b=>b.key!=='cold'); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,BANTLAR.find(b=>b.key==='cold'));
+  /* 6 Ekim 2026, Mustafa: "META FDA NEW'in altinda olacak." META FDA ve COLD EMAIL, NEW'in hemen altinda girintili alt bolum. */
+  const ALT=['meta','cold'];
+  const CIZIM=BANTLAR.filter(b=>!ALT.includes(b.key)); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,...ALT.map(k=>BANTLAR.find(b=>b.key===k)));
   /* AMAZON bandi NOT CONVERTED'in hemen ustunde cizilir (siniflandirma sirasi ayri) */
   { const i=CIZIM.findIndex(b=>b.key==='amazon'); const [a]=CIZIM.splice(i,1); CIZIM.splice(CIZIM.findIndex(b=>b.key==='notconv'),0,a); }
   for(const b of CIZIM){
@@ -959,7 +961,7 @@ function render(){
        RENEWAL artik mukerrer liste; oradaki sayi toplam kayit sayisiyla
        toplanmiyor ve yanlis okunuyordu. Diger bantlarda sayi duruyor. */
     const sayi=b.key==='renewal'?'':` (${satirlar.length})`;
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${b.key==='cold'?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.key==='cold'?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${ALT.includes(b.key)?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${ALT.includes(b.key)?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
     if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
