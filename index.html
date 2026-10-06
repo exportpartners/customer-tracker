@@ -848,6 +848,10 @@ const BANTLAR=[
      degisikligi olana kadar burada durur; boylece NEW bandi soguk adaylarla dolmaz. */
   {key:'cold',       label:'COLD EMAIL · SERTİFİKASYON', cls:'sec-cold', uyar:c=>isCold(c)},  /* gida firmalari sistemi kurulunca ayri bant: COLD EMAIL · GIDA */
   {key:'amazon',     label:'AMAZON',         cls:'sec-amazon',       uyar:c=>isAmazon(c)},
+  /* 6 Ekim 2026, Mustafa: "Meta'dan gelen FDA inquiry'leri mavi META FDA bolumunde olacak; Meta'dan Amazon gelirse
+     AMAZON altinda." META artik EK liste degil, kaydin KENDI bandi: kaynagi Meta olan ve acik (New) duran, Amazon
+     olmayan kayit NEW yerine burada durur. Amazon olan isAmazon ile once yakalanir. */
+  {key:'meta',       label:'META FDA',       cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')&&c.status==='New'},
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
@@ -869,9 +873,6 @@ const BANTLAR=[
      bir kayit FDA RENEWAL gorevi tasisa da OVER DUE'da durur, renewal
      gorevi satirdaki etiketten okunur (Molu Et bu yuzden kaybolmustu). */
   {key:'overdue',    label:'OVER DUE',       cls:'sec-overdue',      uyar:c=>c.status==='Over Due'},
-  /* 5 Ekim 2026, Mustafa: "Meta'dan gelenleri Meta diye bir baslik ac, nasil Renewal var." RENEWAL gibi EK liste:
-     kayit kendi durum bandinda kalir, META ustune ikinci liste olarak gosterir. */
-  {key:'meta',       label:'META',           cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')},
   {key:'renewal',    label:'RENEWAL',        cls:'sec-renewal',      uyar:c=>c.status==='Renewal'||(c.status!=='In Progress'&&(c.tasks||[]).includes('FDA RENEWAL'))},
   {key:'refusal',    label:'IMPORT REFUSAL', cls:'sec-importrefusal',uyar:c=>c.status==='Import Refusal'},
   {key:'completed',  label:'COMPLETED',      cls:'sec-completed',    uyar:c=>DONE_STATUS.includes(c.status)},
@@ -907,7 +908,7 @@ function render(){
      RENEWAL bunun USTUNE, ikinci bir liste olarak duruyor. Tek istisna
      mukerrerlik RENEWAL'dir, oteki bantlar hala tek yer. */
   idx.forEach(i=>{
-    const EK=['renewal','meta'];
+    const EK=['renewal'];
     const b=BANTLAR.filter(b=>!EK.includes(b.key)).find(b=>b.uyar(data[i]));
     if(b) kova[b.key].push(i);
     EK.forEach(k=>{ const r=BANTLAR.find(x=>x.key===k); if(r && r.uyar(data[i])) kova[k].push(i); });
