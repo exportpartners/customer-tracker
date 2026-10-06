@@ -70,6 +70,7 @@
      okunmuyor, o yuzden bu ikisinde yazi rengi koyu. */
   .sec-renewal{background:#F5C518;color:#3d2e00;box-shadow:0 2px 6px rgba(245,197,24,.45)}
   /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
+  .sec-amazon{background:#FF9900;color:#1a1200;box-shadow:0 2px 6px rgba(255,153,0,.45)}
   .sec-meta{background:#1877F2;box-shadow:0 2px 6px rgba(24,119,242,.4)}
   .sec-alt{margin-left:28px}
   .sec-cold{background:#C9A27E;color:#3b2a1a;box-shadow:0 2px 6px rgba(201,162,126,.45)}
@@ -416,7 +417,7 @@ const HOLD_AFTER_BIZ_DAYS=5;
 /* 11 Sep 2026, Mustafa: "dosya ilk acildiginda sectionlar kapali gelsin."
    Her bant baslikta sayisiyla durur, tiklayinca acilir. Listede olmayan
    bir bant anahtari kapali sayilir. */
-let openSec={cold:false,meta:false,new:false,hold:false,renewal:false,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:false};
+let openSec={amazon:false,cold:false,meta:false,new:false,hold:false,renewal:false,progress:false,refusal:false,overdue:false,completed:false,notconv:false,other:false};
 
 function toTel(r){let d=(r||'').replace(/[^\d]/g,'');if(d.startsWith('90'))d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);return '+90'+d;}
 function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
@@ -836,6 +837,9 @@ function rowHtml(c,i,pos){
 
    SON BANT her zaman en altta durur ve hicbir kosula uymayan kaydi
    yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
+/* 6 Ekim 2026, Mustafa: "Not Converted ustunde AMAZON adinda section, turuncu; Amazon inquiry'ler oraya aksin."
+   Amazon isi tasiyan ve FDA/USDA/gumruk kalemi olmayan ACIK kayit AMAZON bandinda durur (NEW/HOLD'a girmez). */
+function isAmazon(c){ const t=c.tasks||[]; return t.includes('AMAZON') && !t.some(x=>/FDA|USDA|FCE|SID|BOND|CUSTOMS|LABEL|DUNS/i.test(x)) && !DONE_STATUS.includes(c.status) && !['Not Converted','Over Due','Import Refusal'].includes(c.status); }
 function isCold(c){ return (c.kaynak||'')==='Cold email' && c.status==='New' && (c.notes||[]).every(n=>n==='Intro Email Sent'); }
 const BANTLAR=[
   /* 11 Sep 2026, Mustafa: HOLD always right under NEW; IN PROGRESS above RENEWAL (16:30 istegi). */
@@ -843,6 +847,7 @@ const BANTLAR=[
      oraya gitsin." Cold email ile acilan kayit, cevap gelip baska bir not (Intro Call, Proposal...) ya da durum
      degisikligi olana kadar burada durur; boylece NEW bandi soguk adaylarla dolmaz. */
   {key:'cold',       label:'COLD EMAIL · SERTİFİKASYON', cls:'sec-cold', uyar:c=>isCold(c)},  /* gida firmalari sistemi kurulunca ayri bant: COLD EMAIL · GIDA */
+  {key:'amazon',     label:'AMAZON',         cls:'sec-amazon',       uyar:c=>isAmazon(c)},
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
@@ -941,6 +946,8 @@ function render(){
      eslesir, boylece NEW'e ikinci kez dusmez); yalnizca CIZIM sirasinda COLD EMAIL, NEW'in hemen altinda girintili
      alt bolum olarak durur. */
   const CIZIM=BANTLAR.filter(b=>b.key!=='cold'); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,BANTLAR.find(b=>b.key==='cold'));
+  /* AMAZON bandi NOT CONVERTED'in hemen ustunde cizilir (siniflandirma sirasi ayri) */
+  { const i=CIZIM.findIndex(b=>b.key==='amazon'); const [a]=CIZIM.splice(i,1); CIZIM.splice(CIZIM.findIndex(b=>b.key==='notconv'),0,a); }
   for(const b of CIZIM){
     const satirlar=kova[b.key];
     if(!satirlar.length) continue;
