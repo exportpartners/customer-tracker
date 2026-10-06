@@ -1072,13 +1072,14 @@ function donusumCiz(){
     if(!v) return; const len=C*v/A;
     arcs+=`<circle r="${R}" cx="80" cy="80" fill="none" stroke="${renk}" stroke-width="18" stroke-dasharray="${(len-2).toFixed(1)} ${(C-len+2).toFixed(1)}" stroke-dashoffset="${(-ofs).toFixed(1)}" transform="rotate(-90 80 80)"><title>${ad}: ${v}</title></circle>`;
     ofs+=len; });
-  const disi=data.length-A;
+  const soguk=data.filter(c=>(c.kaynak||'')==='Cold email'||isOrtak(c)).length;
+  const disi=data.length-A-soguk;
   /* 26 Eylul 2026, Mustafa: "baska firma ismi vs vs yazma, sade neat olsun veri."
      Firma adi listesi kaldirildi; adlar zaten tablonun kendisinde satir satir
      duruyor, burada ikinci kez yazilmasi ekrani uzatiyordu. Burada yalnizca
      sayi var. */
   el.innerHTML=`<h3>Dönüşüm</h3>
-  <div class="dz-alt">Google dönüşümü: gelen her talep (cold email ve iş ortağı kayıtları hariç). Bizim dönüşümümüz: işin başladığı ya da bittiği kayıt. Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
+  <div class="dz-alt">Google dönüşümü: gelen her talep (cold email ve iş ortağı kayıtları hariç). Bizim dönüşümümüz: işin başladığı ya da bittiği kayıt. Havuz dışında: ${soguk} cold email / iş ortağı kaydı, ${disi} kayıt Import Refusal, Renewal ve Over Due bantlarında.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">BİZİM DÖNÜŞÜM</text></svg>
   <div class="dz-lejant">
     <i style="background:#1f6f3f"></i><b>Dönüşen</b><span>${donusen.length} kayıt</span><span class="m">%${Math.round(100*donusen.length/A)}</span>
