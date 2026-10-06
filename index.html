@@ -970,10 +970,10 @@ function render(){
      eslesir, boylece NEW'e ikinci kez dusmez); yalnizca CIZIM sirasinda COLD EMAIL, NEW'in hemen altinda girintili
      alt bolum olarak durur. */
   /* 6 Ekim 2026, Mustafa: "META FDA NEW'in altinda olacak." META FDA ve COLD EMAIL, NEW'in hemen altinda girintili alt bolum. */
-  const ALT=['meta','cold'];
+  /* 7 Ekim 2026, Mustafa: "AMAZON NEW altinda olsun." AMAZON da NEW'in altinda girintili alt bolum, ilk sirada. */
+  const ALT=['amazon','meta','cold'];
   const CIZIM=BANTLAR.filter(b=>!ALT.includes(b.key)); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,...ALT.map(k=>BANTLAR.find(b=>b.key===k)));
   /* AMAZON bandi IN PROGRESS'in hemen altinda cizilir (6 Ekim 2026 gece, Mustafa; siniflandirma sirasi ayri) */
-  { const i=CIZIM.findIndex(b=>b.key==='amazon'); const [a]=CIZIM.splice(i,1); CIZIM.splice(CIZIM.findIndex(b=>b.key==='progress')+1,0,a); }
   for(const b of CIZIM){
     const satirlar=kova[b.key];
     if(!satirlar.length) continue;
