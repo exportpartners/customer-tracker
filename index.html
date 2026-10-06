@@ -455,9 +455,11 @@ function normalize(r){
   let notes=applySupersede((r.notes||[]).map(normNote));
   /* sira: elle tasima. normalize() bilinmeyen alani DUSURUYOR; burada
      sayilmazsa tasima bir sonraki okumada kayboluyordu. */
-  return {id:r.id||'',firm:r.firm||'',product:r.product||'',sira:(typeof r.sira==='number'?r.sira:undefined),title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
+  /* 6 Ekim 2026: Firebase set() undefined deger kabul etmiyor ('value argument contains undefined in property sira');
+     sira yoksa alan hic yazilmaz. */
+  const o={id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
-    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||'')}; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
+    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||'')}; if(typeof r.sira==='number')o.sira=r.sira; return o; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
 }
 let data=[];
 let dbRef=null;
