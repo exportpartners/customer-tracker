@@ -839,7 +839,7 @@ function rowHtml(c,i,pos){
    yakalar: bir kaydin gorunmez kalmasi bir daha mumkun degil. */
 /* 6 Ekim 2026, Mustafa: "Not Converted ustunde AMAZON adinda section, turuncu; Amazon inquiry'ler oraya aksin."
    Amazon isi tasiyan ve FDA/USDA/gumruk kalemi olmayan ACIK kayit AMAZON bandinda durur (NEW/HOLD'a girmez). */
-function isAmazon(c){ const t=c.tasks||[]; return t.includes('AMAZON') && !t.some(x=>/FDA|DUNS/i.test(x)) && !DONE_STATUS.includes(c.status) && !['Not Converted','Over Due','Import Refusal'].includes(c.status); }
+function isAmazon(c){ const t=c.tasks||[]; return t.includes('AMAZON') && !t.some(x=>/FDA|DUNS|FCE|SID|USDA/i.test(x)) && !DONE_STATUS.includes(c.status) && !['Not Converted','Over Due','Import Refusal'].includes(c.status); }
 /* 6 Ekim 2026, Mustafa: "cold email'ler ayri section'da dursun, NEW sayisini artirmasin; takip ediyoruz, new inquiry
    degil." Cevap gelip Proposal Sent olsa da kayit COLD EMAIL bandinda kalir; NEW'e yalnizca durum degisince cikar. */
 function isCold(c){ return (c.kaynak||'')==='Cold email' && c.status==='New'; }
