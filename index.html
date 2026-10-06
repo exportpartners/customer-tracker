@@ -981,7 +981,7 @@ function render(){
        RENEWAL artik mukerrer liste; oradaki sayi toplam kayit sayisiyla
        toplanmiyor ve yanlis okunuyordu. Diger bantlarda sayi duruyor. */
     const sayi=b.key==='renewal'?'':` (${satirlar.length})`;
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${ALT.includes(b.key)?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.key==='cold'?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${ALT.includes(b.key)?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.label}${sayi}</button></td></tr>`;
     if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
