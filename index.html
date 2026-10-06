@@ -1058,7 +1058,9 @@ const DONUSEN=['In Progress','Completed'];
 const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
-  const havuz=data.filter(c=>DONUSUM_HAVUZ.includes(c.status));
+  /* 6 Ekim 2026, Mustafa: "donusum rasyosuna cold email'i katma; biz attik, onlar icin sifirdan conversion degil."
+     Cold email kaynakli ve is ortagi etiketli kayitlar havuza girmez; gelen talep degil, bizim yazdigimiz firma. */
+  const havuz=data.filter(c=>DONUSUM_HAVUZ.includes(c.status)&&(c.kaynak||'')!=='Cold email'&&!isOrtak(c));
   const A=havuz.length; if(!A){el.innerHTML='';return;}
   const donusen=havuz.filter(c=>DONUSEN.includes(c.status));
   const kayip=havuz.filter(c=>c.status==='Not Converted');
@@ -1076,7 +1078,7 @@ function donusumCiz(){
      duruyor, burada ikinci kez yazilmasi ekrani uzatiyordu. Burada yalnizca
      sayi var. */
   el.innerHTML=`<h3>Dönüşüm</h3>
-  <div class="dz-alt">Google dönüşümü: gelen her talep. Bizim dönüşümümüz: işin başladığı ya da bittiği kayıt. Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
+  <div class="dz-alt">Google dönüşümü: gelen her talep (cold email ve iş ortağı kayıtları hariç). Bizim dönüşümümüz: işin başladığı ya da bittiği kayıt. Import Refusal, Renewal ve Over Due bantlarındaki ${disi} kayıt havuz dışında.</div>
   <div class="dz-sar"><svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Dönüşüm grafiği">${arcs}<text x="80" y="78" text-anchor="middle" class="dz-orta">%${oran}</text><text x="80" y="94" text-anchor="middle" class="dz-ortaalt">BİZİM DÖNÜŞÜM</text></svg>
   <div class="dz-lejant">
     <i style="background:#1f6f3f"></i><b>Dönüşen</b><span>${donusen.length} kayıt</span><span class="m">%${Math.round(100*donusen.length/A)}</span>
