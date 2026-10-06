@@ -863,7 +863,7 @@ const BANTLAR=[
   /* 6 Ekim 2026, Mustafa: "Meta'dan gelen FDA inquiry'leri mavi META FDA bolumunde olacak; Meta'dan Amazon gelirse
      AMAZON altinda." META artik EK liste degil, kaydin KENDI bandi: kaynagi Meta olan ve acik (New) duran, Amazon
      olmayan kayit NEW yerine burada durur. Amazon olan isAmazon ile once yakalanir. */
-  {key:'meta',       label:'META FDA',       cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')&&(c.status==='New'||c.status==='Hold')},
+  {key:'meta',       label:'META-FDA',       cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')&&(c.status==='New'||c.status==='Hold')},
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
@@ -909,6 +909,7 @@ function kartLinkiKopyala(){if(memoIdx<0)return; const l=kartLinki(memoIdx); (na
 function isGunuFarki(iso){ if(!iso)return 0; const a=new Date(iso+'T00:00:00'),b=new Date(); b.setHours(0,0,0,0); let n=0; for(let d=new Date(a);d<b;d.setDate(d.getDate()+1)){ const g=d.getDay(); if(g!==0&&g!==6)n++; } return n; }
 function otoHold(arr){ let degisti=false; arr.forEach(c=>{
   if(isOrtak(c)) return;                                                    /* is ortagi hic Hold'a gitmez */
+  if(/^meta/i.test(c.kaynak||'')&&!(c.tasks||[]).includes('AMAZON')) return; /* 6 Ekim: Meta FDA talebi hic Hold'a gitmez, adet gorunsun */
   if((c.kaynak||'')==='Cold email'){ if(c.status==='New'&&teklifGitti(c)){ c.status='Hold'; degisti=true; } return; }
   if(c.status==='New'&&c.firstMeeting&&isGunuFarki(c.firstMeeting)>5){ c.status='Hold'; degisti=true; } }); return degisti; }
 function render(){
@@ -980,7 +981,7 @@ function render(){
        RENEWAL artik mukerrer liste; oradaki sayi toplam kayit sayisiyla
        toplanmiyor ve yanlis okunuyordu. Diger bantlarda sayi duruyor. */
     const sayi=b.key==='renewal'?'':` (${satirlar.length})`;
-    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${ALT.includes(b.key)?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${ALT.includes(b.key)?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
+    html+=`<tr class="sep"><td colspan="9"><button class="sectoggle ${b.cls}${ALT.includes(b.key)?' sec-alt':''}" onclick="toggleSec('${b.key}')"><span class="chev">${open?'▾':'▸'}</span> ${b.key==='cold'?'NEW › ':''}${b.label}${sayi}</button></td></tr>`;
     if(open){let pos=0;html+=satirlar.map(i=>rowHtml(data[i],i,pos++)).join('');}
   }
   document.getElementById('rows').innerHTML=html;
