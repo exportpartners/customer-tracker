@@ -943,14 +943,17 @@ function render(){
      ustte. Tarih olarak once firstMeeting (ilk temas), yoksa issuedDate
      (fatura tarihi) okunur; ikisi de bossa kayit en alta duser, cunku ne
      zaman geldigi bilinmiyor. Diger bantlarin sirasi degismedi. */
-  const yeniTarih=(c)=>(c.firstMeeting||c.issuedDate||'');
-  kova.new.sort((a,b)=>{
+  /* 8 Ekim 2026, Mustafa: "en son gelen inquiry ya da gorusme tarihi daha tepede olsun." Tarih artik en yeni
+     temas: firstMeeting, sonTemas ve issuedDate'in EN BUYUGU; NEW'in yaninda alt bantlar (AMAZON, META-FDA, COLD
+     EMAIL) ve HOLD da ayni sirayla dizilir. */
+  const yeniTarih=(c)=>[c.firstMeeting,c.sonTemas,c.issuedDate].filter(Boolean).sort().pop()||'';
+  ['new','amazon','meta','cold','hold'].forEach(k=>{ if(kova[k]) kova[k].sort((a,b)=>{
     const ta=yeniTarih(data[a]), tb=yeniTarih(data[b]);
     if(ta&&tb) return tb.localeCompare(ta);
     if(ta) return -1;
     if(tb) return 1;
     return 0;
-  });
+  }); });
   /* Elle tasima yapilmis bantlar: bandin TAMAMI sira tasiyorsa o siraya
      uyulur. Bir kismi tasiyorsa bandin kendi siralamasi gecerli kalir,
      yoksa sirasizlar rastgele yere duserdi. */
