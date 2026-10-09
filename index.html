@@ -475,6 +475,11 @@ function setSync(mode){const el=document.getElementById('sync');if(el){el.textCo
    which cannot catch a rejected promise: a write refused by the database
    failed in complete silence and the table quietly reverted on the next
    snapshot. Failures are now reported, and the caller can wait for them. */
+/* 10 Ekim 2026: tek seferlik goc. Firmasi 'Bargello' olup basliginda 'Sınıf 3 depolama' gecen kayit yoksa ekler;
+   tekrar calisma kontrolu yalnizca bu kayit-var-mi kontroludur, ayri bayrak tutulmaz. Durum: Over Due (en acil bant). */
+function bargelloSinif3Goc(arr){if(arr.some(c=>/bargello/i.test(c.firm||'')&&(c.title||'').includes('Sınıf 3 depolama')))return false;
+  arr.push(normalize({firm:'Bargello',title:'Bargello — Almanya deposunda Sınıf 3 depolama ve iç sevkiyat teyidi',status:'Over Due',
+    tasks:[],notes:[],firstMeeting:'2026-10-14',memo:"<div>Parfüm nakliyede UN 1266 / Sınıf 3 yanıcı sıvı. Mal yola çıkmadan depo<br>tarafından yazılı teyit alınacak başlıklar:<br><br>1. Sınıf 3 yanıcı sıvı depolama izni ve miktar sınırı (litre / palet).<br>2. Sigorta poliçesinin yanıcı sıvıyı kapsayıp kapsamadığı.<br>3. Konteyner kabul, boşaltma, paletten koliye ayırma kapasitesi.<br>4. Sınırlı miktar (LQ) rejimine göre yeniden ambalajlama ve etiketleme:<br>   koli üstünde en az 100x100 mm LQ işareti, koli başına azami 30 kg brüt,<br>   cam şişelerde dolgu.<br>5. Amazon lojistik merkezine iç sevkiyatta gönderici kim olacak ve<br>   taşıyıcı sözleşmesinin tehlikeli madde taşıyıp taşımadığı. Amazon'un<br>   anlaşmalı nakliye programı bu kolileri çoğu zaman kabul etmiyor.<br>6. Palet bazında Sınıf 3 gönderiminde tehlikeli madde güvenlik danışmanı<br>   bulunup bulunmadığı.<br>7. FBM siparişleri için tek koli LQ gönderiminde çalıştığı taşıyıcı.<br>8. İthalatta dolaylı temsil tarafı ve serbest dolaşıma giriş noktası.</div>",isNew:false}));ensureIds(arr);return true;}
 function save(cb){
   try{localStorage.setItem('ep_track10',JSON.stringify(data));}
   catch(e){toast('Could not save on this device: '+e.message);}
@@ -507,14 +512,14 @@ function initData(){
       filesRef=firebase.database().ref('ep_tracker_files');
       dbRef.on('value',snap=>{
         const val=snap.val();
-        if(val){data=toArr(val).map(normalize);const d1=ensureIds(data),d2=otoHold(data);if(d1||d2)save();}
+        if(val){data=toArr(val).map(normalize);const d1=ensureIds(data),d2=otoHold(data),d3=bargelloSinif3Goc(data);if(d1||d2||d3)save();}
         else{data=localData();try{dbRef.set(data);}catch(e){}}
         setSync('cloud');render();derinLink();
       },err=>{console.error(err);dbRef=null;filesRef=null;data=localData();setSync('local');render();});
       return;
     }catch(e){console.error(e);dbRef=null;filesRef=null;}
   }
-  data=localData();setSync('local');render();
+  data=localData();bargelloSinif3Goc(data);setSync('local');render();
 }
 
 function statusOpts(sel){return STATUSES.map(s=>`<option ${s===sel?'selected':''}>${s}</option>`).join('');}
