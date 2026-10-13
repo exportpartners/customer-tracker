@@ -773,6 +773,9 @@ function takipKutu(c){
   let roz='';
   if(c.takipIstek&&c.takipIstek!==c.takipYapilan) roz='<span title="Follow-up sırada, birkaç dakika içinde gider" style="font-size:9px;font-weight:800;color:#FF7D07;margin-right:2px">⏳</span>';
   else if(c.takipSonuc) roz='<span title="'+esc(c.takipSonuc)+'" style="font-size:9px;font-weight:800;color:'+(c.takipSonuc.startsWith('gitti')?'#1faa59':'#c0392b')+';margin-right:2px">'+(c.takipSonuc.startsWith('gitti')?'✓':'!')+'</span>';
+  /* 13 Ekim 2026, Mustafa: "gondereli minimum 2 gun olsun". Son temas 2 gunden yeniyse kutu soluk; asil kontrol takip-mail.py'de. */
+  const yakin=c.sonTemas&&((Date.now()-new Date(c.sonTemas+'T00:00:00').getTime())/86400000)<2;
+  if(yakin) return '<input type="checkbox" disabled title="Son mail 2 günden yeni (son temas '+esc(c.sonTemas)+')" style="width:15px;height:15px;margin:0 4px 0 0;opacity:.35;flex:0 0 auto">'+roz;
   return '<input type="checkbox" class="takipsec" title="Follow-up için seç" style="width:15px;height:15px;margin:0 4px 0 0;accent-color:#FF7D07;flex:0 0 auto" '+(TAKIP_SEC.has(c.id)?'checked ':'')+'onchange="takipSecim(\''+esc(c.id)+'\',this.checked)">'+roz;
 }
 function takipSecim(id,acik){ if(acik) TAKIP_SEC.add(id); else TAKIP_SEC.delete(id); takipDugme(); }
