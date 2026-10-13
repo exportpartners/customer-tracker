@@ -261,7 +261,7 @@
     <select id="taskFilter" class="field" style="margin-right:auto" onchange="render()" title="Show only the customers carrying this task">
       <option value="">All tasks</option>
     </select>
-    <button class="addbtn" onclick="addRow()">+ Add Row</button>
+    <button class="addbtn" id="takipBtn" onclick="takipGonder()" style="display:none;background:#FF7D07;margin-right:8px">Follow-up e-postası gönder (0)</button><button class="addbtn" onclick="addRow()">+ Add Row</button>
   </div>
   <div class="scroll">
     <table>
@@ -460,7 +460,7 @@ function normalize(r){
      sira yoksa alan hic yazilmaz. */
   const o={id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
-    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||'')}; if(typeof r.sira==='number')o.sira=r.sira; return o; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
+    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||''),takipIstek:r.takipIstek||'',takipYapilan:r.takipYapilan||'',takipSonuc:r.takipSonuc||''}; if(typeof r.sira==='number')o.sira=r.sira; /* 13 Ekim 2026: follow-up istegi (takip-mail.py okur/yazar); normalize'da sayilmazsa save() ile ucar */ return o; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
 }
 let data=[];
 let dbRef=null;
@@ -761,6 +761,32 @@ function portalRozet(c,i){
   if(o.onay) return `<span class="sent-tag" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="Form onaylandı · tıkla: müşteri formu">✓ Form onaylandı</span>`;
   return `<span class="pblink ${o.bos?'kismi':'tam'}" id="pbadge-${esc(c.portalUid)}" style="cursor:pointer" onclick="openMemo(${i})" title="${o.g?'Form gönderildi':'Form henüz gönderilmedi'} · tıkla: müşteri formu">${o.bos?'Form dolduruluyor · '+dolu+'/'+o.toplam:'Form dolduruldu · '+o.toplam+'/'+o.toplam}${ek.length?' · '+ek.join(' · '):''}</span>`;
 }
+/* 13 Ekim 2026, Mustafa: "Tracker'a tik koyalim, follow up emaili tusu olsun; metin sabit; tik atip send all deyince ayri ayri
+   email gitsin. Tik en solda firma isminin yaninda." Dugme kayda takipIstek yazar; Mac'teki takip-mail.py (5 dk) her kayda
+   AYRI maili, o firmaya giden son mailin ustune (Re:, alinti, eski ekler), Cc yalniz info@ ile gonderir ve takipYapilan/
+   takipSonuc yazar. Yalniz Mustafa (deniz@) gorur ve basar. */
+const TAKIP_METNI='Merhabalar, nasılsınız?\n\nAşağıda <Amazon / FDA / Amazon ve FDA> konulu bilgilendirme e-postamıza istinaden iletişime geçmek istedik.\n\nSüreçte hangi aşamadasınız, yardımcı olabileceğimiz bir konu var mıdır? Destek sağlamaktan memnuniyet duyarız.\n\nSaygılarımızla';
+const TAKIP_SEC=new Set();
+function takipYetki(){return ((typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'')==='deniz@exportpartners.com.tr';}
+function takipKutu(c){
+  if(!takipYetki()||!(c.email||'').includes('@')) return '';
+  let roz='';
+  if(c.takipIstek&&c.takipIstek!==c.takipYapilan) roz='<span title="Follow-up sırada, birkaç dakika içinde gider" style="font-size:9px;font-weight:800;color:#FF7D07;margin-right:2px">⏳</span>';
+  else if(c.takipSonuc) roz='<span title="'+esc(c.takipSonuc)+'" style="font-size:9px;font-weight:800;color:'+(c.takipSonuc.startsWith('gitti')?'#1faa59':'#c0392b')+';margin-right:2px">'+(c.takipSonuc.startsWith('gitti')?'✓':'!')+'</span>';
+  return '<input type="checkbox" class="takipsec" title="Follow-up için seç" style="width:15px;height:15px;margin:0 4px 0 0;accent-color:#FF7D07;flex:0 0 auto" '+(TAKIP_SEC.has(c.id)?'checked ':'')+'onchange="takipSecim(\''+esc(c.id)+'\',this.checked)">'+roz;
+}
+function takipSecim(id,acik){ if(acik) TAKIP_SEC.add(id); else TAKIP_SEC.delete(id); takipDugme(); }
+function takipDugme(){const b=document.getElementById('takipBtn'); if(!b) return; b.style.display=(takipYetki()&&TAKIP_SEC.size)?'':'none'; b.textContent='Follow-up e-postası gönder ('+TAKIP_SEC.size+')';}
+function takipGonder(){
+  if(!takipYetki()){toast('Follow-up yalnızca Mustafa tarafından gönderilir');return;}
+  const sec=data.filter(c=>TAKIP_SEC.has(c.id));
+  if(!sec.length) return;
+  const liste=sec.map(c=>'• '+c.firm+' <'+c.email+'>').join('\n');
+  if(!confirm('Şu '+sec.length+' firmaya AYRI AYRI follow-up e-postası gidecek (son giden mailin üstüne, Cc info@):\n\n'+liste+'\n\nMetin:\n\n'+TAKIP_METNI+'\n\nGönderilsin mi?')) return;
+  const ts=new Date().toISOString();
+  sec.forEach(c=>{c.takipIstek=ts;});
+  save(ok=>{ if(ok){ toast(sec.length+' follow-up sıraya alındı, birkaç dakika içinde gidecek'); TAKIP_SEC.clear(); takipDugme(); render(); } });
+}
 function rowHtml(c,i,pos){
   const hasP=(c.phone||'').replace(/[^\d]/g,'').length>=7;
   const callIc=hasP?`<a class="ic call" href="tel:${toTel(c.phone)}">${PHONE}</a>`:`<span class="ic call off">${PHONE}</span>`;
@@ -812,7 +838,7 @@ function rowHtml(c,i,pos){
   }
   const alt=pos%2?'alt':'';
   return `<tr class="${alt}">
-    <td><div class="firmcell"><div class="firmrow"><input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="tasi" onclick="satirTasi(${i},-1)" title="Bir üste taşı">▲</button><button class="tasi" onclick="satirTasi(${i},1)" title="Bir alta taşı">▼</button><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${(c.etiket&&c.etiket.length)||c.sonTemas?`<div class="ek-satir">${(c.etiket||[]).map(e=>`<span class="etiket-rozet">${esc(e)}</span>`).join('')}${c.sonTemas?`<span class="son-temas">Son temas: ${c.sonTemas.split('-').reverse().join('.')}</span>`:''}</div>`:''}${sub}</div></td>
+    <td><div class="firmcell"><div class="firmrow">${takipKutu(c)}<input class="firm" data-i="${i}" value="${esc(c.firm)}" placeholder="Company" onchange="upd(${i},'firm',this.value)"><button class="tasi" onclick="satirTasi(${i},-1)" title="Bir üste taşı">▲</button><button class="tasi" onclick="satirTasi(${i},1)" title="Bir alta taşı">▼</button><button class="del" onclick="del(${i})" title="Delete row">✕</button></div><input class="product" value="${esc(c.product)}" placeholder="Product name" onchange="upd(${i},'product',this.value)">${(c.etiket&&c.etiket.length)||c.sonTemas?`<div class="ek-satir">${(c.etiket||[]).map(e=>`<span class="etiket-rozet">${esc(e)}</span>`).join('')}${c.sonTemas?`<span class="son-temas">Son temas: ${c.sonTemas.split('-').reverse().join('.')}</span>`:''}</div>`:''}${sub}</div></td>
     <td><div class="chips">${taskChips}<select class="add-sel add-task" onchange="addItem(${i},'tasks',this.value);this.selectedIndex=0">${addOpts(TASKS,c.tasks||[],'+ Task')}</select></div></td>
     <td><select class="pill ${SC[c.status]||'s-hold'}" onchange="upd(${i},'status',this.value);render()">${statusOpts(c.status)}</select></td>
     <td><input class="contact" value="${esc(c.contact)}" placeholder="—" onchange="upd(${i},'contact',this.value)"><input class="title" value="${esc(c.title)}" placeholder="Title" onchange="upd(${i},'title',this.value)"></td>
@@ -996,6 +1022,7 @@ function render(){
   document.getElementById('rows').innerHTML=html;
   fillTaskFilter(tsel);
   donusumCiz();
+  takipDugme();
 }
 /* Options are built from the data, not from the TASKS constant alone, so a
    task that exists in the records is always selectable even if someone
