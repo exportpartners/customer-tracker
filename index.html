@@ -71,7 +71,8 @@
   .sec-renewal{background:#F5C518;color:#3d2e00;box-shadow:0 2px 6px rgba(245,197,24,.45)}
   /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
   .sec-amazon{background:#FF9900;color:#1a1200;box-shadow:0 2px 6px rgba(255,153,0,.45)}
-  .sec-meta{background:#1877F2;box-shadow:0 2px 6px rgba(24,119,242,.4)}
+  .sec-meta{background:linear-gradient(135deg,#6E1630 0%,#8E2442 60%,#A8395A 100%);border:2px solid #fff;box-shadow:0 0 0 1.5px #8E2442,0 2px 6px rgba(110,22,48,.45)} /* 13 Ekim 2026, Mustafa: INSTA-FDA, bordo-beyaz */
+  .sectoggle .ig{width:15px;height:15px;flex:0 0 auto}
   /* 6 Ekim 2026, Mustafa: alt bantlar (META-FDA, Sertifikasyon) daha kucuk oval dugme */
   .sec-alt{margin-left:28px;font-size:11px;font-weight:700;padding:5px 13px;border-radius:999px;letter-spacing:.3px;margin-top:4px;margin-bottom:4px}
   .sec-cold{background:#C9A27E;color:#3b2a1a;box-shadow:0 2px 6px rgba(201,162,126,.45)}
@@ -779,7 +780,7 @@ function takipKutu(c){
   return '<input type="checkbox" class="takipsec" title="Follow-up için seç" style="width:15px;height:15px;margin:0 4px 0 0;accent-color:#FF7D07;flex:0 0 auto" '+(TAKIP_SEC.has(c.id)?'checked ':'')+'onchange="takipSecim(\''+esc(c.id)+'\',this.checked)">'+roz;
 }
 function takipSecim(id,acik){ if(acik) TAKIP_SEC.add(id); else TAKIP_SEC.delete(id); takipDugme(); }
-function takipDugme(){const b=document.getElementById('takipBtn'); if(!b) return; b.style.display=takipYetki()?'':'none'; b.disabled=!TAKIP_SEC.size; b.style.opacity=TAKIP_SEC.size?'1':'.45'; b.textContent='Follow-up e-postası gönder ('+TAKIP_SEC.size+')'; b.title=TAKIP_SEC.size?'Seçilen firmalara ayrı ayrı follow-up gider':'Önce firma adının solundaki kutulardan seçin';}
+function takipDugme(){const b=document.getElementById('takipBtn'); if(!b) return; b.style.display=(takipYetki()&&TAKIP_SEC.size)?'':'none'; b.disabled=false; b.style.opacity='1'; /* 13 Ekim: secim yokken hic gorunmez */ b.textContent='Follow-up e-postası gönder ('+TAKIP_SEC.size+')'; b.title=TAKIP_SEC.size?'Seçilen firmalara ayrı ayrı follow-up gider':'Önce firma adının solundaki kutulardan seçin';}
 function takipGonder(){
   if(!takipYetki()){toast('Follow-up yalnızca Mustafa tarafından gönderilir');return;}
   const sec=data.filter(c=>TAKIP_SEC.has(c.id));
@@ -898,7 +899,7 @@ const BANTLAR=[
   /* 6 Ekim 2026, Mustafa: "Meta'dan gelen FDA inquiry'leri mavi META FDA bolumunde olacak; Meta'dan Amazon gelirse
      AMAZON altinda." META artik EK liste degil, kaydin KENDI bandi: kaynagi Meta olan ve acik (New) duran, Amazon
      olmayan kayit NEW yerine burada durur. Amazon olan isAmazon ile once yakalanir. */
-  {key:'meta',       label:'META-FDA',       cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')&&(c.status==='New'||c.status==='Hold')},
+  {key:'meta',       label:'<svg class="ig" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="#fff" stroke="none"/></svg>INSTA-FDA',       cls:'sec-meta',         uyar:c=>/^meta/i.test(c.kaynak||'')&&(c.status==='New'||c.status==='Hold')},
   {key:'new',        label:'NEW',            cls:'sec-new',          uyar:c=>isNewActive(c)},
   {key:'hold',       label:'HOLD',           cls:'sec-hold',         uyar:c=>c.status==='Hold'},
   /* 11 Sep 2026, Mustafa: "In Progress olan Molu Et'i ayri, progress olarak
