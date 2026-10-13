@@ -767,7 +767,7 @@ function portalRozet(c,i){
    takipSonuc yazar. Yalniz Mustafa (deniz@) gorur ve basar. */
 const TAKIP_METNI='Merhabalar, nasılsınız?\n\nAşağıda <Amazon / FDA / Amazon ve FDA> konulu bilgilendirme e-postamıza istinaden iletişime geçmek istedik.\n\nSüreçte hangi aşamadasınız, yardımcı olabileceğimiz bir konu var mıdır? Destek sağlamaktan memnuniyet duyarız.\n\nSaygılarımızla';
 const TAKIP_SEC=new Set();
-function takipYetki(){return ((typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'')==='deniz@exportpartners.com.tr';}
+function takipYetki(){const e=((typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||'');return e==='deniz@exportpartners.com.tr'||e==='info@exportpartners.com.tr';} /* Mustafa'nin iki girisi; opr@ (Kaan) gormez */
 function takipKutu(c){
   if(!takipYetki()||!(c.email||'').includes('@')) return '';
   let roz='';
@@ -779,7 +779,7 @@ function takipKutu(c){
   return '<input type="checkbox" class="takipsec" title="Follow-up için seç" style="width:15px;height:15px;margin:0 4px 0 0;accent-color:#FF7D07;flex:0 0 auto" '+(TAKIP_SEC.has(c.id)?'checked ':'')+'onchange="takipSecim(\''+esc(c.id)+'\',this.checked)">'+roz;
 }
 function takipSecim(id,acik){ if(acik) TAKIP_SEC.add(id); else TAKIP_SEC.delete(id); takipDugme(); }
-function takipDugme(){const b=document.getElementById('takipBtn'); if(!b) return; b.style.display=(takipYetki()&&TAKIP_SEC.size)?'':'none'; b.textContent='Follow-up e-postası gönder ('+TAKIP_SEC.size+')';}
+function takipDugme(){const b=document.getElementById('takipBtn'); if(!b) return; b.style.display=takipYetki()?'':'none'; b.disabled=!TAKIP_SEC.size; b.style.opacity=TAKIP_SEC.size?'1':'.45'; b.textContent='Follow-up e-postası gönder ('+TAKIP_SEC.size+')'; b.title=TAKIP_SEC.size?'Seçilen firmalara ayrı ayrı follow-up gider':'Önce firma adının solundaki kutulardan seçin';}
 function takipGonder(){
   if(!takipYetki()){toast('Follow-up yalnızca Mustafa tarafından gönderilir');return;}
   const sec=data.filter(c=>TAKIP_SEC.has(c.id));
