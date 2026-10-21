@@ -70,6 +70,7 @@
      okunmuyor, o yuzden bu ikisinde yazi rengi koyu. */
   .sec-renewal{background:#F5C518;color:#3d2e00;box-shadow:0 2px 6px rgba(245,197,24,.45)}
   /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
+  .sec-chewport{background:#232F3E;color:#FF9A3C;border:2px solid #FF7D07} /* 21 Ekim 2026, Mustafa: CHEWPORT bandi NEW altinda */
   .sec-amazon{background:#FF9900;color:#1a1200;box-shadow:0 2px 6px rgba(255,153,0,.45)}
   .sec-meta{background:linear-gradient(135deg,#6E1630 0%,#8E2442 60%,#A8395A 100%);border:2px solid #fff;box-shadow:0 0 0 1.5px #8E2442,0 2px 6px rgba(110,22,48,.45)} /* 13 Ekim 2026, Mustafa: INSTA-FDA, bordo-beyaz */
   .sectoggle .ig{width:15px;height:15px;flex:0 0 auto}
@@ -883,6 +884,9 @@ function isAmazon(c){ const t=c.tasks||[]; return (t.includes('AMAZON')||t.inclu
    cold email kaynakli ACIK kayit; is ortagi her durumda burada (Hold olsa bile), otoHold ona dokunmaz. Is ortagi
    OLMAYAN cold email'e teklif, fiyat ya da fatura gidince (Proposal Sent / Proforma Invoice Sent) kayit Hold'a gecer
    ve HOLD bandina duser. */
+/* 21 Ekim 2026, Mustafa: "panelde chewport acalim, new altinda." Chewport (ABD alicisi, pet chews) talepleri kendi bandinda;
+   kaynak 'Chewport...' ya da 'Chewport' etiketli ACIK kayit. Tedarikci yazismasi yine tracker'a girmez (7 Ekim kurali). */
+function isChewport(c){ const acik=!DONE_STATUS.includes(c.status)&&!['Not Converted','Over Due','Import Refusal'].includes(c.status); return acik && (/chewport/i.test(c.kaynak||'')||(c.etiket||[]).includes('Chewport')); }
 function isOrtak(c){ return (c.etiket||[]).includes('İş ortağı'); }
 function teklifGitti(c){ return (c.notes||[]).some(n=>/Proposal Sent|Proforma Invoice Sent|Payment Received/.test(n)); }
 function isCold(c){ const acik=!DONE_STATUS.includes(c.status)&&!['Not Converted','Over Due','Import Refusal'].includes(c.status); if(!acik)return false; if(isOrtak(c))return true; return (c.kaynak||'')==='Cold email' && c.status==='New'; }
@@ -891,6 +895,7 @@ const BANTLAR=[
   /* 5 Ekim 2026, Mustafa: "bu gonderdigimiz mailleri cold email diye acik kahverengi bir baslik koy, tracker'da
      oraya gitsin." Cold email ile acilan kayit, cevap gelip baska bir not (Intro Call, Proposal...) ya da durum
      degisikligi olana kadar burada durur; boylece NEW bandi soguk adaylarla dolmaz. */
+  {key:'chewport',   label:'CHEWPORT',       cls:'sec-chewport',     uyar:c=>isChewport(c)},
   {key:'cold',       label:'SERTİFİKASYON · İŞ ORTAĞI · COLD EMAIL', cls:'sec-cold', uyar:c=>isCold(c)},  /* gida firmalari sistemi kurulunca ayri bant: COLD EMAIL · GIDA */
   {key:'amazon',     label:'AMAZON',         cls:'sec-amazon',       uyar:c=>isAmazon(c)},
   /* 6 Ekim 2026, Mustafa: "Meta'dan gelen FDA inquiry'leri mavi META FDA bolumunde olacak; Meta'dan Amazon gelirse
@@ -942,6 +947,7 @@ function kartLinkiKopyala(){if(memoIdx<0)return; const l=kartLinki(memoIdx); (na
 function isGunuFarki(iso){ if(!iso)return 0; const a=new Date(iso+'T00:00:00'),b=new Date(); b.setHours(0,0,0,0); let n=0; for(let d=new Date(a);d<b;d.setDate(d.getDate()+1)){ const g=d.getDay(); if(g!==0&&g!==6)n++; } return n; }
 function otoHold(arr){ let degisti=false; arr.forEach(c=>{
   if(isOrtak(c)) return;                                                    /* is ortagi hic Hold'a gitmez */
+  if(isChewport(c)) return;                                                 /* 21 Ekim: Chewport talebi kendi bandinda kalir */
   if(/^meta/i.test(c.kaynak||'')&&!(c.tasks||[]).some(x=>/^AMAZON/.test(x))) return; /* 6 Ekim: Meta FDA talebi hic Hold'a gitmez, adet gorunsun */
   if((c.kaynak||'')==='Cold email'){ if(c.status==='New'&&teklifGitti(c)){ c.status='Hold'; degisti=true; } return; }
   if(c.status==='New'&&c.firstMeeting&&isGunuFarki(c.firstMeeting)>5){ c.status='Hold'; degisti=true; } }); return degisti; }
@@ -979,7 +985,7 @@ function render(){
      temas: firstMeeting, sonTemas ve issuedDate'in EN BUYUGU; NEW'in yaninda alt bantlar (AMAZON, META-FDA, COLD
      EMAIL) ve HOLD da ayni sirayla dizilir. */
   const yeniTarih=(c)=>[c.firstMeeting,c.sonTemas,c.issuedDate].filter(Boolean).sort().pop()||'';
-  ['new','amazon','meta','cold','hold'].forEach(k=>{ if(kova[k]) kova[k].sort((a,b)=>{
+  ['new','amazon','chewport','meta','cold','hold'].forEach(k=>{ if(kova[k]) kova[k].sort((a,b)=>{
     const ta=yeniTarih(data[a]), tb=yeniTarih(data[b]);
     if(ta&&tb) return tb.localeCompare(ta);
     if(ta) return -1;
@@ -1006,7 +1012,7 @@ function render(){
      alt bolum olarak durur. */
   /* 6 Ekim 2026, Mustafa: "META FDA NEW'in altinda olacak." META FDA ve COLD EMAIL, NEW'in hemen altinda girintili alt bolum. */
   /* 7 Ekim 2026, Mustafa: "AMAZON NEW altinda olsun." AMAZON da NEW'in altinda girintili alt bolum, ilk sirada. */
-  const ALT=['amazon','meta','cold'];
+  const ALT=['amazon','chewport','meta','cold'];
   const CIZIM=BANTLAR.filter(b=>!ALT.includes(b.key)); CIZIM.splice(CIZIM.findIndex(b=>b.key==='new')+1,0,...ALT.map(k=>BANTLAR.find(b=>b.key===k)));
   /* AMAZON bandi IN PROGRESS'in hemen altinda cizilir (6 Ekim 2026 gece, Mustafa; siniflandirma sirasi ayri) */
   for(const b of CIZIM){
