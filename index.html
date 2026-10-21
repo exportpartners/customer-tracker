@@ -225,7 +225,14 @@
   /* Donusum grafigi, 11 Eylul 2026. Uc dilim: kazanilan (Completed + In Progress),
      acik (New, Hold, Import Refusal, Renewal), kaybedilen (Not Converted).
      Renkler dataviz dogrulayicisindan gecti: #1f6f3f #d97706 #6d3b9e. */
-  #donusum{max-width:1180px;margin:28px auto 40px;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  #altkutular{max-width:1180px;margin:28px auto 40px;display:flex;gap:18px;align-items:stretch;flex-wrap:wrap}
+  #altkutular>div{flex:1 1 520px;min-width:0}
+  #kaanpay{padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  #kaanpay h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}#kaanpay .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:10px}
+  #kaanpay table{width:100%;border-collapse:collapse;font-size:12px}#kaanpay th{background:#232F3E;color:#fff;text-align:left;padding:5px 7px;font-size:10.5px;border:0}
+  #kaanpay td{padding:4px 7px;border:0;border-bottom:1px solid #eef0f3}#kaanpay td.r,#kaanpay th.r{text-align:right;white-space:nowrap}
+  #kaanpay tr.t td{font-weight:800;background:#F8F5F4}#kaanpay input{width:58px;text-align:right;border:1px solid #e0c97a;background:#FFF8DD;border-radius:5px;padding:2px 4px;font-size:12px}
+  #donusum{margin:0;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
   #donusum h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}
   #donusum .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:12px}
   #donusum .dz-sar{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
@@ -270,7 +277,7 @@
       <thead><tr><th>Company</th><th>Task</th><th>Status</th><th>Contact Person</th><th>Phone / Email</th><th>Action</th><th>Invoice / 1st Meeting</th><th>Submit</th><th>Memo</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
-    <div id="donusum"></div>
+    <div id="altkutular"><div id="donusum"></div><div id="kaanpay" style="display:none"></div></div>
   </div>
 </div>
 
@@ -509,6 +516,7 @@ function initData(){
       if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       dbRef=firebase.database().ref('ep_tracker_v1');
       filesRef=firebase.database().ref('ep_tracker_files');
+      payYukle();
       dbRef.on('value',snap=>{
         const val=snap.val();
         if(val){data=toArr(val).map(normalize);const d1=ensureIds(data),d2=otoHold(data);if(d1||d2)save();}
@@ -1098,6 +1106,27 @@ const DONUSEN=['In Progress','Completed'];
 /* Google Ads "FDA Belgesi" kampanyasi, arama terimleri raporundan. Elle
    guncellenir; yeni export gelince tl, usd ve tarihler birlikte degisir. */
 const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
+/* 21 Ekim 2026, Mustafa: "tabloyu tracker'a at, donusumun sagina." Kaan (KGP) pay tablosu; veri ep_tracker_files/_pay/kaan
+   (tracker girisi gerekir, sayfanin kendisinde rakam yok). Oran sari kutuda; Mustafa'nin girisiyle degistirilir ve kaydedilir. */
+let PAY=null;
+function payYukle(){ if(!filesRef) return; filesRef.child('_pay').child('kaan').on('value',s=>{PAY=s.val(); payCiz();},()=>{}); }
+function payYetki(){ const e=(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||''; return e==='deniz@exportpartners.com.tr'; }
+function payOran(i,v){ const o=Math.max(0,Math.min(100,Number(String(v).replace(',','.'))))/100; if(isNaN(o)) return; PAY.satirlar[i].oran=o; payCiz(); if(filesRef) filesRef.child('_pay').child('kaan').child('satirlar').child(i).child('oran').set(o).catch(()=>toast('Oran kaydedilemedi')); }
+function payCiz(){
+  const el=document.getElementById('kaanpay'); if(!el) return;
+  const S=(PAY&&PAY.satirlar)?toArr(PAY.satirlar):[]; if(!S.length){el.style.display='none';return;} el.style.display='';
+  const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const yaz=payYetki(); let ta=0,tk=0;
+  const satir=S.map((x,i)=>{ const k=Math.round(x.alinan*x.oran*100)/100, e=Math.round((x.alinan-k)*100)/100; ta+=x.alinan; tk+=k;
+    const o=yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${i},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
+    return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
+  const od=Number(PAY.odenen||0);
+  el.innerHTML=`<h3>Kaan payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç.${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
+  <table><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Kaan oranı</th><th class="r">Kaan</th><th class="r">EP</th></tr>${satir}
+  <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
+  ${od?`<tr><td></td><td>${esc(PAY.odenenNot||'Kaan\'a ödenen')}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
+  <tr class="t"><td></td><td>Kaan'a kalan</td><td></td><td></td><td></td><td class="r">${f(tk-od)}</td><td></td></tr></table>`;
+}
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
   /* 6 Ekim 2026, Mustafa: "donusum rasyosuna cold email'i katma; biz attik, onlar icin sifirdan conversion degil."
