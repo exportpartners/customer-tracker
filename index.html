@@ -1119,7 +1119,7 @@ function payCiz(){
   const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const yaz=payYetki(); let ta=0,tk=0;
   const satir=S.map((x,i)=>{ const k=x.sabit?Number(x.sabit):Math.round(x.alinan*x.oran*100)/100, e=Math.round((x.alinan-k)*100)/100; ta+=x.alinan; tk+=k;
-    const o=x.sabit?`<span style="color:#C0392B;font-weight:700" title="Kaan'in bond payi sabit minimum baz">Sabit ${f(x.sabit).replace(',00','')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${i},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
+    const o=x.sabit?`<span style="color:#C0392B;font-weight:700" title="Kaan'in bond payi minimum baz ${x.sabit}; oran bu tutardan hesaplanir">%${(x.sabit/x.alinan*100).toFixed(1).replace('.',',')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${i},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
     return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
   el.innerHTML=`<h3>Kaan payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç.${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
