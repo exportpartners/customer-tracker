@@ -470,7 +470,7 @@ function normalize(r){
      sira yoksa alan hic yazilmaz. */
   const o={id:r.id||'',firm:r.firm||'',product:r.product||'',title:r.title||'',assess:Array.isArray(r.assess)?r.assess:[],tasks:(r.tasks||[]).map(normTask),status:ESKI_STATUS[r.status]||r.status||'In Progress',
     contact:r.contact||'',phone:r.phone||'',email:r.email||'',website:r.website||'',notes:notes,issuedDate:toISO(r.issuedDate||''),firstMeeting:toISO(r.firstMeeting||''),
-    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||''),takipIstek:r.takipIstek||'',takipYapilan:r.takipYapilan||'',takipSonuc:r.takipSonuc||''}; if(typeof r.sira==='number')o.sira=r.sira; /* 13 Ekim 2026: follow-up istegi (takip-mail.py okur/yazar); normalize'da sayilmazsa save() ile ucar */ return o; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
+    memo:r.memo||'',files:Array.isArray(r.files)?r.files:[],isNew:!!r.isNew,fmSubmitted:!!r.fmSubmitted,techSubmitted:!!r.techSubmitted,portalUid:r.portalUid||'',portalEmail:r.portalEmail||'',kaynak:r.kaynak||'',etiket:Array.isArray(r.etiket)?r.etiket.filter(Boolean):[],sonTemas:toISO(r.sonTemas||''),takipIstek:r.takipIstek||'',takipYapilan:r.takipYapilan||'',takipSonuc:r.takipSonuc||''}; if(typeof r.sira==='number')o.sira=r.sira; if(Array.isArray(r.odemeKalem)&&r.odemeKalem.length)o.odemeKalem=r.odemeKalem; /* 21 Ekim 2026: Stripe odeme kalemleri (kgp-aktar.py yazar), OPR tablosu okur */ /* 13 Ekim 2026: follow-up istegi (takip-mail.py okur/yazar); normalize'da sayilmazsa save() ile ucar */ return o; /* 2 Ekim 2026: etiket (orn. 'İş ortağı') ve sonTemas (son giden e-posta) gonderilen-tara.py yazar; normalize'da sayilmazsa bir sonraki kayitta ucuyordu (29 Eylul dersi). */
 }
 let data=[];
 let dbRef=null;
@@ -1037,7 +1037,7 @@ function render(){
   }
   document.getElementById('rows').innerHTML=html;
   fillTaskFilter(tsel);
-  donusumCiz();
+  donusumCiz(); if(typeof payCiz==='function') payCiz();
   takipDugme();
 }
 /* Options are built from the data, not from the TASKS constant alone, so a
@@ -1112,17 +1112,37 @@ const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
 let PAY=null;
 function payYukle(){ if(!filesRef) return; filesRef.child('_pay').child('kaan').on('value',s=>{PAY=s.val(); payCiz();},()=>{}); }
 function payYetki(){ const e=(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||''; return e==='deniz@exportpartners.com.tr'; }
-function payOran(i,v){ const o=Math.max(0,Math.min(100,Number(String(v).replace(',','.'))))/100; if(isNaN(o)) return; PAY.satirlar[i].oran=o; payCiz(); if(filesRef) filesRef.child('_pay').child('kaan').child('satirlar').child(i).child('oran').set(o).catch(()=>toast('Oran kaydedilemedi')); }
+/* 21 Ekim 2026, Mustafa: "USDA de 55/45; formulize et; is In Progress'e donunce Stripe faturasina gore tabloya aktar."
+   Oran kalem adindan formulle gelir (kgpKural); elle degistirilen oran _pay/kaan/oranlar/<fatura:kalem> altinda durur. */
+function kgpKural(kalem,alinan){ const k=(kalem||'').toLowerCase();
+  if(/processing fee|banking fee|bank processing|stripe|%\s*5|5\s*%/.test(k)) return {haric:1};
+  if(/trademark|uspto|attorney|llc|formation|tax return|wyoming|amazon|ppc|marketplace|duty|ups handling|ddp/.test(k)) return {haric:1};
+  if(/permit fee|harc|harç|government fee/.test(k)) return {haric:1};
+  if(/bond/.test(k)) return /difference|fark/.test(k)?{tanimsiz:1}:{sabit:Math.min(750,Number(alinan)||0)};
+  if(/customs registration|importer registration|gümrük kaydı|gumruk kaydi/.test(k)) return {oran:.75};
+  if(/\bfce\b|\bsid\b|food canning|process filing/.test(k)) return {oran:.6};
+  if(/usda|aphis/.test(k)) return {oran:.55};
+  if(/fda|duns|label|cosmetic|kozmetik|renewal|correction|etiket/.test(k)) return {oran:.55};
+  return {tanimsiz:1}; }
+function payTuret(){ const O=(PAY&&PAY.oranlar)||{}; const out=[];
+  (data||[]).forEach(c=>{ if(!['In Progress','Completed'].includes(c.status)) return; (c.odemeKalem||[]).forEach(x=>{ const r=kgpKural(x.kalem,x.alinan); if(r.haric) return;
+    const key=String(x.id||'').replace(/[.#$\/\[\]]/g,'_'); const o=(key in O)?Number(O[key]):(r.oran||0);
+    out.push({tarih:x.tarih||'',musteri:x.musteri||c.firm,kalem:x.kalem,alinan:Number(x.alinan)||0,oran:o,sabit:(key in O)?0:(r.sabit||0),tanimsiz:r.tanimsiz&&!(key in O),key}); }); });
+  return out; }
+function payOran(i,v){ const o=Math.max(0,Math.min(100,Number(String(v).replace(',','.'))))/100; if(isNaN(o)) return;
+  if(typeof i==='string'){ if(filesRef) filesRef.child('_pay').child('kaan').child('oranlar').child(i).set(o).catch(()=>toast('Oran kaydedilemedi')); return; }
+  PAY.satirlar[i].oran=o; payCiz(); if(filesRef) filesRef.child('_pay').child('kaan').child('satirlar').child(i).child('oran').set(o).catch(()=>toast('Oran kaydedilemedi')); }
 function payCiz(){
   const el=document.getElementById('kaanpay'); if(!el) return;
-  const S=(PAY&&PAY.satirlar)?toArr(PAY.satirlar):[]; if(!S.length){el.style.display='none';return;} el.style.display='';
+  if(!PAY){el.style.display='none';return;} const S=(PAY.satirlar?toArr(PAY.satirlar):[]).concat(payTuret()); if(!S.length){el.style.display='none';return;} el.style.display='';
   const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const yaz=payYetki(); let ta=0,tk=0;
   const satir=S.map((x,i)=>{ const k=x.sabit?Number(x.sabit):Math.round(x.alinan*x.oran*100)/100, e=Math.round((x.alinan-k)*100)/100; ta+=x.alinan; tk+=k;
-    const o=x.sabit?`<span style="color:#C0392B;font-weight:700" title="OPR bond payi minimum baz ${x.sabit}; oran bu tutardan hesaplanir">%${(x.sabit/x.alinan*100).toFixed(1).replace('.',',')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${i},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
+    const ix=x.key?`'${x.key}'`:i;
+    const o=x.tanimsiz&&yaz?`<input style="border-color:#C0392B" title="Bu kalemin oranı formülde yok; yazın" value="0" onchange="payOran(${ix},this.value)">%`:x.sabit?`<span style="color:#C0392B;font-weight:700" title="OPR bond payi minimum baz ${x.sabit}; oran bu tutardan hesaplanir">%${(x.sabit/x.alinan*100).toFixed(1).replace('.',',')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${ix},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
     return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
-  el.innerHTML=`<h3>OPR payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç.${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
+  el.innerHTML=`<h3>OPR payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir (FDA ve USDA %55, FCE ve SID %60, gümrük kaydı %75, bond 750 baz).${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
   <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">EP</th></tr>${satir}
   <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
   ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
