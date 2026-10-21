@@ -225,10 +225,10 @@
   /* Donusum grafigi, 11 Eylul 2026. Uc dilim: kazanilan (Completed + In Progress),
      acik (New, Hold, Import Refusal, Renewal), kaybedilen (Not Converted).
      Renkler dataviz dogrulayicisindan gecti: #1f6f3f #d97706 #6d3b9e. */
-  #altkutular{max-width:1180px;margin:28px auto 40px;display:flex;gap:18px;align-items:stretch;flex-wrap:wrap}
+  #altkutular{max-width:min(1180px,calc(100% - 32px));box-sizing:border-box;margin:28px auto 40px;display:flex;gap:18px;align-items:stretch;flex-wrap:wrap}
   #altkutular>div{flex:1 1 420px;min-width:0}
   #altkutular>#kaanpay{flex:1.5 1 560px;overflow-x:auto}
-  #kaanpay{padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  #kaanpay{box-sizing:border-box;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
   #kaanpay h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}#kaanpay .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:10px}
   #kaanpay table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed}#kaanpay td{overflow-wrap:anywhere}#kaanpay th{background:#232F3E;color:#fff;text-align:left;padding:5px 7px;font-size:10.5px;border:0}
   #kaanpay td{padding:4px 7px;border:0;border-bottom:1px solid #eef0f3}#kaanpay td.r,#kaanpay th.r{text-align:right;white-space:nowrap}
@@ -1123,7 +1123,7 @@ function payCiz(){
     return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
   el.innerHTML=`<h3>Kaan payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç.${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
-  <table><colgroup><col style="width:46px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Kaan oranı</th><th class="r">Kaan</th><th class="r">EP</th></tr>${satir}
+  <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Kaan oranı</th><th class="r">Kaan</th><th class="r">EP</th></tr>${satir}
   <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
   ${od?`<tr><td></td><td>${esc(PAY.odenenNot||'Kaan\'a ödenen')}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
   <tr class="t"><td></td><td>Kaan'a kalan</td><td></td><td></td><td></td><td class="r">${f(tk-od)}</td><td></td></tr></table>`;
