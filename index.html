@@ -90,6 +90,13 @@
   .chip.task-urun{background:#9a4a32}
   .chip.note{background:#b08d3a}
   .chip.note-green{background:#2e9e5b}
+  .chip.note-magenta{background:#c2467a}
+  .chip.note-teal{background:#0f8b8d}
+  .chip.note-slate{background:#5b6b7c}
+  .chip.note-forest{background:#1f6f3f}
+  .chip.note-brown{background:#8a5a2b}
+  .chip.note-olive{background:#7a8a2b}
+  .chip.note-sky{background:#2b86c5}
   .chip.note-orange{background:#E8821E}
   .chip.note-red{background:#c0392b;font-size:12px;padding:5px 8px 5px 10px;box-shadow:0 1px 4px rgba(192,57,43,.4)}
   .chip.note-burgundy{background:#7d1935;box-shadow:0 1px 4px rgba(125,25,53,.35)}
@@ -536,7 +543,8 @@ function initData(){
 
 function statusOpts(sel){return STATUSES.map(s=>`<option ${s===sel?'selected':''}>${s}</option>`).join('');}
 function addOpts(list,existing,label){return `<option value="">${label}</option>`+list.filter(t=>!existing.includes(t)).map(t=>`<option value="${esc(t)}">${t}</option>`).join('');}
-function noteClass(n){if(AQUA_NOTES.includes(n))return 'note-aqua';if(BLUE_NOTES.includes(n))return 'note-blue';if(LILAC_NOTES.includes(n))return 'note-lilac';if(PURPLE_NOTES.includes(n))return 'note-purple';if(BURGUNDY_NOTES.includes(n))return 'note-burgundy';if(RED_NOTES.includes(n))return 'note-red';if(ORANGE_NOTES.includes(n))return 'note-orange';if(GREEN_NOTES.includes(n))return 'note-green';return 'note';}
+const NOTE_RENK={'Quote In Preparation':'note-magenta','Address Sent':'note-teal','Awaiting FDA Reply':'note-slate','FDA Registration Completed':'note-forest','Intro Call Done':'note-brown','Awaiting Client Export':'note-olive','Renewal Contacted':'note-sky','Follow-up Email Sent':'note-sky'};
+function noteClass(n){if(NOTE_RENK[n])return NOTE_RENK[n];if(AQUA_NOTES.includes(n))return 'note-aqua';if(BLUE_NOTES.includes(n))return 'note-blue';if(LILAC_NOTES.includes(n))return 'note-lilac';if(PURPLE_NOTES.includes(n))return 'note-purple';if(BURGUNDY_NOTES.includes(n))return 'note-burgundy';if(RED_NOTES.includes(n))return 'note-red';if(ORANGE_NOTES.includes(n))return 'note-orange';if(GREEN_NOTES.includes(n))return 'note-green';return 'note';}
 function openMail(e){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(e),'_blank');}
 
 /* NEW band membership: only a still-Hold new inquiry within 5 business days of its
