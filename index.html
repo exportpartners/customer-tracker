@@ -1147,19 +1147,27 @@ function payCiz(){
     const o=x.tanimsiz&&yaz?`<input style="border-color:#C0392B" title="Bu kalemin oranı formülde yok; yazın" value="0" onchange="payOran(${ix},this.value)">%`:x.sabit?`<span style="color:#C0392B;font-weight:700" title="OPR bond payi minimum baz ${x.sabit}; oran bu tutardan hesaplanir">%${(x.sabit/x.alinan*100).toFixed(1).replace('.',',')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${ix},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
     return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
+  /* 22 Ekim 2026, Mustafa: "1 Temmuz'dan bu yana reklam harcamalarini cirodan kes, Kaan'a ve bana oyle dagit." Reklam (USD, aylik TCMB
+     kuruyla) toplam alinandan dusulur ve OPR / EP arasinda ayni orandaki payla bolunur (OPR payi / alinan). */
+  const RK=(PAY.reklam?toArr(PAY.reklam):[]).filter(x=>String(x.ay)>='2026-07'); const rt=RK.reduce((a,x)=>a+Number(x.usd||0),0), rtl=RK.reduce((a,x)=>a+Number(x.toplam||0),0);
+  const orn=ta?tk/ta:0, rO=Math.round(rt*orn*100)/100, rE=Math.round((rt-rO)*100)/100, net=Math.round((ta-rt)*100)/100, tkn=Math.round((tk-rO)*100)/100, en=Math.round((ta-tk-rE)*100)/100;
+  const reklamSat=rt?`<tr><td></td><td>Reklam harcaması, 1 Temmuz'dan beri (${f(rtl)} TL, aylık TCMB kuruyla)</td><td></td><td class="r">−${f(rt)}</td><td class="r"></td><td class="r">−${f(rO)}</td><td class="r">−${f(rE)}</td></tr>
+  <tr class="t"><td></td><td>Net (reklam düşüldükten sonra)</td><td></td><td class="r">${f(net)}</td><td class="r">%${(net?tkn/net*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tkn)}</td><td class="r">${f(en)}</td></tr>`:'';
+  const tkk=rt?tkn:tk;
   el.innerHTML=`<h3>OPR payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir (FDA ve USDA %55, FCE ve SID %60, gümrük kaydı %75, bond 750 baz).${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
   <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">EP</th></tr>${satir}
   <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
+  ${reklamSat}
   ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
-  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td class="r">${f(tk-od)}</td><td></td></tr></table>`
+  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table>`
   + reklamPayHtml(f);
 }
 /* 22 Ekim 2026, Mustafa: "google ads ve meta'da fda, usda, gumruk konulu kampanya masraflarini kaan tablosuna, x ayi toplam
    reklam harcamasi olarak yaz; eylul de olsun." Bilgi satiri, paydan dusulmez. Veri _pay/kaan/reklam (reklam-pay.py yazar). */
 function reklamPayHtml(f){ const R=(PAY&&PAY.reklam)?toArr(PAY.reklam):[]; if(!R.length) return '';
   const ay=m=>{ const [y,k]=String(m).split('-'); return ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][Number(k)-1]+' '+y; };
-  const sat=R.slice().reverse().map(x=>`<tr><td>${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r">${f(x.google||0)}</td><td class="r">${f(x.meta||0)}</td><td class="r"><b>${f(x.toplam||0)}</b></td></tr>`).join('');
-  return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam</th></tr>${sat}</table>`; }
+  const sat=R.slice().reverse().map(x=>`<tr><td>${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r">${f(x.google||0)}</td><td class="r">${f(x.meta||0)}</td><td class="r"><b>${f(x.toplam||0)}</b></td><td class="r">${f(x.usd||0)}</td></tr>`).join('');
+  return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam TL</th><th class="r">USD</th></tr>${sat}</table>`; }
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
   /* 6 Ekim 2026, Mustafa: "donusum rasyosuna cold email'i katma; biz attik, onlar icin sifirdan conversion degil."
