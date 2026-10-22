@@ -85,6 +85,9 @@
   .chip{display:inline-flex;align-items:center;gap:4px;color:#fff;border-radius:12px;padding:4px 7px 4px 9px;font-size:11px;font-weight:700;white-space:nowrap}
   .chip span{cursor:pointer;opacity:.85;font-size:12px;line-height:1}
   .chip.task{background:#1c5fa8}
+  .chip.task-sample{background:#2e9e5b}
+  .chip.task-pl{background:#E8821E}
+  .chip.task-urun{background:#9a4a32}
   .chip.note{background:#b08d3a}
   .chip.note-green{background:#2e9e5b}
   .chip.note-orange{background:#E8821E}
@@ -806,7 +809,9 @@ function rowHtml(c,i,pos){
   const mailIc=hasE?`<span class="ic mail" onclick="openMail('${esc(c.email)}')">${MAIL}</span>`:`<span class="ic mail off">${MAIL}</span>`;
   const hasW=(c.website||'').trim().length>3;
   const webIc=hasW?`<a class="ic web" href="${esc(toUrl(c.website))}" target="_blank" rel="noopener">${GLOBE}</a>`:`<span class="ic web off">${GLOBE}</span>`;
-  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip task">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('');
+  const cwPet=(c.etiket||[]).includes('Chewport');
+  const taskCls=t=>/^sample$/i.test(t)?'task task-sample':/^private label$/i.test(t)?'task task-pl':(cwPet&&/beef|lamb|goat|duck|chicken|pizzle|trachea|tendon|collagen|bully|\bear\b|horn|testicle|lung|feet/i.test(t))?'task task-urun':'task';
+  const taskChips=(c.tasks||[]).map((t,j)=>`<span class="chip ${taskCls(t)}">${esc(t)}<span onclick="rm(${i},'tasks',${j})">✕</span></span>`).join('');
   /* 18 Eylul 2026, Mustafa: odeme alindiysa Action sutununda yalnizca 'Payment Received' gorunsun; onceki adim cipleri (Intro/Technical Call Done, Proposal Sent) gizlenir, veri silinmez */
   const odemeVar=(c.notes||[]).includes('Payment Received');
   const noteChips=(c.notes||[]).map((t,j)=>{if(odemeVar&&['Intro Call Done','Technical Call Done','Proposal Sent'].includes(t))return '';const cl=noteClass(t);const pre=cl==='note-red'?'⚠ ':'';return `<span class="chip ${cl}">${pre}${esc(t)}<span onclick="rm(${i},'notes',${j})">✕</span></span>`;}).join('');
