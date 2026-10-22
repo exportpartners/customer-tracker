@@ -72,6 +72,7 @@
   /* 5 Ekim 2026, Mustafa: Meta'dan gelenler Facebook mavisi, cold email acik kahverengi. */
   .sec-chewport{background:#232F3E;color:#FF9A3C;border:2px solid #FF7D07} /* 21 Ekim 2026, Mustafa: CHEWPORT bandi NEW altinda */
   .sec-amazon{background:#FF9900;color:#1a1200;box-shadow:0 2px 6px rgba(255,153,0,.45)}
+  .sec-sirket{background:#1F8A8A;color:#fff;box-shadow:0 2px 6px rgba(31,138,138,.45)}
   .sec-meta{background:linear-gradient(135deg,#6E1630 0%,#8E2442 60%,#A8395A 100%);border:2px solid #fff;box-shadow:0 0 0 1.5px #8E2442,0 2px 6px rgba(110,22,48,.45)} /* 13 Ekim 2026, Mustafa: INSTA-FDA, bordo-beyaz */
   .sectoggle .ig{width:15px;height:15px;flex:0 0 auto}
   /* 6 Ekim 2026, Mustafa: alt bantlar (META-FDA, Sertifikasyon) daha kucuk oval dugme */
@@ -885,6 +886,9 @@ function rowHtml(c,i,pos){
 /* 6 Ekim 2026, Mustafa: "Not Converted ustunde AMAZON adinda section, turuncu; Amazon inquiry'ler oraya aksin."
    Amazon isi tasiyan ve FDA/USDA/gumruk kalemi olmayan ACIK kayit AMAZON bandinda durur (NEW/HOLD'a girmez). */
 /* 6 Ekim 2026 aksami, Mustafa: "icinde Amazon gecen KESIN Amazon section icinde olsun." FDA/FCE olsa da fark etmez. */
+/* 22 Ekim 2026, Mustafa: "sirket acilisi yeni alan, gelince baslik at." Acik talep (New/Hold) TRADEMARK ya da LLC FORMATION
+   kalemi tasiyorsa kendi bandinda durur; In Progress ve sonrasi kendi bandinda kalir. Amazon kalemi varsa AMAZON bandi once yakalar. */
+function isSirket(c){ const t=c.tasks||[]; return (t.includes('TRADEMARK')||t.includes('LLC FORMATION')) && ['New','Hold'].includes(c.status); }
 function isAmazon(c){ const t=c.tasks||[]; return (t.includes('AMAZON')||t.includes('AMAZON DE')) && !DONE_STATUS.includes(c.status) && !['Not Converted','Over Due','Import Refusal'].includes(c.status); }
 /* 6 Ekim 2026, Mustafa: "cold email'ler ayri section'da dursun, NEW sayisini artirmasin; takip ediyoruz, new inquiry
    degil." Cevap gelip Proposal Sent olsa da kayit COLD EMAIL bandinda kalir; NEW'e yalnizca durum degisince cikar. */
@@ -907,6 +911,7 @@ const BANTLAR=[
   {key:'chewport',   label:'CHEWPORT',       cls:'sec-chewport',     uyar:c=>isChewport(c)},
   {key:'cold',       label:'SERTİFİKASYON · İŞ ORTAĞI · COLD EMAIL', cls:'sec-cold', uyar:c=>isCold(c)},  /* gida firmalari sistemi kurulunca ayri bant: COLD EMAIL · GIDA */
   {key:'amazon',     label:'AMAZON',         cls:'sec-amazon',       uyar:c=>isAmazon(c)},
+  {key:'sirket',     label:'ŞİRKET AÇILIŞI · MARKA TESCİLİ', cls:'sec-sirket', uyar:c=>isSirket(c)},
   /* 6 Ekim 2026, Mustafa: "Meta'dan gelen FDA inquiry'leri mavi META FDA bolumunde olacak; Meta'dan Amazon gelirse
      AMAZON altinda." META artik EK liste degil, kaydin KENDI bandi: kaynagi Meta olan ve acik (New) duran, Amazon
      olmayan kayit NEW yerine burada durur. Amazon olan isAmazon ile once yakalanir. */
