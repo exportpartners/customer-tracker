@@ -1141,25 +1141,25 @@ function payCiz(){
   const el=document.getElementById('kaanpay'); if(!el) return;
   if(!PAY){el.style.display='none';return;} const S=(PAY.satirlar?toArr(PAY.satirlar):[]).concat(payTuret()); if(!S.length){el.style.display='none';return;} el.style.display='';
   const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const yaz=payYetki(); let ta=0,tk=0;
-  const satir=S.map((x,i)=>{ const k=x.sabit?Number(x.sabit):Math.round(x.alinan*x.oran*100)/100, e=Math.round((x.alinan-k)*100)/100; ta+=x.alinan; tk+=k;
+  const yaz=payYetki(); let ta=0,tk=0,tr=0;
+  /* 22 Ekim 2026, Mustafa: "sabit bond haric butun kalemler uzerinden toplam reklam harcamasini kalem basina eksiltip kalem basina net ciroyu oranla."
+     Reklam (USD, aylik TCMB kuruyla, 1 Temmuz'dan beri) bond disindaki kalemlere alinan tutariyla orantili dagitilir; her kalemin OPR/EP payi
+     (kalem orani) net tutar uzerinden hesaplanir. Bond payi sabit (750 baz) kalir, reklamdan dusulmez. */
+  const RK=(PAY.reklam?toArr(PAY.reklam):[]).filter(x=>String(x.ay)>='2026-07'); const rt=RK.reduce((a,x)=>a+Number(x.usd||0),0), rtl=RK.reduce((a,x)=>a+Number(x.toplam||0),0);
+  const baz=S.reduce((a,x)=>a+(x.sabit?0:Number(x.alinan||0)),0);
+  const satir=S.map((x,i)=>{ const r=(!x.sabit&&baz&&rt)?Math.round(rt*x.alinan/baz*100)/100:0, nt=x.alinan-r, k=x.sabit?Number(x.sabit):Math.round(nt*x.oran*100)/100, e=Math.round((nt-k)*100)/100; ta+=x.alinan; tk+=k; tr+=r;
     const ix=x.key?`'${x.key}'`:i;
     const o=x.tanimsiz&&yaz?`<input style="border-color:#C0392B" title="Bu kalemin oranı formülde yok; yazın" value="0" onchange="payOran(${ix},this.value)">%`:x.sabit?`<span style="color:#C0392B;font-weight:700" title="OPR bond payi minimum baz ${x.sabit}; oran bu tutardan hesaplanir">%${(x.sabit/x.alinan*100).toFixed(1).replace('.',',')}</span>`:yaz?`<input value="${(x.oran*100).toFixed(1).replace('.',',')}" onchange="payOran(${ix},this.value)">%`:'%'+(x.oran*100).toFixed(1).replace('.',',');
-    return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
+    return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${r?'−'+f(r):''}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
-  /* 22 Ekim 2026, Mustafa: "1 Temmuz'dan bu yana reklam harcamalarini cirodan kes, Kaan'a ve bana oyle dagit." Reklam (USD, aylik TCMB
-     kuruyla) toplam alinandan dusulur ve OPR / EP arasinda ayni orandaki payla bolunur (OPR payi / alinan). */
-  const RK=(PAY.reklam?toArr(PAY.reklam):[]).filter(x=>String(x.ay)>='2026-07'); const rt=RK.reduce((a,x)=>a+Number(x.usd||0),0), rtl=RK.reduce((a,x)=>a+Number(x.toplam||0),0);
-  const orn=ta?tk/ta:0, rO=Math.round(rt*orn*100)/100, rE=Math.round((rt-rO)*100)/100, net=Math.round((ta-rt)*100)/100, tkn=Math.round((tk-rO)*100)/100, en=Math.round((ta-tk-rE)*100)/100;
-  const reklamSat=rt?`<tr><td></td><td>Reklam harcaması, 1 Temmuz'dan beri (${f(rtl)} TL, aylık TCMB kuruyla)</td><td></td><td class="r">−${f(rt)}</td><td class="r"></td><td class="r">−${f(rO)}</td><td class="r">−${f(rE)}</td></tr>
-  <tr class="t"><td></td><td>Net (reklam düşüldükten sonra)</td><td></td><td class="r">${f(net)}</td><td class="r">%${(net?tkn/net*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tkn)}</td><td class="r">${f(en)}</td></tr>`:'';
-  const tkk=rt?tkn:tk;
+  const reklamSat=rt?`<tr><td></td><td colspan="2">Reklam harcaması, 1 Temmuz'dan beri: ${f(rt)} USD (${f(rtl)} TL, aylık TCMB kuruyla). Bond hariç kalemlere alınan tutarıyla orantılı dağıtıldı; OPR ve EP payı net tutardan hesaplandı.</td><td class="r"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="r"></td></tr>`:'';
+  const tkk=tk;
   el.innerHTML=`<h3>OPR payı (KGP)</h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir (FDA ve USDA %55, FCE ve SID %60, gümrük kaydı %75, bond 750 baz).${yaz?' Sarı kutudaki oranı değiştirince tutarlar yeniden hesaplanır.':''}</div>
-  <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">EP</th></tr>${satir}
-  <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
+  <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:58px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Reklam</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">EP</th></tr>${satir}
+  <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">${tr?'−'+f(tr):''}</td><td class="r">%${(ta-tr?tk/(ta-tr)*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tr-tk)}</td></tr>
   ${reklamSat}
-  ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
-  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table>`
+  ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
+  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table>`
   + reklamPayHtml(f);
 }
 /* 22 Ekim 2026, Mustafa: "google ads ve meta'da fda, usda, gumruk konulu kampanya masraflarini kaan tablosuna, x ayi toplam
