@@ -1159,8 +1159,7 @@ function payCiz(){
 function reklamPayHtml(f){ const R=(PAY&&PAY.reklam)?toArr(PAY.reklam):[]; if(!R.length) return '';
   const ay=m=>{ const [y,k]=String(m).split('-'); return ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][Number(k)-1]+' '+y; };
   const sat=R.slice().reverse().map(x=>`<tr><td>${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r">${f(x.google||0)}</td><td class="r">${f(x.meta||0)}</td><td class="r"><b>${f(x.toplam||0)}</b></td></tr>`).join('');
-  return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><div class="dz-alt">Google Ads ve Meta'da aylık toplam, TL. FDA konulu kampanyalar (FDA Belgesi ve içindeki gümrük ve uyum reklam grupları, FDA yenileme). Bilgi satırıdır, OPR payından düşülmez.</div>
-  <table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam</th></tr>${sat}</table>`; }
+  return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam</th></tr>${sat}</table>`; }
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
   /* 6 Ekim 2026, Mustafa: "donusum rasyosuna cold email'i katma; biz attik, onlar icin sifirdan conversion degil."
