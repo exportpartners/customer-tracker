@@ -1151,8 +1151,16 @@ function payCiz(){
   <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">EP</th></tr>${satir}
   <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">%${(ta?tk/ta*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tk)}</td></tr>
   ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
-  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td class="r">${f(tk-od)}</td><td></td></tr></table>`;
+  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td class="r">${f(tk-od)}</td><td></td></tr></table>`
+  + reklamPayHtml(f);
 }
+/* 22 Ekim 2026, Mustafa: "google ads ve meta'da fda, usda, gumruk konulu kampanya masraflarini kaan tablosuna, x ayi toplam
+   reklam harcamasi olarak yaz; eylul de olsun." Bilgi satiri, paydan dusulmez. Veri _pay/kaan/reklam (reklam-pay.py yazar). */
+function reklamPayHtml(f){ const R=(PAY&&PAY.reklam)?toArr(PAY.reklam):[]; if(!R.length) return '';
+  const ay=m=>{ const [y,k]=String(m).split('-'); return ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][Number(k)-1]+' '+y; };
+  const sat=R.slice().reverse().map(x=>`<tr><td>${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r">${f(x.google||0)}</td><td class="r">${f(x.meta||0)}</td><td class="r"><b>${f(x.toplam||0)}</b></td></tr>`).join('');
+  return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><div class="dz-alt">Google Ads ve Meta'da aylık toplam, TL. FDA konulu kampanyalar (FDA Belgesi ve içindeki gümrük ve uyum reklam grupları, FDA yenileme). Bilgi satırıdır, OPR payından düşülmez.</div>
+  <table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam</th></tr>${sat}</table>`; }
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
   /* 6 Ekim 2026, Mustafa: "donusum rasyosuna cold email'i katma; biz attik, onlar icin sifirdan conversion degil."
