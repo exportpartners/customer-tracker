@@ -793,7 +793,12 @@ function takipKutu(c){
   if(!takipYetki()||!(c.email||'').includes('@')) return '';
   let roz='';
   if(c.takipIstek&&c.takipIstek!==c.takipYapilan) roz='<span title="Follow-up sırada, birkaç dakika içinde gider" style="font-size:9px;font-weight:800;color:#FF7D07;margin-right:2px">⏳</span>';
-  else if(c.takipSonuc) roz='<span title="'+esc(c.takipSonuc)+'" style="font-size:9px;font-weight:800;color:'+(c.takipSonuc.startsWith('gitti')?'#1faa59':'#c0392b')+';margin-right:2px">'+(c.takipSonuc.startsWith('gitti')?'✓':'!')+'</span>';
+  else if(c.takipSonuc){
+    /* 23 Ekim 2026, Mustafa: "follow up emaili gonderdiklerimize panelden 'follow up email gonderildi **.**' gibi tarih de belirtip kalsin" */
+    const gt=(c.takipSonuc.match(/^gitti\s+(\d{1,2}\.\d{1,2})/)||[])[1];
+    roz=gt?'<span title="'+esc(c.takipSonuc)+'" style="font-size:10px;color:#1faa59;margin-right:6px;white-space:nowrap">✓ Follow-up e-postası gönderildi <b>'+esc(gt)+'</b></span>'
+          :'<span title="'+esc(c.takipSonuc)+'" style="font-size:10px;font-weight:700;color:#c0392b;margin-right:6px">! '+esc(c.takipSonuc)+'</span>';
+  }
   /* 13 Ekim 2026, Mustafa: "gondereli minimum 2 gun olsun". Son temas 2 gunden yeniyse kutu soluk; asil kontrol takip-mail.py'de. */
   const yakin=c.sonTemas&&((Date.now()-new Date(c.sonTemas+'T00:00:00').getTime())/86400000)<2;
   if(yakin) return '<input type="checkbox" disabled title="Son mail 2 günden yeni (son temas '+esc(c.sonTemas)+')" style="width:15px;height:15px;margin:0 4px 0 0;opacity:.35;flex:0 0 auto">'+roz;
