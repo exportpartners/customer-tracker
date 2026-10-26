@@ -79,7 +79,7 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
     <button id="cikis" style="background:none;border:1px solid #4B5563;color:#C4CBD8;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;display:none">Çıkış</button>
   </div>
   <nav id="sekmeler">
-    <button data-t="kelime" class="secili">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
+    <button data-t="yorum" class="secili">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
     <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
     <button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
   </nav>
@@ -107,6 +107,10 @@ function kelimeTablo(l,bos){if(!l||!l.length)return '<div class="etiket">'+(bos|
   return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+konumRenk(x.konum)+'">'+sf(x.konum,1)+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td><td class="r">'+sf(x.tik)+'</td></tr>'}).join('')+'</table></div>'}
 
 function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.teknik||{},r=V.reklam||{},ic=V.icerik||{},o=V.oneri||{},H='';
+ // YORUM
+ H+='<section class="sekme" id="yorum"><h2>Yorum ve öneriler</h2>'+hataNotu('yorum')+'<div class="izgara g3">';
+ (V.yorum||[]).forEach(function(x){H+='<div class="kart"'+(x.s?' data-s="'+x.s+'"':'')+'><h3>'+e(x.baslik)+(x.s?' <span class="etiket">· grafik</span>':'')+'</h3><ul style="margin:0;padding-left:18px">'+x.yorum.map(function(y){return '<li style="margin:4px 0">'+e(y)+'</li>'}).join('')+'</ul>'+(x.oneri&&x.oneri.length?'<h4>İyileştirme</h4>'+x.oneri.map(function(o){return '<div class="oneri" style="cursor:default"><div class="neden" style="color:#1E1810">'+e(o)+'</div></div>'}).join(''):'')+'</div>'});
+ H+='</div><div class="kaynak">Yorumlar her sabah verinin kendisinden kurala göre yazılır; sayı uydurulmaz.</div></section>';
  // KELIMELER
  H+='<section class="sekme" id="kelime"><h2>Kelimeler</h2>'+hataNotu('gsc')+'<div class="izgara g3">';
  H+=kart('Organikte önde olduğumuz kelimeler (ilk 10)',kelimeTablo(a.onde,'İlk 10\'da ticari kelime yok')+
@@ -186,8 +190,8 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+='</div></section>';
  document.getElementById('ana').innerHTML=H;
  document.getElementById('uretim').textContent='Ölçüm ve strateji · son güncelleme '+(V.uretim||'').replace('T',' ')+' · satıra dokun, zaman çizgisi açılır';
- var k='kelime';try{k=localStorage.getItem('ep-metrics-sekme')||'kelime'}catch(x){}
- sekmeAc(document.getElementById(k)?k:'kelime');
+ var k='yorum';try{k=localStorage.getItem('ep-metrics-sekme')||'yorum'}catch(x){}
+ sekmeAc(document.getElementById(k)?k:'yorum');
 }
 function sekmeAc(id){document.querySelectorAll('#sekmeler button').forEach(function(b){b.classList.toggle('secili',b.getAttribute('data-t')==id)});document.querySelectorAll('.sekme').forEach(function(s){s.classList.toggle('acik',s.id==id)});try{localStorage.setItem('ep-metrics-sekme',id)}catch(x){}}
 document.getElementById('sekmeler').addEventListener('click',function(ev){var b=ev.target.closest('button');if(b)sekmeAc(b.getAttribute('data-t'))});
