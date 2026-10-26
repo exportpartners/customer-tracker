@@ -26,6 +26,7 @@ h2{font-size:14px;margin:24px 0 10px;text-transform:uppercase;letter-spacing:.06
 .izgara{display:grid;gap:14px}
 .g3{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 .g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
 .kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:12px;padding:14px 16px;min-width:0}
 .kart h3{margin:0 0 10px;font-size:14px;color:var(--lac)}
 .kart h4{margin:12px 0 6px;font-size:11px;color:var(--soluk);text-transform:uppercase;letter-spacing:.05em}
@@ -140,6 +141,14 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+=kart('Talebin kaynağı (28 gün)','<table><tr><th>Kaynak</th><th class="r">Talep</th></tr>'+(t.talep_kaynak||[]).map(function(x){return '<tr><td>'+e(x.kaynak)+'</td><td class="r">'+x.adet+'</td></tr>'}).join('')+'</table>','Tracker + tracker dışı talepler · cold email ve iş ortağı hariç');
  H+=kart('Oturumu en çok artan ve düşen sayfalar','<div class="tablo"><table><tr><th>Sayfa</th><th class="r">28 gün</th><th class="r">Fark</th></tr>'+(t.sayfalar||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+e(x.sayfa)+'</td><td class="r">'+x.simdi+'</td><td class="r">'+ok(x.fark)+'</td></tr>'}).join('')+'</table></div>','GA4 · son 28 gün / önceki 28 gün · İngilizce sayfalar hariç');
  H+=kart('Talep getiren sayfalar (28 gün)','<div class="tablo"><table><tr><th>Sayfa</th><th class="r">Talep</th></tr>'+(t.talep_sayfa||[]).map(function(x){return '<tr><td>'+e(x.sayfa)+'</td><td class="r">'+x.adet+'</td></tr>'}).join('')+'</table></div>','GA4 generate_lead, sayfa bazında');
+ H+='</div><h3 style="margin:22px 0 4px">Kanal karşılaştırması: organik, yapay zeka, reklam (önemli sayfa grupları, son 28 gün)</h3><div class="etiket">Oturum sayısı · değişim önceki 28 güne göre · yapay zeka: ChatGPT, Perplexity, Gemini, Copilot, Claude · doğrudan trafiğin bir kısmı etiketsiz Meta ve WhatsApp bağlantısıdır</div><div class="izgara g2" style="margin-top:12px">';
+ (t.kanal||[]).forEach(function(k,i){var top=0;['organik','ai','ads','sosyal','dogrudan','diger'].forEach(function(c){top+=k.k28[c]||0});
+  var sat=['organik','ai','ads','sosyal','dogrudan','diger'].map(function(c){var a=k.k28[c]||0,b=(k.onceki||{})[c]||0,p=top?Math.round(100*a/top):0;
+   return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+KANAL_RENK[c]+';margin-right:6px"></i>'+KANAL_ADI[c]+'</td><td class="r">'+sf(a)+'</td><td class="r">%'+p+'</td><td class="r">'+ok(a-b)+'</td><td class="r">'+((k.talep||{})[c]||0)+'</td></tr>'}).join('');
+  var sy=(k.sayfalar||[]).map(function(x){return '<tr><td>'+e(x.sayfa)+'</td><td class="r" style="color:'+KANAL_RENK.organik+'">'+x.organik+'</td><td class="r" style="color:'+KANAL_RENK.ai+'">'+x.ai+'</td><td class="r" style="color:'+KANAL_RENK.ads+'">'+x.ads+'</td><td class="r">'+(x.sosyal+x.dogrudan+x.diger)+'</td></tr>'}).join('');
+  H+='<div class="kart"><h3>'+e(k.konu)+' sayfaları</h3><div class="tablo"><table><tr><th>Kanal</th><th class="r">Oturum</th><th class="r">Pay</th><th class="r">Fark</th><th class="r">Talep</th></tr>'+sat+'</table></div>'
+   +'<h4>Sayfa bazında</h4><div class="tablo"><table><tr><th>Sayfa</th><th class="r">Organik</th><th class="r">AI</th><th class="r">Reklam</th><th class="r">Diğer</th></tr>'+sy+'</table></div>'
+   +'<h4>90 gün, 7 günlük toplam</h4><div class="araliklar" id="a-kn'+i+'"></div><div id="g-kn'+i+'"></div><div class="kaynak">GA4 · İngilizce sayfalar hariç · talep: generate_lead olayı</div></div>'});
  H+='</div></section>';
  // SEO GEO
  H+='<section class="sekme" id="seo"><h2>SEO</h2>'+hataNotu('dizin')+'<div class="izgara g3">';
@@ -171,7 +180,7 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+='</div><div class="izgara g3" style="margin-top:14px">';
  H+=kart('Kampanya (14 gün)','<table><tr><th>Kampanya</th><th class="r">TL</th></tr>'+(r.kampanya||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+e(x.kampanya)+'</td><td class="r">'+sf(x.tl)+'</td></tr>'}).join('')+'</table>','Ads API · satıra dokun: günlük harcama');
  H+=kart('En çok harcayan kelimeler (30 gün)','<div class="tablo"><table><tr><th>Kelime</th><th class="r">TL</th><th class="r">Tık</th><th class="r">CPC</th><th class="r">Ads dön.</th></tr>'+(r.kelime||[]).map(function(x){return '<tr><td>'+e(x.kelime)+'</td><td class="r">'+sf(x.tl)+'</td><td class="r">'+x.tik+'</td><td class="r">'+sf(x.cpc,2)+'</td><td class="r '+(x.ads_donusum?'':'renk-k')+'">'+sf(x.ads_donusum,1)+'</td></tr>'}).join('')+'</table></div>','Ads API');
- H+='<div class="kart" style="grid-column:1/-1;margin-top:14px"><h3>Tıklama başı maliyet (CPC) · kampanya karşılaştırması</h3><div class="araliklar" id="cpc-ar"></div><div id="cpc-graf"></div><div class="kaynak">Ads API · 7 günlük kayan ortalama (harcama / tıklama) · turuncu kalın çizgi: tüm kampanyalar · boş aralık: o dönemde tıklama yok</div></div>';
+ H+='<div class="kart" style="grid-column:1/-1;margin-top:14px"><h3>Tıklama başı maliyet (CPC) · kampanya karşılaştırması</h3><div class="araliklar" id="a-cpc"></div><div id="g-cpc"></div><div class="kaynak">Ads API · 7 günlük kayan ortalama (harcama / tıklama) · turuncu kalın çizgi: tüm kampanyalar · boş aralık: o dönemde tıklama yok</div></div>';
  H+=kart('Kampanya karnesi (14 gün): CPC, tıklama oranı, gösterim payı ve kayıplar','<div class="tablo"><table><tr><th>Kampanya</th><th class="r">CPC</th><th class="r">CTR</th><th class="r">Pay</th><th class="r">Bütçe kaybı</th><th class="r">Sıra kaybı</th></tr>'+(r.karne||[]).map(function(x){return '<tr><td>'+e(x.kampanya)+'</td><td class="r">'+(x.cpc==null?'—':sf(x.cpc,2))+'</td><td class="r">%'+sf(x.ctr,1)+'</td><td class="r">'+(x.pay==null?'—':'%'+sf(x.pay,0))+'</td><td class="r '+((x.butce_kayip||0)>=20?'renk-k':'')+'">'+(x.butce_kayip==null?'—':'%'+sf(x.butce_kayip,0))+'</td><td class="r '+((x.sira_kayip||0)>=40?'renk-k':'')+'">'+(x.sira_kayip==null?'—':'%'+sf(x.sira_kayip,0))+'</td></tr>'}).join('')+'</table></div>','Ads API · Pay: gösterim payı. Bütçe kaybı: bütçe yetmediği için kaçan gösterim. Sıra kaybı: teklif ve kalite düşük kaldığı için kaçan');
  var gc=r.guc||{};
  H+=kart('Reklam gücü (etkin reklamlar)','<table>'+[['EXCELLENT','p-y','Excellent','anlik-guc-excellent'],['GOOD','p-n','Good','anlik-guc-good'],['AVERAGE','p-s','Average','anlik-guc-average'],['POOR','p-k','Poor','anlik-guc-average'],['PENDING','p-n','Hesaplanıyor','']].filter(function(x){return gc[x[0]]}).map(function(x){return '<tr'+(x[3]?' data-s="'+x[3]+'"':'')+'><td><span class="pill '+x[1]+'">'+x[2]+'</span></td><td class="r">'+gc[x[0]]+'</td></tr>'}).join('')+'</table>','Ads API');
@@ -196,6 +205,7 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+='</div></section>';
  document.getElementById('ana').innerHTML=H;
  try{cpcCiz(60)}catch(x){}
+ try{((V.trafik||{}).kanal||[]).forEach(function(k,i){kanalCiz(i,60)})}catch(x){}
  document.getElementById('uretim').textContent='Ölçüm ve strateji · son güncelleme '+(V.uretim||'').replace('T',' ')+' · satıra dokun, zaman çizgisi açılır';
  var k='yorum';try{k=localStorage.getItem('ep-metrics-sekme')||'yorum'}catch(x){}
  sekmeAc(document.getElementById(k)?k:'yorum');
@@ -206,18 +216,25 @@ document.getElementById('sekmeler').addEventListener('click',function(ev){var b=
 function noktalar(sr){var out=[];if(sr.tarihler){for(var i=0;i<sr.v.length;i++)out.push([new Date(sr.tarihler[i]+'T12:00:00'),sr.v[i]])}else{var d=new Date(sr.bas+'T12:00:00');for(var j=0;j<sr.v.length;j++){out.push([new Date(d.getTime()+j*864e5),sr.v[j]])}}return out}
 function fmt(d){return d.toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'2-digit'})}
 var CPC_RENK=['#FF7D07','#232F3E','#2E7D32','#1F77B4','#C0392B','#8E44AD','#00897B','#B8860B'];
-function cpcCiz(gun){var c=(V.reklam||{}).cpc_kamp,kap=document.getElementById('cpc-graf'),ar=document.getElementById('cpc-ar');if(!kap)return;
+var KANAL_ADI={organik:'Organik',ai:'Yapay zeka',ads:'Reklam (Google Ads)',sosyal:'Sosyal (Meta, LinkedIn)',dogrudan:'Doğrudan',diger:'Diğer'};
+var KANAL_RENK={organik:'#2E7D32',ai:'#1F77B4',ads:'#FF7D07',sosyal:'#232F3E',dogrudan:'#9AA0A6',diger:'#C9B8A0'};
+function cokCiz(id,c,gun,birim,ondalik){var kap=document.getElementById('g-'+id),ar=document.getElementById('a-'+id);if(!kap)return;
  if(!c||!c.seriler||!c.seriler.length){kap.innerHTML='<div class="etiket">Veri yok</div>';return}
- var n=c.seriler[0].v.length,bas=Math.max(0,n-gun),W=900,Hh=300,sol=46,sag=12,ust=14,alt=26,mx=0,i,k;
+ var n=c.seriler[0].v.length,bas=Math.max(0,n-gun),W=900,Hh=300,sol=46,sag=12,ust=14,alt=26,mx=0,i;
  c.seriler.forEach(function(s){s.v.slice(bas).forEach(function(v){if(v!=null&&v>mx)mx=v})});mx=Math.ceil((mx||1)/5)*5;
  var X=function(j){return sol+(W-sol-sag)*j/Math.max(1,n-bas-1)},Y=function(v){return ust+(Hh-ust-alt)*(1-v/mx)};
  var g='';for(i=0;i<=4;i++){var yv=mx*i/4;g+='<line x1="'+sol+'" x2="'+(W-sag)+'" y1="'+Y(yv)+'" y2="'+Y(yv)+'" stroke="#E7E3DD"/><text x="'+(sol-6)+'" y="'+(Y(yv)+4)+'" text-anchor="end" font-size="11" fill="#6B6560">'+Math.round(yv)+'</text>'}
  var bd=new Date(c.bas+'T00:00:00');for(i=0;i<=4;i++){var j=Math.round((n-bas-1)*i/4),d=new Date(bd.getTime()+(bas+j)*864e5);g+='<text x="'+X(j)+'" y="'+(Hh-6)+'" text-anchor="'+(i===4?'end':i===0?'start':'middle')+'" font-size="11" fill="#6B6560">'+d.getDate()+'.'+(d.getMonth()+1)+'</text>'}
  var yol='';c.seriler.forEach(function(s,si){var d='',a=false;s.v.slice(bas).forEach(function(v,j){if(v==null){a=false;return}d+=(a?'L':'M')+X(j).toFixed(1)+' '+Y(v).toFixed(1)+' ';a=true});
-  var renk=s.toplam?CPC_RENK[0]:CPC_RENK[1+((si-1)%(CPC_RENK.length-1))];s._r=renk;yol+='<path d="'+d+'" fill="none" stroke="'+renk+'" stroke-width="'+(s.toplam?3.4:2)+'" stroke-linejoin="round" stroke-linecap="round"'+(s.toplam?'':' opacity=".92"')+'/>'});
- var lej='<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px">'+c.seriler.map(function(s){var son=null;s.v.forEach(function(v){if(v!=null)son=v});return '<span style="font-size:12px;display:inline-flex;align-items:center;gap:6px"><i style="width:14px;height:4px;border-radius:2px;background:'+s._r+';display:inline-block"></i>'+e(s.ad)+' <b>'+(son==null?'—':sf(son,1)+' TL')+'</b></span>'}).join('')+'</div>';
+  var renk=s.renk||(s.toplam?CPC_RENK[0]:CPC_RENK[1+((si-1)%(CPC_RENK.length-1))]);s._r=renk;yol+='<path d="'+d+'" fill="none" stroke="'+renk+'" stroke-width="'+(s.toplam?3.4:2.4)+'" stroke-linejoin="round" stroke-linecap="round"/>'});
+ var lej='<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px">'+c.seriler.map(function(s){var son=null;s.v.forEach(function(v){if(v!=null)son=v});return '<span style="font-size:12px;display:inline-flex;align-items:center;gap:6px"><i style="width:14px;height:4px;border-radius:2px;background:'+s._r+';display:inline-block"></i>'+e(s.ad)+' <b>'+(son==null?'—':sf(son,ondalik)+' '+birim)+'</b></span>'}).join('')+'</div>';
  kap.innerHTML='<div class="grafik"><svg viewBox="0 0 '+W+' '+Hh+'">'+g+yol+'</svg></div>'+lej;
- ar.innerHTML=[30,60,120].map(function(x){return '<button class="'+(x===gun?'secili':'')+'" onclick="cpcCiz('+x+')">'+x+' gün</button>'}).join('')}
+ ar.innerHTML=[30,60,90,120].filter(function(x){return x<=n}).map(function(x){return '<button class="'+(x===gun?'secili':'')+'" onclick="cokCiz(\''+id+'\',window._cs[\''+id+'\'],'+x+',\''+birim+'\','+ondalik+')">'+x+' gün</button>'}).join('')}
+window._cs={};
+function cpcCiz(gun){var c=(V.reklam||{}).cpc_kamp;window._cs.cpc=c;cokCiz('cpc',c,gun,'TL',1)}
+function kanalCiz(i,gun){var k=((V.trafik||{}).kanal||[])[i];if(!k)return;var sr=V.seriler||{},seriler=[];
+ ['organik','ai','ads'].forEach(function(sn){var x=sr[k.s[sn]];if(!x)return;var v=x.v,r=[];for(var j=0;j<v.length;j++){var t=0;for(var q=Math.max(0,j-6);q<=j;q++)t+=v[q]||0;r.push(t)}seriler.push({ad:KANAL_ADI[sn],renk:KANAL_RENK[sn],v:r,bas:x.bas})});
+ if(!seriler.length)return;var c={bas:sr[k.s.organik].bas,seriler:seriler};window._cs['kn'+i]=c;cokCiz('kn'+i,c,gun,'oturum',0)}
 function grafikAc(k){var sr=V.seriler&&V.seriler[k];if(!sr)return;aktif=sr;grafikCiz(12)}
 function grafikCiz(ay){var sr=aktif,tum=noktalar(sr),son=tum.length?tum[tum.length-1][0]:new Date(),sinir=ay?new Date(son.getTime()-ay*30.4*864e5):null;
  var s=tum.filter(function(p){return (!sinir||p[0]>=sinir)});var dolu=s.filter(function(p){return p[1]!=null});
