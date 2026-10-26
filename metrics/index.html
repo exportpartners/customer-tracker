@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#232F3E">
+<title>EP Metrics</title>
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+:root{--lac:#232F3E;--tur:#FF7D07;--zemin:#F5F6F8;--kart:#fff;--yazi:#1E1810;--soluk:#6B7280;--cizgi:#E6E8EC;--yes:#16A34A;--kir:#DC2626;--sari:#D97706}
+*{box-sizing:border-box}
+body{margin:0;background:var(--zemin);color:var(--yazi);font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px}
+header{background:var(--lac);color:#fff;padding:14px 24px 0;position:sticky;top:0;z-index:5}
+.ust{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:20px;font-weight:700}header h1 span{color:var(--tur)}
+.alt{color:#C4CBD8;font-size:12px}
+nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:transparent;border:0;color:#C4CBD8;font:inherit;font-weight:600;padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+nav button.secili{background:var(--zemin);color:var(--lac)}
+main{max-width:1320px;margin:0 auto;padding:18px 16px 40px}
+.sekme{display:none}.sekme.acik{display:block}
+h2{font-size:14px;margin:24px 0 10px;text-transform:uppercase;letter-spacing:.06em;color:var(--lac);border-bottom:2px solid var(--tur);padding-bottom:6px}
+.sekme>h2:first-child{margin-top:4px}
+.izgara{display:grid;gap:14px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:12px;padding:14px 16px;min-width:0}
+.kart h3{margin:0 0 10px;font-size:14px;color:var(--lac)}
+.kart h4{margin:12px 0 6px;font-size:11px;color:var(--soluk);text-transform:uppercase;letter-spacing:.05em}
+.kaynak{font-size:11px;color:var(--soluk);margin-top:8px}
+.sayi{font-size:26px;font-weight:800;color:var(--lac)}
+.etiket{font-size:12px;color:var(--soluk)}
+.fark{font-size:12px;font-weight:700}
+.yuk{color:var(--yes)}.dus{color:var(--kir)}.sabit{color:var(--soluk)}
+.tablo{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;color:var(--soluk);font-weight:600;border:0;border-bottom:1px solid var(--cizgi);padding:5px 4px;white-space:nowrap}
+td{border:0;border-bottom:1px solid #F0F1F3;padding:6px 4px}
+.r{text-align:right;white-space:nowrap}
+[data-s]{cursor:pointer}
+tr[data-s]:hover td{background:#FFF8F1}
+.kart[data-s]:hover{border-color:var(--tur)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+.p-y{background:#DCFCE7;color:#166534}.p-k{background:#FEE2E2;color:#991B1B}.p-s{background:#FEF3C7;color:#92400E}.p-n{background:#E5E7EB;color:#374151}
+.renk-y{color:var(--yes);font-weight:700}.renk-k{color:var(--kir);font-weight:700}.renk-s{color:var(--sari);font-weight:700}
+.oneri{border-left:3px solid var(--tur);padding:8px 10px;margin:8px 0;background:#FFF8F1;border-radius:0 8px 8px 0;cursor:pointer}
+.oneri:hover{background:#FFEFDF}
+.oneri b{color:var(--lac)}.oneri .neden{font-size:12px;color:var(--soluk)}
+.oneri code{font-size:11px;background:#fff;border:1px solid var(--cizgi);border-radius:4px;padding:0 4px;color:var(--lac)}
+ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
+.hata{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:10px;padding:8px 12px;font-size:12px;margin:6px 0}
+#perde{position:fixed;inset:0;background:rgba(15,20,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+#perde.acik{display:flex}
+#pencere{background:#fff;border-radius:14px;max-width:780px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px}
+#pencere h3{margin:0 0 4px;color:var(--lac);font-size:17px;padding-right:30px}
+.kapat{float:right;background:none;border:0;font-size:24px;cursor:pointer;color:var(--soluk);line-height:1}
+.araliklar{display:flex;gap:6px;margin:12px 0 6px;flex-wrap:wrap}
+.araliklar button{border:1px solid var(--cizgi);background:#fff;border-radius:999px;padding:6px 13px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--lac)}
+.araliklar button.secili{background:var(--lac);color:#fff;border-color:var(--lac)}
+.grafik svg{width:100%;height:auto;display:block}
+.ozetsatir{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;font-size:13px}.ozetsatir b{color:var(--lac)}
+#giris{position:fixed;inset:0;background:var(--lac);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+#giris.acik{display:flex}
+#giris .kutu{background:#fff;border-radius:14px;padding:24px;max-width:360px;width:100%}
+#giris h2{border:0;margin:0 0 14px;text-transform:none;letter-spacing:0;font-size:20px}
+#giris input{width:100%;padding:12px;border:1px solid var(--cizgi);border-radius:8px;font:inherit;margin-bottom:10px}
+#giris button{width:100%;padding:12px;border:0;border-radius:999px;background:var(--tur);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+#girisHata{color:var(--kir);font-size:12px;min-height:16px;margin:0 0 8px}
+#yukleniyor{text-align:center;padding:60px 16px;color:var(--soluk)}
+@media (max-width:600px){header{padding:12px 16px 0}main{padding:12px 16px 30px}.sayi{font-size:22px}.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="ust">
+    <div><h1>EP <span>Metrics</span></h1><div class="alt" id="uretim">Ölçüm ve strateji · satıra dokun, zaman çizgisi açılır</div></div>
+    <button id="cikis" style="background:none;border:1px solid #4B5563;color:#C4CBD8;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;display:none">Çıkış</button>
+  </div>
+  <nav id="sekmeler">
+    <button data-t="kelime" class="secili">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
+    <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
+    <button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
+  </nav>
+</header>
+<main id="ana"><div id="yukleniyor">Veri yükleniyor…</div></main>
+<div id="perde"><div id="pencere"></div></div>
+<div id="giris"><div class="kutu"><h2>EP <span style="color:var(--tur)">Metrics</span></h2>
+  <input type="email" id="gEmail" placeholder="E-posta" autocomplete="username">
+  <input type="password" id="gSifre" placeholder="Şifre" autocomplete="current-password" onkeydown="if(event.key==='Enter')girisYap()">
+  <p id="girisHata"></p><button onclick="girisYap()">Giriş yap</button>
+  <p class="etiket" style="margin-top:12px">Tracker ile aynı giriş.</p></div></div>
+<script>
+var FIREBASE_CONFIG={apiKey:"AIzaSyAAk9RE2orcJek5J0YeAu0qvZWWlHzY5CA",authDomain:"export-partners-crm.firebaseapp.com",
+  databaseURL:"https://export-partners-crm-default-rtdb.europe-west1.firebasedatabase.app",projectId:"export-partners-crm",appId:"1:1076654066112:web:1a2b1179ed9a2c59fe6025"};
+var V=null, aktif=null;
+function e(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sf(x,o){if(x==null||x==='')return '—';x=+x;var d=(o===undefined)?(Math.abs(x)<10&&x%1!==0?1:0):o;return x.toLocaleString('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function ok(d,ters){if(d==null)return '<span class="sabit">—</span>';if(Math.abs(d)<0.05)return '<span class="sabit">• 0</span>';var iyi=ters?d<0:d>0;return '<span class="'+(iyi?'yuk':'dus')+'">'+(iyi?'▲':'▼')+' '+sf(Math.abs(d),1)+'</span>'}
+function yuzde(a,b){if(!b)return '';var p=Math.round(100*(a-b)/b);return '<div class="fark '+(p>=0?'yuk':'dus')+'">'+(p>=0?'▲':'▼')+' %'+Math.abs(p)+' önceki döneme göre</div>'}
+function kart(baslik,ic,kaynak){return '<div class="kart"><h3>'+baslik+'</h3>'+ic+(kaynak?'<div class="kaynak">'+kaynak+'</div>':'')+'</div>'}
+function hataNotu(ad){return V.hatalar&&V.hatalar[ad]?'<div class="hata">'+e(ad)+': '+e(V.hatalar[ad])+'</div>':''}
+function konumRenk(k){return k==null?'':(k<=3?'renk-y':(k<=10?'':(k<=20?'renk-s':'renk-k')))}
+function kelimeTablo(l,bos){if(!l||!l.length)return '<div class="etiket">'+(bos||'Yok')+'</div>';
+  return '<div class="tablo"><table><tr><th>Kelime</th><th class="r">Konum</th><th class="r">Hafta</th><th class="r">Ay</th><th class="r">Tık</th></tr>'+l.map(function(x){
+  return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+konumRenk(x.konum)+'">'+sf(x.konum,1)+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td><td class="r">'+sf(x.tik)+'</td></tr>'}).join('')+'</table></div>'}
+
+function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.teknik||{},r=V.reklam||{},ic=V.icerik||{},o=V.oneri||{},H='';
+ // KELIMELER
+ H+='<section class="sekme" id="kelime"><h2>Kelimeler</h2>'+hataNotu('gsc')+'<div class="izgara g3">';
+ H+=kart('Organikte önde olduğumuz kelimeler (ilk 10)',kelimeTablo(a.onde,'İlk 10\'da ticari kelime yok')+
+   (a.yeni&&a.yeni.length?'<h4>Yeni giren</h4>'+a.yeni.map(function(x){return '<span class="pill p-y" data-s="'+x.s+'">'+e(x.q)+' ('+sf(x.konum,1)+')</span> '}).join(''):'')+
+   (a.dusen&&a.dusen.length?'<h4>İlk 10\'dan düşen</h4>'+a.dusen.map(function(x){return '<span class="pill p-k" data-s="'+x.s+'">'+e(x.q)+' ('+sf(x.konum,1)+')</span> '}).join(''):''),
+   'Search Console, son veri günü '+e(a.son)+' · hafta: son 7 gün / önceki 7 gün · ay: son 28 / önceki 28 gün · ▲ yükseldi');
+ H+=kart('Yapay zekâda önde olduğumuz sorgular',(g.satirlar?'<div class="tablo"><table><tr><th>Sorgu</th><th class="r">Sıra</th><th class="r">Hafta</th><th class="r">Ay</th></tr>'+g.satirlar.map(function(x){
+   return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+(x.sira?(x.sira<=3?'renk-y':''):'renk-k')+'">'+(x.sira||'yok')+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td></tr>'}).join('')+'</table></div>'+
+   '<div class="etiket" style="margin-top:8px" data-s="ai-bulunan">'+g.toplam+' sorgunun <b>'+g.bulunan+'</b> tanesinde ilk 10\'dayız'+(g.onceki!=null?' (önceki ölçüm '+g.onceki+')':'')+'</div>':hataNotu('geo')),
+   'Perplexity, 10 ticari sorgu · ölçüm '+e(g.olcum)+' · haftada bir (Pazartesi)');
+ var h=a.hedef||{};
+ H+=kart('Hedef kelimeler (sabit sepet)','<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">'+
+   ['1-10','11-20','21+'].map(function(b){return '<div><div class="sayi">'+((h.bant||{})[b]||0)+'</div><div class="etiket">'+(b=='1-10'?'ilk sayfada':b+' arası')+'</div></div>'}).join('')+
+   '<div><div class="sayi">'+(h.gorunmuyor||0)+'</div><div class="etiket">görünmüyor</div></div></div>'+
+   Object.keys(h.sepetler||{}).map(function(k){var x=h.sepetler[k];return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer"><b>'+e(k)+' sepeti</b> · ortalama konum '+sf(x.son,1)+'<div class="neden">Dokun: 16 aylık çizgi</div></div>'}).join('')+
+   kelimeTablo((h.satirlar||[]).filter(function(x){return x.konum}).slice(0,15)),'kelime-izle.py sepetleri: Amazon 25 + FDA 17 · hedef ilk sayfa');
+ H+='</div></section>';
+ // TRAFIK
+ H+='<section class="sekme" id="trafik"><h2>Trafik ve talep</h2>'+hataNotu('ga4')+hataNotu('talep')+'<div class="izgara g4">';
+ var gs=(V.gsc_ozet||{});
+ H+='<div class="kart" data-s="gsc-tik"><div class="etiket">Organik tıklama (28 gün)</div><div class="sayi">'+sf(gs.tik28)+'</div>'+yuzde(gs.tik28,gs.tik28_gy).replace('önceki döneme','geçen yıla')+'</div>';
+ H+='<div class="kart" data-s="gsc-gosterim"><div class="etiket">Organik gösterim (28 gün)</div><div class="sayi">'+sf(gs.gos28)+'</div>'+yuzde(gs.gos28,gs.gos28_gy).replace('önceki döneme','geçen yıla')+'</div>';
+ H+='<div class="kart" data-s="ga-oturum"><div class="etiket">GA4 oturum (28 gün)</div><div class="sayi">'+sf(t.oturum28)+'</div>'+yuzde(t.oturum28,t.oturum28_once)+'</div>';
+ H+='<div class="kart" data-s="talep-gunluk"><div class="etiket">Gelen talep (28 gün)</div><div class="sayi">'+sf(t.talep28_tracker)+'</div><div class="etiket">tracker ve form kayıtları</div></div>';
+ H+='<div class="kart" data-s="ga-talep"><div class="etiket">Form talebi GA4 (28 gün)</div><div class="sayi">'+sf(t.talep28)+'</div>'+yuzde(t.talep28,t.talep28_once)+'</div>';
+ H+='</div><div class="izgara g3" style="margin-top:14px">';
+ H+=kart('Talebin kaynağı (28 gün)','<table><tr><th>Kaynak</th><th class="r">Talep</th></tr>'+(t.talep_kaynak||[]).map(function(x){return '<tr><td>'+e(x.kaynak)+'</td><td class="r">'+x.adet+'</td></tr>'}).join('')+'</table>','Tracker + tracker dışı talepler · cold email ve iş ortağı hariç');
+ H+=kart('Oturumu en çok artan ve düşen sayfalar','<div class="tablo"><table><tr><th>Sayfa</th><th class="r">28 gün</th><th class="r">Fark</th></tr>'+(t.sayfalar||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+e(x.sayfa)+'</td><td class="r">'+x.simdi+'</td><td class="r">'+ok(x.fark)+'</td></tr>'}).join('')+'</table></div>','GA4 · son 28 gün / önceki 28 gün · İngilizce sayfalar hariç');
+ H+=kart('Talep getiren sayfalar (28 gün)','<div class="tablo"><table><tr><th>Sayfa</th><th class="r">Talep</th></tr>'+(t.talep_sayfa||[]).map(function(x){return '<tr><td>'+e(x.sayfa)+'</td><td class="r">'+x.adet+'</td></tr>'}).join('')+'</table></div>','GA4 generate_lead, sayfa bazında');
+ H+='</div></section>';
+ // SEO GEO
+ H+='<section class="sekme" id="seo"><h2>SEO</h2>'+hataNotu('dizin')+'<div class="izgara g3">';
+ H+=kart('Konum bantları (ticari kelimeler)','<table><tr><th>Bant</th><th class="r">Kelime</th><th class="r">Önceki 28 gün</th></tr>'+(s.bantlar||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+x.bant+'</td><td class="r">'+x.sayi+'</td><td class="r">'+x.onceki+'</td></tr>'}).join('')+'</table>','Search Console · grafik günlük ölçümle birikir');
+ H+=kart('Fırsat: konum 5-15, tıklama düşük',kelimeTablo(s.firsat,'Bu hafta fırsat yok'),'Başlık ve meta adayı · aynı sayfaya 30 günde bir dokunulur');
+ var dz=s.dizin||{};
+ H+='<div class="kart" data-s="'+(dz.s||'')+'"><h3>Dizin</h3><div style="display:flex;gap:18px"><div><div class="sayi">'+(dz.toplam?Math.round(100*dz.dizinde/dz.toplam):'—')+'%</div><div class="etiket">dizinde</div></div><div><div class="sayi">'+((dz.toplam||0)-(dz.dizinde||0))+'</div><div class="etiket">dizinde değil</div></div></div><div class="kaynak">URL Inspection API · ölçüm '+e(dz.tarih)+'</div></div>';
+ H+='</div><h2>GEO (yapay zekâ görünürlüğü)</h2>'+hataNotu('geo')+'<div class="izgara g4">';
+ H+='<div class="kart" data-s="ai-bulunan"><div class="etiket">Perplexity\'de ilk 10\'da olduğumuz sorgu</div><div class="sayi">'+(g.bulunan!=null?g.bulunan+' / '+g.toplam:'—')+'</div></div>';
+ H+='<div class="kart"><div class="etiket">Yapay zekâ okumasında kapsam dışı ifade</div><div class="sayi">'+(g.kapsam_disi!=null?g.kapsam_disi:'—')+'</div><div class="etiket">ölçüm '+e(g.ai_okuma_tarih)+'</div></div>';
+ H+='</div></section>';
+ // TEKNIK
+ H+='<section class="sekme" id="teknik"><h2>Teknik sağlık</h2>'+hataNotu('teknik')+'<div class="izgara g3">';
+ H+=kart('Hız puanı (laboratuvar)','<table><tr><th>Sayfa</th><th class="r">Mobil</th><th class="r">Masaüstü</th></tr>'+(tk.hiz||[]).map(function(x){return '<tr><td>'+e(x.sayfa)+'</td><td class="r '+(x.mobil>=80?'renk-y':'renk-s')+'" data-s="'+x.sm+'">'+x.mobil+'</td><td class="r '+(x.masaustu>=90?'renk-y':'renk-s')+'" data-s="'+x.sd+'">'+x.masaustu+'</td></tr>'}).join('')+'</table>','PageSpeed, her gün 16:00 · hedef mobil 80, masaüstü 90 · rakama dokun');
+ var cr=tk.crux||{};
+ H+=kart('Gerçek kullanıcı (CrUX, p75)','<div class="izgara g4" style="gap:10px">'+Object.keys(cr).map(function(k){var x=cr[k],v=x.deger,b=k=='LCP'?(v<=2.5?'p-y':v<=4?'p-s':'p-k'):k=='INP'?(v<=200?'p-y':v<=500?'p-s':'p-k'):k=='CLS'?(v<=0.1?'p-y':v<=0.25?'p-s':'p-k'):(v<=0.8?'p-y':v<=1.8?'p-s':'p-k');
+   return '<div data-s="'+x.s+'"><div class="etiket">'+k+'</div><div class="sayi" style="font-size:20px">'+sf(v,k=='CLS'?2:(k=='INP'?0:1))+' '+x.birim+'</div><span class="pill '+b+'">'+(b=='p-y'?'iyi':b=='p-s'?'orta':'kötü')+'</span></div>'}).join('')+'</div>','Chrome UX Report, site geneli, haftalık 28 günlük pencere');
+ H+='</div></section>';
+ // REKLAM
+ H+='<section class="sekme" id="reklam"><h2>Reklam (Google Ads, 14 gün)</h2>'+hataNotu('reklam')+'<div class="izgara g4">';
+ H+='<div class="kart" data-s="ads-harcama"><div class="etiket">Harcama</div><div class="sayi">'+sf(r.harcama14)+' TL</div>'+yuzde(r.harcama14,r.harcama14_once)+'</div>';
+ H+='<div class="kart" data-s="ads-tik"><div class="etiket">Tıklama</div><div class="sayi">'+sf(r.tik14)+'</div>'+yuzde(r.tik14,r.tik14_once)+'</div>';
+ H+='<div class="kart"><div class="etiket">Tıklama başı maliyet</div><div class="sayi">'+(r.tik14?sf(r.harcama14/r.tik14,1):'—')+' TL</div></div>';
+ H+='<div class="kart"><div class="etiket">Ads dönüşümü olmayan kelimelere giden pay (30 gün)</div><div class="sayi">%'+sf(r.donusumsuz_pay)+'</div><div class="etiket">Ads sütunu, karar ölçütü değil</div></div>';
+ H+='</div><div class="izgara g3" style="margin-top:14px">';
+ H+=kart('Kampanya (14 gün)','<table><tr><th>Kampanya</th><th class="r">TL</th></tr>'+(r.kampanya||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+e(x.kampanya)+'</td><td class="r">'+sf(x.tl)+'</td></tr>'}).join('')+'</table>','Ads API · satıra dokun: günlük harcama');
+ H+=kart('En çok harcayan kelimeler (30 gün)','<div class="tablo"><table><tr><th>Kelime</th><th class="r">TL</th><th class="r">Tık</th><th class="r">Ads dön.</th></tr>'+(r.kelime||[]).map(function(x){return '<tr><td>'+e(x.kelime)+'</td><td class="r">'+sf(x.tl)+'</td><td class="r">'+x.tik+'</td><td class="r '+(x.ads_donusum?'':'renk-k')+'">'+sf(x.ads_donusum,1)+'</td></tr>'}).join('')+'</table></div>','Ads API');
+ var gc=r.guc||{};
+ H+=kart('Reklam gücü (etkin reklamlar)','<table>'+[['EXCELLENT','p-y','Excellent','anlik-guc-excellent'],['GOOD','p-n','Good','anlik-guc-good'],['AVERAGE','p-s','Average','anlik-guc-average'],['POOR','p-k','Poor','anlik-guc-average'],['PENDING','p-n','Hesaplanıyor','']].filter(function(x){return gc[x[0]]}).map(function(x){return '<tr'+(x[3]?' data-s="'+x[3]+'"':'')+'><td><span class="pill '+x[1]+'">'+x[2]+'</span></td><td class="r">'+gc[x[0]]+'</td></tr>'}).join('')+'</table>','Ads API');
+ H+='</div></section>';
+ // ICERIK
+ H+='<section class="sekme" id="icerik"><h2>İçerik etkisi</h2>'+hataNotu('icerik')+hataNotu('bulten')+'<div class="izgara g3">';
+ H+=kart('Yeni yazılar: 7, 28 ve 90. gün gösterimi','<div class="tablo"><table><tr><th>Yazı</th><th class="r">7 g</th><th class="r">28 g</th><th class="r">90 g</th><th class="r">Konum</th></tr>'+(ic.yazilar||[]).map(function(x){return '<tr data-s="'+x.s+'"><td>'+e(x.yazi)+'<div class="etiket">'+e(x.tarih)+'</div></td><td class="r">'+sf(x.g7)+'</td><td class="r">'+sf(x.g28)+'</td><td class="r">'+sf(x.g90)+'</td><td class="r '+konumRenk(x.konum)+'">'+sf(x.konum,1)+'</td></tr>'}).join('')+'</table></div>','Search Console · — : süre dolmadı');
+ H+=kart('Bülten','<div class="tablo"><table><tr><th>Sayı</th><th class="r">Gönderim</th><th class="r">Açılma</th><th class="r">Tık</th></tr>'+(ic.bulten||[]).map(function(x){return '<tr data-s="bulten-acilma"><td>'+e(x.ad)+'<div class="etiket">'+e(x.tarih)+'</div></td><td class="r">'+x.gonderim+'</td><td class="r">%'+sf(x.acilma,1)+'</td><td class="r">%'+sf(x.tiklama,1)+'</td></tr>'}).join('')+'</table></div>','Brevo');
+ H+='</div></section>';
+ // HATLAR
+ H+='<section class="sekme" id="hatlar"><h2>Hatlar</h2>'+hataNotu('hatlar')+'<div class="izgara g3">';
+ (V.hatlar||[]).forEach(function(x){var d=(x.durum||'');var p=/onay|bekli/.test(d)?'p-s':/engel|sorun/.test(d)?'p-k':/plan/.test(d)?'p-n':'p-y';
+   H+='<div class="kart"><h3>'+e(x.hat)+' <span class="pill '+p+'">'+e(d)+'</span></h3><div class="etiket">'+e(x.nerede)+'</div>'+(x.sonraki&&x.sonraki.length?'<h4>Sıradaki</h4><ol class="is">'+x.sonraki.map(function(s){return '<li>'+e(s)+'</li>'}).join('')+'</ol>':'')+'<div class="kaynak">Tarih: '+e(x.tarih)+'</div></div>'});
+ H+='</div><h2>Atılacak cold email</h2><div class="kart">'+((V.cold&&V.cold.length)?'<div class="tablo"><table><tr><th>Hat</th><th>Konu</th><th class="r">Alıcı</th></tr>'+V.cold.map(function(x){return '<tr><td>'+e(x.hat)+'</td><td>'+e(x.konu)+'</td><td class="r">'+x.alici+'</td></tr>'}).join('')+'</table></div>':'<div class="etiket">Bekleyen yok</div>')+'<div class="kaynak">Gönderim senin onayınla, sohbette</div></div></section>';
+ // ONERILER
+ H+='<section class="sekme" id="oneri"><h2>Blog ve slug önerileri</h2>'+hataNotu('oneriler')+'<div class="izgara g3"><div class="kart">';
+ H+=(o.blog||[]).map(function(x,i){return '<div class="oneri" data-o="blog-'+i+'"><b>'+e(x.konu)+'</b><div class="neden">'+e(x.tarih)+' · '+e(x.sutun)+' · odak <b>'+e(x.odak)+'</b> · slug <code>/'+e(x.slug)+'/</code></div></div>'}).join('')||'<div class="etiket">Plan boş</div>';
+ H+='<div class="kaynak">BLOG-PLANI · puan = talep x iş değeri x boşluk</div></div>';
+ H+='<div class="kart"><h3>Veriden çıkan öneriler</h3>'+(o.liste||[]).map(function(x,i){return '<div class="oneri" data-o="liste-'+i+'"><b>'+e(x.baslik)+'</b><div class="neden">'+e(x.tarih)+' · '+e(x.durum)+'</div></div>'}).join('')+'</div>';
+ H+='<div class="kart"><h3>Yapay zekâ görünürlüğü aksiyonları</h3>'+(o.geo_aksiyon||[]).map(function(x){return '<div class="oneri"><div class="neden" style="color:#1E1810">'+e(x)+'</div></div>'}).join('')+
+   (o.defter&&o.defter.length?'<h4>Kaynak defteri (son)</h4>'+o.defter.map(function(x){return '<div class="oneri"><b>'+e(x.alan)+'</b> · '+e(x.aksiyon)+'<div class="neden">'+e(x.tarih)+' · '+e(x.durum)+'</div></div>'}).join(''):'')+'</div>';
+ H+='</div></section>';
+ document.getElementById('ana').innerHTML=H;
+ document.getElementById('uretim').textContent='Ölçüm ve strateji · son güncelleme '+(V.uretim||'').replace('T',' ')+' · satıra dokun, zaman çizgisi açılır';
+ var k='kelime';try{k=localStorage.getItem('ep-metrics-sekme')||'kelime'}catch(x){}
+ sekmeAc(document.getElementById(k)?k:'kelime');
+}
+function sekmeAc(id){document.querySelectorAll('#sekmeler button').forEach(function(b){b.classList.toggle('secili',b.getAttribute('data-t')==id)});document.querySelectorAll('.sekme').forEach(function(s){s.classList.toggle('acik',s.id==id)});try{localStorage.setItem('ep-metrics-sekme',id)}catch(x){}}
+document.getElementById('sekmeler').addEventListener('click',function(ev){var b=ev.target.closest('button');if(b)sekmeAc(b.getAttribute('data-t'))});
+
+function noktalar(sr){var out=[];if(sr.tarihler){for(var i=0;i<sr.v.length;i++)out.push([new Date(sr.tarihler[i]+'T12:00:00'),sr.v[i]])}else{var d=new Date(sr.bas+'T12:00:00');for(var j=0;j<sr.v.length;j++){out.push([new Date(d.getTime()+j*864e5),sr.v[j]])}}return out}
+function fmt(d){return d.toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'2-digit'})}
+function grafikAc(k){var sr=V.seriler&&V.seriler[k];if(!sr)return;aktif=sr;grafikCiz(12)}
+function grafikCiz(ay){var sr=aktif,tum=noktalar(sr),son=tum.length?tum[tum.length-1][0]:new Date(),sinir=ay?new Date(son.getTime()-ay*30.4*864e5):null;
+ var s=tum.filter(function(p){return (!sinir||p[0]>=sinir)});var dolu=s.filter(function(p){return p[1]!=null});
+ var btn=[[1,'1 ay'],[3,'3 ay'],[6,'6 ay'],[12,'12 ay'],[0,'Tümü']].map(function(b){return '<button '+(b[0]===ay?'class="secili"':'')+' onclick="grafikCiz('+b[0]+')">'+b[1]+'</button>'}).join('');
+ var bas='<button class="kapat" onclick="kapat()">×</button><h3>'+e(sr.ad)+'</h3><div class="etiket">Veri '+(tum.length?fmt(tum[0][0]):'—')+' tarihinden beri'+(sr.ters?' · düşük değer daha iyi, eksen ters':'')+'</div><div class="araliklar">'+btn+'</div>';
+ if(dolu.length<2){goster(bas+'<div class="etiket" style="padding:30px 0">Bu aralıkta çizgi için yeterli veri yok ('+dolu.length+' nokta). Ölçüm her gün birikiyor.</div>');return}
+ var W=720,Hh=290,L=52,R=16,T=16,B=34,t0=s[0][0].getTime(),t1=s[s.length-1][0].getTime()||t0+1,vs=dolu.map(function(p){return p[1]}),mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs);
+ if(mx==mn){mx+=1;mn-=1}var pay=(mx-mn)*.1;mn-=pay;mx+=pay;if(mn<0&&Math.min.apply(null,vs)>=0)mn=0;
+ function x(t){return L+(W-L-R)*(t-t0)/((t1-t0)||1)}function y(v){var o=(v-mn)/(mx-mn);if(sr.ters)o=1-o;return T+(Hh-T-B)*(1-o)}
+ var yol='',bas2=true;s.forEach(function(p){if(p[1]==null){bas2=true;return}yol+=(bas2?'M':'L')+x(p[0].getTime()).toFixed(1)+','+y(p[1]).toFixed(1);bas2=false});
+ var izg='';for(var k=0;k<=4;k++){var vv=mn+(mx-mn)*k/4,yy=y(vv);izg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#EEF0F3"/><text x="'+(L-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="#6B7280">'+sf(vv,Math.abs(mx)<10?1:0)+'</text>'}
+ var son1=dolu[dolu.length-1],ilk=dolu[0];
+ var etk='<text x="'+L+'" y="'+(Hh-10)+'" font-size="11" fill="#6B7280">'+fmt(s[0][0])+'</text><text x="'+((L+W-R)/2)+'" y="'+(Hh-10)+'" font-size="11" fill="#6B7280" text-anchor="middle">'+fmt(new Date((t0+t1)/2))+'</text><text x="'+(W-R)+'" y="'+(Hh-10)+'" font-size="11" fill="#6B7280" text-anchor="end">'+fmt(s[s.length-1][0])+'</text>';
+ var nok=dolu.length<40?dolu.map(function(p){return '<circle cx="'+x(p[0].getTime())+'" cy="'+y(p[1])+'" r="3" fill="#FF7D07"/>'}).join(''):'';
+ var svg='<svg viewBox="0 0 '+W+' '+Hh+'">'+izg+'<path d="'+yol+'" fill="none" stroke="#FF7D07" stroke-width="2.2" stroke-linejoin="round"/>'+nok+'<circle cx="'+x(son1[0].getTime())+'" cy="'+y(son1[1])+'" r="4" fill="#232F3E"/>'+etk+'</svg>';
+ var fark=son1[1]-ilk[1],iyi=sr.ters?fark<0:fark>0,en=sr.ters?Math.min.apply(null,vs):Math.max.apply(null,vs);
+ goster(bas+'<div class="grafik">'+svg+'</div><div class="ozetsatir"><span>Başta: <b>'+sf(ilk[1],1)+' '+e(sr.birim)+'</b></span><span>Şimdi: <b>'+sf(son1[1],1)+' '+e(sr.birim)+'</b></span><span class="'+(Math.abs(fark)<1e-9?'sabit':(iyi?'yuk':'dus'))+'"><b>'+(Math.abs(fark)<1e-9?'•':(iyi?'▲':'▼'))+' '+sf(Math.abs(fark),1)+'</b></span><span>En iyi: <b>'+sf(en,1)+'</b></span></div>')}
+function oneriAc(k){var p=k.split('-'),o=V.oneri||{},x;
+ if(p[0]=='blog'){x=o.blog[+p[1]];goster('<button class="kapat" onclick="kapat()">×</button><h3>'+e(x.konu)+'</h3><div class="etiket">'+e(x.tarih)+' · '+e(x.sutun)+' · '+e(x.durum)+'</div><h4 style="color:#6B7280;font-size:11px;text-transform:uppercase;margin:14px 0 6px">Dayanak veri</h4><ul><li>Odak kelime: <b>'+e(x.odak)+'</b></li><li>Önerilen slug: <code>/'+e(x.slug)+'/</code></li><li>Puan: '+e(x.puan)+'</li></ul><h4 style="color:#6B7280;font-size:11px;text-transform:uppercase;margin:14px 0 6px">Gerekçe</h4><p>Puan = talep (GSC gösterim, otomatik tamamlama, Ads terimi) x iş değeri (tracker\'daki iş sayısı) x boşluk (aynı odaklı yazı yok). Sütun dönüşü haftada 3 farklı sütun; doygun sütunda puan yarıya iner.</p>');return}
+ x=o.liste[+p[1]];goster('<button class="kapat" onclick="kapat()">×</button><h3>'+e(x.baslik)+'</h3><div class="etiket">'+e(x.tarih)+' · '+e(x.durum)+'</div><h4 style="color:#6B7280;font-size:11px;text-transform:uppercase;margin:14px 0 6px">Dayanak veri</h4><ul>'+(x.dayanak||[]).filter(Boolean).map(function(d){return '<li>'+e(d)+'</li>'}).join('')+'</ul><h4 style="color:#6B7280;font-size:11px;text-transform:uppercase;margin:14px 0 6px">Gerekçe</h4><p>'+e(x.gerekce)+'</p>')}
+function goster(h){document.getElementById('pencere').innerHTML=h;document.getElementById('perde').classList.add('acik')}
+function kapat(){document.getElementById('perde').classList.remove('acik')}
+document.getElementById('perde').addEventListener('click',function(ev){if(ev.target.id=='perde')kapat()});
+document.addEventListener('keydown',function(ev){if(ev.key=='Escape')kapat()});
+document.getElementById('ana').addEventListener('click',function(ev){var o=ev.target.closest('[data-o]');if(o){oneriAc(o.getAttribute('data-o'));return}var s=ev.target.closest('[data-s]');if(s&&s.getAttribute('data-s'))grafikAc(s.getAttribute('data-s'))});
+
+function yukle(src){return new Promise(function(ok,red){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=red;document.head.appendChild(s)})}
+function girisYap(){var h=document.getElementById('girisHata');h.textContent='';firebase.auth().signInWithEmailAndPassword(document.getElementById('gEmail').value.trim(),document.getElementById('gSifre').value).catch(function(x){h.textContent=(x&&x.code||'').indexOf('invalid')>=0?'E-posta ya da şifre hatalı.':'Giriş yapılamadı: '+(x&&x.message||x)})}
+function veriYukle(){document.getElementById('ana').innerHTML='<div id="yukleniyor">Veri yükleniyor…</div>';
+ firebase.database().ref('ep_metrics/veri').once('value').then(function(sn){V=sn.val();if(!V){document.getElementById('ana').innerHTML='<div class="hata">Veri henüz yazılmadı.</div>';return}V.gsc_ozet=V.gsc_ozet||{};ciz()})
+ .catch(function(x){document.getElementById('ana').innerHTML='<div class="hata">Veri okunamadı: '+e(x&&x.message||x)+'</div>'})}
+if(window.VERI){V=window.VERI;ciz()}else{
+ yukle('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js').then(function(){return yukle('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js')}).then(function(){return yukle('https'+'://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js')}).then(function(){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged(function(u){var g=document.getElementById('giris');if(u){g.classList.remove('acik');document.getElementById('cikis').style.display='';veriYukle()}else{g.classList.add('acik');document.getElementById('cikis').style.display='none'}});
+  document.getElementById('cikis').onclick=function(){firebase.auth().signOut()};
+ }).catch(function(){document.getElementById('ana').innerHTML='<div class="hata">Firebase yüklenemedi, bağlantıyı kontrol et.</div>'})}
+</script>
+</body>
+</html>

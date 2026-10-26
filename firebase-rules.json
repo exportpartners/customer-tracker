@@ -2,52 +2,104 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "ep_tracker_v1": {
-      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".read": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
       ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')"
     },
     "ep_tracker_files": {
-      ".read":  "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      ".read": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
       ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
     },
-
     "musteri_portal": {
       "$uid": {
-        ".read":  "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-        "form":       { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "dosyalar":   { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "guncelleme": { ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "durum":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "firma":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "eposta":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "acilis":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "giris":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "yerine":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "kilit":      { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "kapatildi":  { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" },
-        "notlar":     { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')" },
-        "sorular":    {
-          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
-          "$sid": { ".write": "auth != null && auth.uid == $uid && !data.hasChild('yanit') && newData.hasChildren(['metin','kalem','ts']) && newData.child('metin').isString() && newData.child('metin').val().length <= 600 && !newData.hasChild('yanit')" }
+        ".read": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+        "form": {
+          ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
         },
-        ".write":     "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        "dosyalar": {
+          ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "guncelleme": {
+          ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "durum": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "firma": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "eposta": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "acilis": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "giris": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "yerine": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "kilit": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "kapatildi": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+        },
+        "notlar": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')"
+        },
+        "sorular": {
+          ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+          "$sid": {
+            ".write": "auth != null && auth.uid == $uid && !data.hasChild('yanit') && newData.hasChildren(['metin','kalem','ts']) && newData.child('metin').isString() && newData.child('metin').val().length <= 600 && !newData.hasChild('yanit')"
+          }
+        },
+        ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
       }
     },
-
-    "bargello_tracker_v2": { ".read": true, ".write": true },
-    "bargello_visits_v1":  { ".read": true, ".write": true },
-    "bargello_tracker":    { ".read": true, ".write": true },
-    "molubon_tracker_v2":  { ".read": true, ".write": true },
-    "molubon_tracker":     { ".read": true, ".write": true },
-
+    "bargello_tracker_v2": {
+      ".read": true,
+      ".write": true
+    },
+    "bargello_visits_v1": {
+      ".read": true,
+      ".write": true
+    },
+    "bargello_tracker": {
+      ".read": true,
+      ".write": true
+    },
+    "molubon_tracker_v2": {
+      ".read": true,
+      ".write": true
+    },
+    "molubon_tracker": {
+      ".read": true,
+      ".write": true
+    },
     "portal_index": {
       ".read": true,
-      "$k": { ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')" }
+      "$k": {
+        ".write": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr')"
+      }
     },
-
     "spapi_auth": {
-      "$state": { ".read": true, ".write": true }
+      "$state": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "llc_iletisim": {
+      ".read": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr' || auth.token.email == 'opr@exportpartners.com.tr' || auth.token.email == 'yedek@exportpartners.com.tr')",
+      "$id": {
+        ".write": "!data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['ad','firma','eposta','mesaj','zaman']) && newData.child('eposta').isString() && newData.child('eposta').val().length < 200 && newData.child('mesaj').isString() && newData.child('mesaj').val().length < 3100 && newData.child('ad').val().length < 200 && newData.child('firma').val().length < 200"
+      }
+    },
+    "ep_metrics": {
+      ".read": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')",
+      ".write": "auth != null && auth.token.email == 'yedek@exportpartners.com.tr'"
     }
   }
 }
