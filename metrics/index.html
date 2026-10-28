@@ -6,7 +6,9 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#232F3E">
 <title>EP Metrics</title>
-<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="metrics-touch.png">
 <style>
 :root{--lac:#232F3E;--tur:#FF7D07;--zemin:#F5F6F8;--kart:#fff;--yazi:#1E1810;--soluk:#6B7280;--cizgi:#E6E8EC;--yes:#16A34A;--kir:#DC2626;--sari:#D97706}
 *{box-sizing:border-box}
@@ -104,8 +106,8 @@ function kart(baslik,ic,kaynak){return '<div class="kart"><h3>'+baslik+'</h3>'+i
 function hataNotu(ad){return V.hatalar&&V.hatalar[ad]?'<div class="hata">'+e(ad)+': '+e(V.hatalar[ad])+'</div>':''}
 function konumRenk(k){return k==null?'':(k<=3?'renk-y':(k<=10?'':(k<=20?'renk-s':'renk-k')))}
 function kelimeTablo(l,bos){if(!l||!l.length)return '<div class="etiket">'+(bos||'Yok')+'</div>';
-  return '<div class="tablo"><table><tr><th>Kelime</th><th class="r">Konum</th><th class="r">Hafta</th><th class="r">Ay</th><th class="r">Tık</th></tr>'+l.map(function(x){
-  return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+konumRenk(x.konum)+'">'+sf(x.konum,1)+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td><td class="r">'+sf(x.tik)+'</td></tr>'}).join('')+'</table></div>'}
+  return '<div class="tablo"><table><tr><th>Kelime</th><th class="r">Konum</th><th class="r">Hafta</th><th class="r">Ay</th><th class="r">Ay %</th><th class="r">Tık</th></tr>'+l.map(function(x){
+  return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+konumRenk(x.konum)+'">'+sf(x.konum,1)+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td><td class="r">'+(x.ay_yuzde==null?'<span class="sabit">—</span>':'<span class="'+(x.ay_yuzde>=0?'yuk':'dus')+'">'+(x.ay_yuzde>=0?'▲':'▼')+' %'+Math.abs(x.ay_yuzde)+'</span>')+'</td><td class="r">'+sf(x.tik)+'</td></tr>'}).join('')+'</table></div>'}
 
 function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.teknik||{},r=V.reklam||{},ic=V.icerik||{},o=V.oneri||{},H='';
  // YORUM
@@ -118,6 +120,13 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
    (a.yeni&&a.yeni.length?'<h4>Yeni giren</h4>'+a.yeni.map(function(x){return '<span class="pill p-y" data-s="'+x.s+'">'+e(x.q)+' ('+sf(x.konum,1)+')</span> '}).join(''):'')+
    (a.dusen&&a.dusen.length?'<h4>İlk 10\'dan düşen</h4>'+a.dusen.map(function(x){return '<span class="pill p-k" data-s="'+x.s+'">'+e(x.q)+' ('+sf(x.konum,1)+')</span> '}).join(''):''),
    'Search Console, son veri günü '+e(a.son)+' · hafta: son 7 gün / önceki 7 gün · ay: son 28 / önceki 28 gün · ▲ yükseldi');
+ var dg=a.degisim||{};
+ H+=kart('Büyük değişen kelimeler: neden? (otomatik analiz)',(dg.liste&&dg.liste.length?dg.liste.map(function(x){var dus=x.yon=='dustu';
+   return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer"><b>'+e(x.q)+'</b> <span class="'+(dus?'dus':'yuk')+'">'+(dus?'▼':'▲')+' %'+Math.abs(x.yuzde)+'</span> · '+sf(x.onceki,1)+' → '+sf(x.konum,1)+' <span class="etiket">('+(x.donem=='hafta'?'son 7 gün':'son 28 gün')+')</span>'+
+    (x.sayfa?'<div class="neden">Sayfa: '+e(x.sayfa)+'</div>':'')+
+    '<ul style="margin:4px 0 4px;padding-left:18px">'+(x.sebep||[]).map(function(y){return '<li>'+e(y)+'</li>'}).join('')+'</ul>'+
+    '<div class="neden"><b>Aksiyon:</b> '+e(x.aksiyon)+'</div></div>'}).join(''):'<div class="etiket">Eşiği aşan değişim yok.</div>'),
+   'Eşik: '+e(dg.esik||'')+' · haftalık kontrolde konum ≥ 4 sıra ya da ≥ %30 · '+(dg.olculen||0)+' kelime ölçüldü · sebepler veriden çıkarılan olasılıklardır, kesin hüküm değildir · dokun: çizgi');
  H+=kart('Yapay zekâda önde olduğumuz sorgular',(g.satirlar?'<div class="tablo"><table><tr><th>Sorgu</th><th class="r">Sıra</th><th class="r">Hafta</th><th class="r">Ay</th></tr>'+g.satirlar.map(function(x){
    return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+(x.sira?(x.sira<=3?'renk-y':''):'renk-k')+'">'+(x.sira||'yok')+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td></tr>'}).join('')+'</table></div>'+
    '<div class="etiket" style="margin-top:8px" data-s="ai-bulunan">'+g.toplam+' sorgunun <b>'+g.bulunan+'</b> tanesinde ilk 10\'dayız'+(g.onceki!=null?' (önceki ölçüm '+g.onceki+')':'')+'</div>':hataNotu('geo')),
