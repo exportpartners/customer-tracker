@@ -298,8 +298,7 @@
   <div>A NEW inquiry auto-moves to HOLD 5 business days after its 1st-meeting date. Tap the NEW badge to move it there straight away. SUBMIT buttons open a WhatsApp / e-mail draft to Kaan (intro) or Deniz (technical); nothing is sent automatically.</div>
   <div id="sync">● Local only on this device</div>
   <div style="display:flex;gap:8px;justify-content:center;opacity:.85">
-    <span id="yedekDugmeleri" style="display:none"><button class="mini" onclick="exportData()">⬇ Backup (JSON)</button>
-    <button class="mini" onclick="document.getElementById('importFile').click()">⬆ Restore</button></span>
+    <span id="yedekDugmeleri" style="display:none"></span><!-- 29 Ekim 2026, Mustafa: json indirme ve yukleme dugmeleri kaldirildi; yedek sunucu tarafinda otomatik aliniyor -->
     <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
     <span id="geriAlYeri"></span>
   </div>
