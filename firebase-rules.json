@@ -100,6 +100,14 @@
     "ep_metrics": {
       ".read": "auth != null && (auth.token.email == 'deniz@exportpartners.com.tr' || auth.token.email == 'info@exportpartners.com.tr')",
       ".write": "auth != null && auth.token.email == 'yedek@exportpartners.com.tr'"
+    },
+    "sid_panel_v1": {
+      "sorular": {
+        ".read": true,
+        "$id": {
+          ".write": "(!data.exists() && newData.child('s').exists()) || auth != null"
+        }
+      }
     }
   }
 }
