@@ -84,7 +84,7 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
   <nav id="sekmeler">
     <button data-t="yorum" class="secili">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
     <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
-    <button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
+    <button data-t="gorunurluk">Davranış ve rakip</button><button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
   </nav>
 </header>
 <main id="ana"><div id="yukleniyor">Veri yükleniyor…</div></main>
@@ -211,6 +211,25 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+='<div class="kart"><h3>Veriden çıkan öneriler</h3>'+(o.liste||[]).map(function(x,i){return '<div class="oneri" data-o="liste-'+i+'"><b>'+e(x.baslik)+'</b><div class="neden">'+e(x.tarih)+' · '+e(x.durum)+'</div></div>'}).join('')+'</div>';
  H+='<div class="kart"><h3>Yapay zekâ görünürlüğü aksiyonları</h3>'+(o.geo_aksiyon||[]).map(function(x){return '<div class="oneri"><div class="neden" style="color:#1E1810">'+e(x)+'</div></div>'}).join('')+
    (o.defter&&o.defter.length?'<h4>Kaynak defteri (son)</h4>'+o.defter.map(function(x){return '<div class="oneri"><b>'+e(x.alan)+'</b> · '+e(x.aksiyon)+'<div class="neden">'+e(x.tarih)+' · '+e(x.durum)+'</div></div>'}).join(''):'')+'</div>';
+ H+='</div></section>';
+ 
+ var dv=V.davranis||{},bl=V.backlink||{};
+ H+='<section class="sekme" id="gorunurluk"><h2>Ziyaretçi davranışı (PostHog)</h2>'+hataNotu('davranis')+hataNotu('backlink');
+ if(dv.ziyaretci){
+ H+='<div class="izgara g4">'+
+  '<div class="kart"><div class="etiket">Ziyaretçi ('+e(dv.pencere)+')</div><div class="sayi">'+sf(dv.ziyaretci)+'</div><div class="etiket">'+sf(dv.oturum)+' oturum, '+sf(dv.goruntuleme)+' görüntüleme</div></div>'+
+  '<div class="kart"><div class="etiket">Sıçrama oranı</div><div class="sayi">%'+sf(dv.sicrama)+'</div><div class="etiket">tek sayfa, etkileşim yok</div></div>'+
+  '<div class="kart"><div class="etiket">Ortalama oturum</div><div class="sayi">'+e(dv.sure)+'</div></div>'+
+  '<div class="kart"><div class="etiket">Cihaz</div><div class="sayi">'+sf(dv.mobil)+' / '+sf(dv.masaustu)+'</div><div class="etiket">mobil / masaüstü</div></div></div>'+
+  '<div class="izgara g3" style="margin-top:14px">'+
+  kart('Sayfa ve sıçrama','<div class="tablo"><table><tr><th>Sayfa</th><th class="r">Ziyaretçi</th><th class="r">Sıçrama</th></tr>'+(dv.sayfalar||[]).map(function(x){return '<tr><td>'+e(x[0])+'</td><td class="r">'+x[1]+'</td><td class="r '+(x[3]>=90?'renk-k':(x[3]<=25?'renk-y':''))+'">%'+sf(x[3])+'</td></tr>'}).join('')+'</table></div>','PostHog · küçük örnek, kesin hüküm değil')+
+  kart('Kanal','<table><tr><th>Kanal</th><th class="r">Ziyaretçi</th></tr>'+(dv.kanallar||[]).map(function(x){return '<tr><td>'+e(x[0])+'</td><td class="r">'+x[1]+'</td></tr>'}).join('')+'</table>','PostHog')+
+  kart('Bulgular',(dv.bulgular||[]).map(function(x){return '<div class="oneri"><div class="neden" style="color:#1E1810">'+e(x)+'</div></div>'}).join(''),e(dv.kaynak)+' · '+dv.yas_gun+' gün önce')+'</div>';}
+ H+='<h2>Backlink ve rakip</h2><div class="izgara g3">';
+ if(bl.ahrefs){
+ H+=kart('Bizim link profilimiz','<table><tr><td>Referans alan adı (Ahrefs)</td><td class="r">'+sf(bl.ahrefs.ref)+'</td></tr><tr><td>Followed referans alan adı</td><td class="r renk-k">'+sf(bl.ahrefs.followed)+'</td></tr><tr><td>Hedef (31 Ekim)</td><td class="r">'+sf(bl.hedef.followed)+' · '+e(bl.hedef.sonuc)+'</td></tr><tr><td>Moz DA / referans</td><td class="r">'+bl.biz_moz.da+' / '+bl.biz_moz.ref+'</td></tr></table><div class="etiket" style="margin-top:8px">'+e(bl.ahrefs.not)+'</div>',e(bl.kaynaklar)+' · '+bl.yas_gun+' gün önce')+
+ kart('Rakip otorite (Moz)','<div class="tablo"><table><tr><th>Site</th><th class="r">DA</th><th class="r">Ref. alan adı</th></tr>'+(bl.rakipler||[]).map(function(x){return '<tr><td>'+e(x.site)+'</td><td class="r">'+x.da+'</td><td class="r">'+x.ref+'</td></tr>'}).join('')+'</table></div>','Moz API, 17 Ekim')+
+ kart('Uyarılar ve sipariş','<table><tr><th>Semrush (ücretsiz)</th><th class="r">Ref.</th></tr>'+(bl.semrush||[]).map(function(x){return '<tr><td>'+e(x[0])+' <span class="etiket">'+e(x[2])+'</span></td><td class="r">'+e(x[1])+'</td></tr>'}).join('')+'</table>'+(bl.uyarilar||[]).map(function(x){return '<div class="oneri"><div class="neden" style="color:#1E1810">'+e(x)+'</div></div>'}).join('')+'<div class="etiket">'+e(bl.siparis)+'</div>','Semrush 1 Kasım, Bing');}
  H+='</div></section>';
  document.getElementById('ana').innerHTML=H;
  try{cpcCiz(60)}catch(x){}
