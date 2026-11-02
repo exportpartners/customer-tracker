@@ -82,7 +82,7 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
     <button id="cikis" style="background:none;border:1px solid #4B5563;color:#C4CBD8;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;display:none">Çıkış</button>
   </div>
   <nav id="sekmeler">
-    <button data-t="yorum" class="secili">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
+    <button data-t="ozet" class="secili">Genel özet</button><button data-t="yorum">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
     <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
     <button data-t="gorunurluk">Davranış ve rakip</button><button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
   </nav>
@@ -231,13 +231,59 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  kart('Rakip otorite (Moz)','<div class="tablo"><table><tr><th>Site</th><th class="r">DA</th><th class="r">Ref. alan adı</th></tr>'+(bl.rakipler||[]).map(function(x){return '<tr><td>'+e(x.site)+'</td><td class="r">'+x.da+'</td><td class="r">'+x.ref+'</td></tr>'}).join('')+'</table></div>','Moz API, 17 Ekim')+
  kart('Uyarılar ve sipariş','<table><tr><th>Semrush (ücretsiz)</th><th class="r">Ref.</th></tr>'+(bl.semrush||[]).map(function(x){return '<tr><td>'+e(x[0])+' <span class="etiket">'+e(x[2])+'</span></td><td class="r">'+e(x[1])+'</td></tr>'}).join('')+'</table>'+(bl.uyarilar||[]).map(function(x){return '<div class="oneri"><div class="neden" style="color:#1E1810">'+e(x)+'</div></div>'}).join('')+'<div class="etiket">'+e(bl.siparis)+'</div>','Semrush 1 Kasım, Bing');}
  H+='</div></section>';
+ 
+ H+='<section class="sekme" id="ozet"><h2>Genel özet</h2><div id="oz-sec" style="display:flex;gap:8px;margin:0 0 14px"></div><div id="oz-ic"></div></section>';
  document.getElementById('ana').innerHTML=H;
+ try{ozetCiz()}catch(x){console.log(x)}
  try{cpcCiz(60)}catch(x){}
  try{((V.trafik||{}).kanal||[]).forEach(function(k,i){kanalCiz(i,60)})}catch(x){}
  document.getElementById('uretim').textContent='Ölçüm ve strateji · son güncelleme '+(V.uretim||'').replace('T',' ')+' · satıra dokun, zaman çizgisi açılır';
- var k='yorum';try{k=localStorage.getItem('ep-metrics-sekme')||'yorum'}catch(x){}
- sekmeAc(document.getElementById(k)?k:'yorum');
+ var k='ozet';try{k=localStorage.getItem('ep-metrics-sekme')||'ozet'}catch(x){}
+ sekmeAc(document.getElementById(k)?k:'ozet');
 }
+
+var OZ_DONEM='hafta';
+var OZ_G={hafta:7,ay:28,uc:90},OZ_AD={hafta:'Hafta',ay:'Ay',uc:'3 ay'},OZ_TAM={hafta:'son 7 gün',ay:'son 28 gün',uc:'son 90 gün'};
+function ozSr(k){return ((V.seriler||{})[k]||{}).v||[]}
+function ozPen(a,g,o){var n=a.length;return a.slice(Math.max(0,n-g-o),Math.max(0,n-o))}
+function ozTop(a){var t=0,c=0;a.forEach(function(x){if(x!=null){t+=x;c++}});return c?t:null}
+function ozOrt(a){var t=0,c=0;a.forEach(function(x){if(x!=null){t+=x;c++}});return c?t/c:null}
+function ozTalep(g,o){var a=ozSr('talep-gunluk'),n=a.length,t=0,say=Math.round(g/7);for(var i=0;i<say;i++){var ix=n-1-o-7*i;if(ix<0)return null;t+=(a[ix]||0)}return t}
+function ozYuzde(s,o){return(s==null||!o)?null:Math.round(100*(s-o)/o)}
+function ozDurum(fark,yukariIyi){if(fark==null||Math.abs(fark)<5)return 0;return (fark>0)==yukariIyi?1:-1}
+function ozKart(baslik,buyuk,alt,durum,cumle,terim){
+ var r=durum>0?'#2E7D32':(durum<0?'#C0392B':'#6B7280'),ok=durum>0?'▲ iyiye gidiyor':(durum<0?'▼ kötüye gidiyor':'• yerinde');
+ return '<div class="kart"><div class="etiket">'+baslik+'</div><div class="sayi">'+buyuk+'</div><div style="color:'+r+';font-weight:600;font-size:13px">'+ok+(alt?' · '+alt:'')+'</div><div style="margin-top:8px;font-size:14px;line-height:1.5">'+cumle+'</div>'+(terim?'<div class="kaynak">'+terim+'</div>':'')+'</div>'}
+function ozetCiz(){
+ var d=OZ_DONEM,g=OZ_G[d],tam=OZ_TAM[d],K=[],durumlar=[];
+ var gos=ozTop(ozPen(ozSr('gsc-gosterim'),g,0)),gosO=ozTop(ozPen(ozSr('gsc-gosterim'),g,g)),tik=ozTop(ozPen(ozSr('gsc-tik'),g,0)),tikO=ozTop(ozPen(ozSr('gsc-tik'),g,g));
+ var kn=ozOrt(ozPen(ozSr('sepet-amazon'),g,0).concat(ozPen(ozSr('sepet-fda'),g,0))),knO=ozOrt(ozPen(ozSr('sepet-amazon'),g,g).concat(ozPen(ozSr('sepet-fda'),g,g)));
+ var fg=ozYuzde(gos,gosO),dg=ozDurum(fg,true);durumlar.push(dg);
+ K.push(ozKart('1 · Görünürlük (Google\'da görülme)',sf(gos),(fg==null?'':'%'+Math.abs(fg)+(fg>=0?' artış':' düşüş')),dg,
+  'Google\'da arama yapanlara sitemiz '+tam+' içinde <b>'+sf(gos)+'</b> kez gösterildi, bunların <b>'+sf(tik)+'</b>\'i tıklayıp geldi.'+(kn!=null?' Aradığımız ana kelimelerde ortalama '+sf(kn,1)+'. sıradayız'+(knO!=null?' (öncesi '+sf(knO,1)+')':'')+'; 10\'un altı Google\'ın ilk sayfası demek.':''),
+  'Gösterim: sonuçlarda göründüğümüz sayı. Tık: bize gelen kişi. Kaynak: Search Console'));
+ var oz=ozTop(ozPen(ozSr('ga-oturum'),g,0)),ozO=ozTop(ozPen(ozSr('ga-oturum'),g,g)),fo=ozYuzde(oz,ozO),dz=ozDurum(fo,true);durumlar.push(dz);
+ K.push(ozKart('2 · Ziyaretçi',sf(oz),(fo==null?'':'%'+Math.abs(fo)+(fo>=0?' artış':' düşüş')),dz,
+  'Siteye '+tam+' içinde <b>'+sf(oz)+'</b> kez girildi (aynı kişi iki kez gelirse iki sayılır). Öncesinde '+sf(ozO)+' idi.','Oturum: siteye bir giriş. Kaynak: Google Analytics'));
+ var tp=ozTalep(g,0),tpO=ozTalep(g,g),ft=ozYuzde(tp,tpO),dt=(tp==null||tpO==null)?0:(tp>tpO?1:(tp<tpO?-1:0));durumlar.push(dt);
+ K.push(ozKart('3 · Talep (asıl sonuç)',sf(tp),(tpO==null?'':'öncesi '+sf(tpO)),dt,
+  tam.charAt(0).toUpperCase()+tam.slice(1)+' içinde formdan, telefondan ya da e-postadan <b>'+sf(tp)+'</b> kişi bizimle iletişime geçti.'+((oz&&tp!=null&&tp<=1&&fo!=null&&fo>=0)?' <b>Ziyaretçi var ama talep az:</b> asıl iş, gelenin forma ulaşması.':''),'Talep: tracker ve form kayıtları. Satış değil, ilk temas'));
+ var hs=ozTop(ozPen(ozSr('ads-harcama'),g,0)),hsO=ozTop(ozPen(ozSr('ads-harcama'),g,g)),ht=ozTop(ozPen(ozSr('ads-tik'),g,0)),htO=ozTop(ozPen(ozSr('ads-tik'),g,g));
+ var cpc=(hs!=null&&ht)?hs/ht:null,cpcO=(hsO!=null&&htO)?hsO/htO:null,fc=ozYuzde(cpc,cpcO),dc=ozDurum(fc,false);durumlar.push(dc);
+ K.push(ozKart('4 · Reklam maliyeti',cpc==null?'—':sf(cpc,2)+' TL',(fc==null?'':'%'+Math.abs(fc)+(fc>=0?' pahalandı':' ucuzladı')),dc,
+  tam.charAt(0).toUpperCase()+tam.slice(1)+' içinde Google reklamlarına <b>'+sf(hs)+' TL</b> harcandı; reklamı tıklayan her kişi bize ortalama <b>'+(cpc==null?'—':sf(cpc,2))+' TL</b>\'ye geldi.','Tıklama başı maliyet. Kaynak: Google Ads'));
+ var th=(V.teknik||{}).hiz||[],mob=ozOrt(th.map(function(x){return x.mobil})),mas=ozOrt(th.map(function(x){return x.masaustu})),dz2=ozSr('dizin-oran'),dizin=dz2.length?dz2[dz2.length-1]:null;
+ var ds=(mob!=null&&mob>=80&&mas>=90)?1:((mob!=null&&mob<70)?-1:0);durumlar.push(ds);
+ K.push(ozKart('5 · Site sağlığı',mob==null?'—':sf(mob,0)+' / '+sf(mas,0),'mobil / masaüstü hız puanı',ds,
+  'Sitenin açılış hızı 100 üzerinden mobilde <b>'+sf(mob,0)+'</b>, bilgisayarda <b>'+sf(mas,0)+'</b> (hedef 80 ve 90).'+(dizin!=null?' Google\'ın tanıdığı sayfa oranı <b>%'+sf(dizin,1)+'</b>.':'')+' Yavaş ya da tanınmayan sayfa, ziyaretçi ve görünürlük kaybettirir.','Bu kart dönemden bağımsız, son ölçüm'));
+ var iyi=durumlar.filter(function(x){return x>0}).length,kotu=durumlar.filter(function(x){return x<0}).length;
+ var genel='Bu '+OZ_AD[d].toLowerCase()+' ('+tam+') <b>5 göstergeden '+iyi+'\'i iyiye, '+kotu+'\'i kötüye gidiyor</b>, kalanı yerinde. ';
+ if(tp!=null&&tp<=1)genel+='En önemli nokta: talep az. Ziyaretçi geliyor, ama azı bize ulaşıyor; bu yüzden hizmet sayfalarındaki buton ve formlar üzerinde çalışıyoruz. ';
+ if(dg<0)genel+='Google\'da görünürlük düşüyor; hangi kelimelerin kaydığına "Kelimeler" sekmesinden bakılır. ';
+ document.getElementById('oz-ic').innerHTML='<div class="kart" style="background:#FFF7ED;border-left:4px solid #FF7D07;margin-bottom:14px"><div style="font-size:15px;line-height:1.6">'+genel+'</div></div><div class="izgara g3">'+K.join('')+'</div><div class="etiket" style="margin-top:12px">Karşılaştırma: aynı uzunlukta bir önceki dönemle. 3 ay görünümü, verisi yeterli göstergelerde dolu gelir. Tamamı ham sayıdır, yoruma dönüştürülmüş tek puan yoktur.</div>';
+ document.getElementById('oz-sec').innerHTML=['hafta','ay','uc'].map(function(k){return '<button data-oz="'+k+'" style="border:1px solid #232F3E;border-radius:999px;padding:6px 18px;font:inherit;font-size:13px;cursor:pointer;background:'+(k==d?'#232F3E':'#fff')+';color:'+(k==d?'#fff':'#232F3E')+'">'+OZ_AD[k]+'</button>'}).join('');
+}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-oz]');if(b){OZ_DONEM=b.getAttribute('data-oz');ozetCiz()}});
 function sekmeAc(id){document.querySelectorAll('#sekmeler button').forEach(function(b){b.classList.toggle('secili',b.getAttribute('data-t')==id)});document.querySelectorAll('.sekme').forEach(function(s){s.classList.toggle('acik',s.id==id)});try{localStorage.setItem('ep-metrics-sekme',id)}catch(x){}}
 document.getElementById('sekmeler').addEventListener('click',function(ev){var b=ev.target.closest('button');if(b)sekmeAc(b.getAttribute('data-t'))});
 
