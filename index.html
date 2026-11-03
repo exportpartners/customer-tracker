@@ -1157,7 +1157,8 @@ function payOran(i,v){ const o=Math.max(0,Math.min(100,Number(String(v).replace(
   PAY.satirlar[i].oran=o; payCiz(); if(filesRef) filesRef.child('_pay').child('kaan').child('satirlar').child(i).child('oran').set(o).catch(()=>toast('Oran kaydedilemedi')); }
 function payCiz(){
   const el=document.getElementById('kaanpay'); if(!el) return;
-  if(!PAY){el.style.display='none';return;} const S=(PAY.satirlar?toArr(PAY.satirlar):[]).concat(payTuret()); if(!S.length){el.style.display='none';return;} el.style.display='';
+  if(!PAY){el.style.display='none';return;} const AYS={Oca:1,Şub:2,Mar:3,Nis:4,May:5,Haz:6,Tem:7,Ağu:8,Eyl:9,Eki:10,Kas:11,Ara:12}; const tsr=t=>{const m=String(t||'').match(/(\d+)\s+(\S{3})/); return m?(AYS[m[2]]||0)*100+Number(m[1]):9999;};
+  const S=(PAY.satirlar?toArr(PAY.satirlar):[]).concat(payTuret()).sort((x,y)=>tsr(x.tarih)-tsr(y.tarih)||String(x.musteri).localeCompare(String(y.musteri),'tr')); if(!S.length){el.style.display='none';return;} el.style.display='';
   const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const yaz=payYetki(); let ta=0,tk=0,tr=0;
   /* 22 Ekim 2026, Mustafa: "sabit bond haric butun kalemler uzerinden toplam reklam harcamasini kalem basina eksiltip kalem basina net ciroyu oranla."
@@ -1171,14 +1172,13 @@ function payCiz(){
     return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${r?'−'+f(r):''}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
   const rg=RK.reduce((a,x)=>a+Number(x.google||0),0), rm=RK.reduce((a,x)=>a+Number(x.meta||0),0);
-  const reklamSat=rt?`<tr><td></td><td colspan="2" style="font-size:12px;line-height:1.5;color:#55697D">Reklam gideri (01.07.2026–bugün), faturalanmış harcama: Google Ads hesap 562-712-6192, kampanya 22985492115 ve 24291291511: ${f(rg)} TL; Meta Ads hesap act_3201095793368132, kampanya 120247836646720788: ${f(rm)} TL; toplam ${f(rtl)} TL. Aylık TCMB döviz satış kuruyla ${f(rt)} USD; bond hariç kalemlere alınan tutarıyla orantılı dağıtıldı.</td><td class="r"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="r"></td></tr>`:'';
+  const reklamSat=rt?`<div style="font-size:12px;line-height:1.5;color:#55697D;margin:8px 0 4px">Reklam gideri (01.07.2026–bugün), faturalanmış harcama: Google Ads hesap 562-712-6192, kampanya 22985492115 ve 24291291511: ${f(rg)} TL; Meta Ads hesap act_3201095793368132, kampanya 120247836646720788: ${f(rm)} TL; toplam ${f(rtl)} TL. Aylık TCMB döviz satış kuruyla ${f(rt)} USD; bond hariç kalemlere alınan tutarıyla orantılı dağıtıldı.</div>`:'';
   const tkk=tk;
   el.innerHTML=`<h3>OPR payı <span style="font-weight:500;color:#8a8f98">· USD</span></h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir (FDA ve USDA %55, FCE ve SID %60, gümrük kaydı %75, bond 750 baz).</div>
-  <table><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:58px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Reklam</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">Kalan</th></tr>${satir}
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="min-width:640px"><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:58px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Reklam</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">Kalan</th></tr>${satir}
   <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">${tr?'−'+f(tr):''}</td><td class="r">%${(ta-tr?tk/(ta-tr)*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tr-tk)}</td></tr>
-  ${reklamSat}
   ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
-  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table>`
+  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table></div>${reklamSat}`
   + reklamPayHtml(f);
 }
 /* 22 Ekim 2026, Mustafa: "google ads ve meta'da fda, usda, gumruk konulu kampanya masraflarini kaan tablosuna, x ayi toplam
