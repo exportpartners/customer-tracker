@@ -1135,7 +1135,13 @@ const ADS={tl:74844,usd:1660,bas:'4 Eki 2025',bit:'4 Eyl 2026'};
    (tracker girisi gerekir, sayfanin kendisinde rakam yok). Oran sari kutuda; Mustafa'nin girisiyle degistirilir ve kaydedilir. */
 let PAY=null;
 let OPRKUR=null;
-function payYukle(){ if(!filesRef) return; filesRef.child('_pay').child('kaan').on('value',s=>{PAY=s.val(); payCiz();},()=>{}); firebase.database().ref('ep_metrics/kur').on('value',s=>{OPRKUR=s.val(); payCiz();},()=>{}); }
+function payYukle(){ if(!filesRef) return; filesRef.child('_pay').child('kaan').on('value',s=>{PAY=s.val(); paySync(); payCiz();},()=>{}); firebase.database().ref('ep_metrics/kur').on('value',s=>{OPRKUR=s.val(); paySync(); payCiz();},()=>{}); firebase.database().ref('ep_metrics/opr_reklam').on('value',s=>{OPRRK=s.val(); paySync();},()=>{}); }
+/* 6 Kasim 2026: otomasyon (yedek@) yalniz ep_metrics'e yazabiliyor, opr@ ise ep_metrics'i okuyamiyor. deniz@ girisinde veri _pay/kaan altina kopyalanir, Kaan oradan gorur. */
+let OPRRK=null;
+function paySync(){ if(!PAY||!filesRef||!payYetki()) return; const k=filesRef.child('_pay').child('kaan');
+  const im=R=>JSON.stringify((R?toArr(R):[]).map(x=>[x.ay,x.toplam,x.usd,(x.kampanyalar?toArr(x.kampanyalar):[]).length]));
+  if(OPRRK&&im(OPRRK)!==im(PAY.reklam)) k.child('reklam').set(OPRRK).catch(()=>{});
+  if(OPRKUR&&JSON.stringify([OPRKUR.tarih,OPRKUR.usdtry])!==JSON.stringify([PAY.kur&&PAY.kur.tarih,PAY.kur&&PAY.kur.usdtry])) k.child('kur').set(OPRKUR).catch(()=>{}); }
 function payYetki(){ const e=(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||''; return e==='deniz@exportpartners.com.tr'; }
 /* 21 Ekim 2026, Mustafa: "USDA de 55/45; formulize et; is In Progress'e donunce Stripe faturasina gore tabloya aktar."
    Oran kalem adindan formulle gelir (kgpKural); elle degistirilen oran _pay/kaan/oranlar/<fatura:kalem> altinda durur. */
@@ -1174,7 +1180,7 @@ function payCiz(){
   const rg=RK.reduce((a,x)=>a+Number(x.google||0),0), rm=RK.reduce((a,x)=>a+Number(x.meta||0),0);
   const tkk=tk;
   /* 6 Kasim 2026, Mustafa: "ana parayi mobilde goremiyorum; ay ay detay yazma, bir yerde gozuksun; ad masrafi bir tarafta, sade ozet." */
-  const kalan=tkk-od, KUR=OPRKUR, tl=n=>Math.round(n*KUR.usdtry).toLocaleString('tr-TR');
+  const kalan=tkk-od, KUR=OPRKUR||PAY.kur||null, tl=n=>Math.round(n*KUR.usdtry).toLocaleString('tr-TR');
   const ozet=`<div class="kp-oz"><div class="kb">OPR'ye ödenecek</div><div class="kt">${KUR?tl(kalan)+' TL':f(kalan)+' USD'}</div><div class="ku">${KUR?f(kalan)+' USD · kur '+KUR.usdtry.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:4})+' (TCMB '+esc(KUR.tarih||'')+')':'TL kuru yok'}</div><div class="ks"><span>Toplam OPR</span><b>${f(tk)} USD</b></div><div class="ks"><span>Ödenen</span><b>${od?'−'+f(od):'0,00'} USD</b></div><div class="ks"><span>Reklam masrafı (düşüldü)</span><b>${rtl?Math.round(rtl).toLocaleString('tr-TR')+' TL':f(tr)+' USD'}</b></div><button onclick="document.body.classList.toggle('kp-detay');const k=document.getElementById('kaanpay');if(document.body.classList.contains('kp-detay')&&k)k.scrollIntoView({behavior:'smooth'})">Satır detayı</button></div>`;
   if(oz){oz.innerHTML=ozet+reklamPayHtml(f);oz.style.display='';}
   el.innerHTML=ozet+`<h3>OPR payı <span style="font-weight:500;color:#8a8f98">· USD</span></h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir. Reklam düşüldükten sonra bond hariç bütün kalemler %50 bölünür; bond 750 baz, reklamdan düşülmez.</div>
