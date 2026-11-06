@@ -244,7 +244,7 @@
   #kaanpay h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}#kaanpay .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:10px}
   #kaanpay table{width:100%;min-width:0!important;border-collapse:collapse;font-size:11.5px;table-layout:fixed}#kaanpay td{overflow-wrap:anywhere}#kaanpay th{background:#232F3E;color:#fff;text-align:left;padding:5px 7px;font-size:10.5px;border:0}
   #kaanpay td{padding:4px 7px;border:0;border-bottom:1px solid #eef0f3}#kaanpay td.r,#kaanpay th.r{text-align:right;white-space:nowrap}
-  #kaanpay tr.t td{font-weight:800;background:#F8F5F4}#kaanpay input{width:58px;text-align:right;border:1px solid #e0c97a;background:#FFF8DD;border-radius:5px;padding:2px 4px;font-size:12px}
+  @media (max-width:700px){#altkutular>#kaanpay{flex:1 1 100%;min-width:0;overflow:visible}#kaanpay{padding:14px}#kaanpay h3{font-size:17px}#kaanpay .dz-alt{font-size:13px;line-height:1.45}#kaanpay table,#kaanpay tbody,#kaanpay tr,#kaanpay td{display:block;width:100%;box-sizing:border-box}#kaanpay colgroup,#kaanpay tr:has(th){display:none}#kaanpay tr{border:1px solid #e6e8ec;border-radius:10px;padding:8px 12px;margin-bottom:10px;background:#fff}#kaanpay tr.t{background:#F8F5F4}#kaanpay td,#kaanpay tr.t td{padding:3px 0;border:0;background:transparent;font-size:15px}#kaanpay td:empty{display:none}#kaanpay td.pm-b{font-weight:700;color:#232F3E}#kaanpay td.r{display:flex;justify-content:space-between;gap:12px;white-space:normal}#kaanpay td.r::before{content:attr(data-l);color:#55697D;font-weight:500}#kaanpay td.r[data-l="OPR"]{font-weight:800}}#kaanpay tr.t td{font-weight:800;background:#F8F5F4}#kaanpay input{width:58px;text-align:right;border:1px solid #e0c97a;background:#FFF8DD;border-radius:5px;padding:2px 4px;font-size:12px}
   #donusum{margin:0;padding:18px 22px;background:#fff;border:1px solid #e6e8ec;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
   #donusum h3{margin:0 0 4px;font-size:15px;color:#0E1B3D}
   #donusum .dz-alt{font-size:11.5px;color:#6b6f76;margin-bottom:12px}
@@ -1137,16 +1137,14 @@ function payYukle(){ if(!filesRef) return; filesRef.child('_pay').child('kaan').
 function payYetki(){ const e=(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser&&firebase.auth().currentUser.email)||''; return e==='deniz@exportpartners.com.tr'; }
 /* 21 Ekim 2026, Mustafa: "USDA de 55/45; formulize et; is In Progress'e donunce Stripe faturasina gore tabloya aktar."
    Oran kalem adindan formulle gelir (kgpKural); elle degistirilen oran _pay/kaan/oranlar/<fatura:kalem> altinda durur. */
+const OPR_DUZ=.5;
 function kgpKural(kalem,alinan){ const k=(kalem||'').toLowerCase();
   if(/processing fee|banking fee|bank processing|stripe|%\s*5|5\s*%/.test(k)) return {haric:1};
   if(/trademark|uspto|attorney|llc|formation|tax return|wyoming|amazon|ppc|marketplace|duty|ups handling|ddp/.test(k)) return {haric:1};
   if(/permit fee|harc|harç|government fee/.test(k)) return {haric:1};
   if(/bond/.test(k)) return /difference|fark/.test(k)?{tanimsiz:1}:{sabit:Math.min(750,Number(alinan)||0)};
-  if(/customs registration|importer registration|gümrük kaydı|gumruk kaydi/.test(k)) return {oran:.75};
-  if(/\bfce\b|\bsid\b|food canning|process filing/.test(k)) return {oran:.6};
-  if(/usda|aphis/.test(k)) return {oran:.55};
-  if(/fda|duns|label|cosmetic|kozmetik|renewal|correction|etiket/.test(k)) return {oran:.55};
-  return {tanimsiz:1}; }
+  /* 6 Kasim 2026, Mustafa: "reklamlar ciktiktan sonra bond haric yuzde 50'ye bol, duz." */
+  return {oran:OPR_DUZ}; }
 function payTuret(){ const O=(PAY&&PAY.oranlar)||{}; const out=[];
   (data||[]).forEach(c=>{ if(!['In Progress','Completed'].includes(c.status)) return; (c.odemeKalem||[]).forEach(x=>{ const r=kgpKural(x.kalem,x.alinan); if(r.haric) return;
     const key=String(x.id||'').replace(/[.#$\/\[\]]/g,'_'); const o=(key in O)?Number(O[key]):(r.oran||0);
@@ -1166,26 +1164,26 @@ function payCiz(){
      (kalem orani) net tutar uzerinden hesaplanir. Bond payi sabit (750 baz) kalir, reklamdan dusulmez. */
   const RK=(PAY.reklam?toArr(PAY.reklam):[]).filter(x=>String(x.ay)>='2026-07'); const rt=RK.reduce((a,x)=>a+Number(x.usd||0),0), rtl=RK.reduce((a,x)=>a+Number(x.toplam||0),0);
   const baz=S.reduce((a,x)=>a+(x.sabit?0:Number(x.alinan||0)),0);
-  const satir=S.map((x,i)=>{ const r=(!x.sabit&&baz&&rt)?Math.round(rt*x.alinan/baz*100)/100:0, nt=x.alinan-r, k=x.sabit?Number(x.sabit):Math.round(nt*x.oran*100)/100, e=Math.round((nt-k)*100)/100; ta+=x.alinan; tk+=k; tr+=r;
+  const satir=S.map((x,i)=>{ const r=(!x.sabit&&baz&&rt)?Math.round(rt*x.alinan/baz*100)/100:0, nt=x.alinan-r, oran=/bond/i.test(x.kalem||'')?x.oran:OPR_DUZ, k=x.sabit?Number(x.sabit):Math.round(nt*oran*100)/100, e=Math.round((nt-k)*100)/100; ta+=x.alinan; tk+=k; tr+=r;
     const ix=x.key?`'${x.key}'`:i;
-    const o=x.tanimsiz&&yaz?`<input style="border-color:#C0392B" title="Bu kalemin oranı formülde yok; yazın" value="0" onchange="payOran(${ix},this.value)">%`:x.sabit?`<span style="color:#8a8f98" title="Bond payı sabit">${Number(x.sabit)}</span>`:`<span style="color:#8a8f98" title="Formülden gelir, değiştirilemez">%${(x.oran*100).toFixed(1).replace('.',',')}</span>`;
-    return `<tr><td>${esc(x.tarih||'')}</td><td>${esc(x.musteri||'')}</td><td>${esc(x.kalem||'')}</td><td class="r">${f(x.alinan)}</td><td class="r">${r?'−'+f(r):''}</td><td class="r">${o}</td><td class="r">${f(k)}</td><td class="r">${f(e)}</td></tr>`; }).join('');
+    const o=x.tanimsiz&&yaz?`<input style="border-color:#C0392B" title="Bu kalemin oranı formülde yok; yazın" value="0" onchange="payOran(${ix},this.value)">%`:x.sabit?`<span style="color:#8a8f98" title="Bond payı sabit">${Number(x.sabit)}</span>`:`<span style="color:#8a8f98" title="Formülden gelir, değiştirilemez">%${(oran*100).toFixed(1).replace('.',',')}</span>`;
+    return `<tr><td class="pm-b">${esc(x.tarih||'')}</td><td class="pm-b">${esc(x.musteri||'')}</td><td class="pm-b">${esc(x.kalem||'')}</td><td class="r" data-l="Alınan">${f(x.alinan)}</td><td class="r" data-l="Reklam">${r?'−'+f(r):''}</td><td class="r" data-l="OPR %">${o}</td><td class="r" data-l="OPR">${f(k)}</td><td class="r" data-l="Kalan">${f(e)}</td></tr>`; }).join('');
   const od=Number(PAY.odenen||0);
   const rg=RK.reduce((a,x)=>a+Number(x.google||0),0), rm=RK.reduce((a,x)=>a+Number(x.meta||0),0);
   const reklamSat=rt?`<div style="font-size:12px;line-height:1.5;color:#55697D;margin:8px 0 4px">Reklam gideri (01.07.2026–bugün), faturalanmış harcama: Google Ads hesap 562-712-6192, kampanya 22985492115 ve 24291291511: ${f(rg)} TL; Meta Ads hesap act_3201095793368132, kampanya 120247836646720788: ${f(rm)} TL; toplam ${f(rtl)} TL. Aylık TCMB döviz satış kuruyla ${f(rt)} USD; bond hariç kalemlere alınan tutarıyla orantılı dağıtıldı.</div>`:'';
   const tkk=tk;
-  el.innerHTML=`<h3>OPR payı <span style="font-weight:500;color:#8a8f98">· USD</span></h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir (FDA ve USDA %55, FCE ve SID %60, gümrük kaydı %75, bond 750 baz).</div>
+  el.innerHTML=`<h3>OPR payı <span style="font-weight:500;color:#8a8f98">· USD</span></h3><div class="dz-alt">Ödemesi alınan faturalar; tutarlar USD, %5 Stripe bedeli hariç. In Progress'e geçen işin ödenmiş Stripe faturası kendiliğinden eklenir Reklam düşüldükten sonra bond hariç bütün kalemler %50 bölünür; bond 750 baz, reklamdan düşülmez.</div>
   <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="min-width:640px"><colgroup><col style="width:56px"><col style="width:22%"><col><col style="width:62px"><col style="width:58px"><col style="width:74px"><col style="width:66px"><col style="width:62px"></colgroup><tr><th>Tarih</th><th>Müşteri</th><th>Kalem</th><th class="r">Alınan</th><th class="r">Reklam</th><th class="r">OPR %</th><th class="r">OPR</th><th class="r">Kalan</th></tr>${satir}
-  <tr class="t"><td></td><td>Toplam</td><td></td><td class="r">${f(ta)}</td><td class="r">${tr?'−'+f(tr):''}</td><td class="r">%${(ta-tr?tk/(ta-tr)*100:0).toFixed(1).replace('.',',')}</td><td class="r">${f(tk)}</td><td class="r">${f(ta-tr-tk)}</td></tr>
-  ${od?`<tr><td></td><td>${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td></td><td class="r">−${f(od)}</td><td></td></tr>`:''}
-  <tr class="t"><td></td><td>OPR'ye kalan</td><td></td><td></td><td></td><td></td><td class="r">${f(tkk-od)}</td><td></td></tr></table></div>${reklamSat}`
+  <tr class="t"><td></td><td class="pm-b">Toplam</td><td></td><td class="r" data-l="Alınan">${f(ta)}</td><td class="r" data-l="Reklam">${tr?'−'+f(tr):''}</td><td class="r" data-l="OPR %">%${(ta-tr?tk/(ta-tr)*100:0).toFixed(1).replace('.',',')}</td><td class="r" data-l="OPR">${f(tk)}</td><td class="r" data-l="Kalan">${f(ta-tr-tk)}</td></tr>
+  ${od?`<tr><td></td><td class="pm-b">${esc((PAY.odenenNot||'OPR\'ye ödenen').replace(/Kaan'a/g,'OPR\'ye'))}</td><td></td><td></td><td></td><td></td><td class="r" data-l="OPR">−${f(od)}</td><td></td></tr>`:''}
+  <tr class="t"><td></td><td class="pm-b">OPR'ye kalan</td><td></td><td></td><td></td><td></td><td class="r" data-l="OPR">${f(tkk-od)}</td><td></td></tr></table></div>${reklamSat}`
   + reklamPayHtml(f);
 }
 /* 22 Ekim 2026, Mustafa: "google ads ve meta'da fda, usda, gumruk konulu kampanya masraflarini kaan tablosuna, x ayi toplam
    reklam harcamasi olarak yaz; eylul de olsun." Bilgi satiri, paydan dusulmez. Veri _pay/kaan/reklam (reklam-pay.py yazar). */
 function reklamPayHtml(f){ const R=(PAY&&PAY.reklam)?toArr(PAY.reklam):[]; if(!R.length) return '';
   const ay=m=>{ const [y,k]=String(m).split('-'); return ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][Number(k)-1]+' '+y; };
-  const sat=R.slice().reverse().map(x=>`<tr><td>${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r">${f(x.google||0)}</td><td class="r">${f(x.meta||0)}</td><td class="r"><b>${f(x.toplam||0)}</b></td><td class="r">${f(x.usd||0)}</td></tr>`).join('');
+  const sat=R.slice().reverse().map(x=>`<tr><td class="pm-b">${ay(x.ay)}${x.devam?' (devam ediyor)':''}</td><td class="r" data-l="Google Ads">${f(x.google||0)}</td><td class="r" data-l="Meta">${f(x.meta||0)}</td><td class="r" data-l="Toplam TL"><b>${f(x.toplam||0)}</b></td><td class="r" data-l="USD">${f(x.usd||0)}</td></tr>`).join('');
   return `<h3 style="margin-top:18px">Reklam harcaması (FDA, USDA, gümrük)</h3><table><tr><th>Ay</th><th class="r">Google Ads</th><th class="r">Meta</th><th class="r">Toplam TL</th><th class="r">USD</th></tr>${sat}</table><div style="font-size:11px;line-height:1.5;color:#8a8f98;margin-top:8px"><b>Kaynak (1 Temmuz 2026'dan bugüne):</b> Google Ads hesabı 562-712-6192; kampanya no 22985492115 “FDA Belgesi” (reklam grupları: Ad group 1 no 180264656050, Gümrük no 183419606285, FDA_Kaydı no 185760321035, FDA_Onayı no 188932098950, Ad group 6 no 198613917996) ve kampanya no 24291291511 “HEDEF 10 GUN - FDA, etiket, bond” (Etiket Incelemesi no 200008183146, FDA Kayit ve US Agent no 200554204756) için Google'a ödenen tutarlardır. Meta: “Export Partners” reklam hesabı (act_3201095793368132), kampanya no 120247836646720788 “FDA yenileme 2026 - form” için Meta'ya ödenen tutardır. Tutarlar Google Ads ve Meta Ads Manager harcama raporlarındandır; USD karşılığı her ayın son günü TCMB döviz satış kuruyla (Ekim: 22 Ekim) hesaplanmıştır.</div>`; }
 function donusumCiz(){
   const el=document.getElementById('donusum'); if(!el) return;
