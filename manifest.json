@@ -1,6 +1,6 @@
 {
- "name": "EP FDA Tracker",
- "short_name": "EP FDA Tracker",
+ "name": "FDA Tracker",
+ "short_name": "FDA Tracker",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
