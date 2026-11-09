@@ -1164,8 +1164,12 @@ function payTuret(){ const O=(PAY&&PAY.oranlar)||{}; const out=[];
 function payOran(i,v){ const o=Math.max(0,Math.min(100,Number(String(v).replace(',','.'))))/100; if(isNaN(o)) return;
   if(typeof i==='string'){ if(filesRef) filesRef.child('_pay').child('kaan').child('oranlar').child(i).set(o).catch(()=>toast('Oran kaydedilemedi')); return; }
   PAY.satirlar[i].oran=o; payCiz(); if(filesRef) filesRef.child('_pay').child('kaan').child('satirlar').child(i).child('oran').set(o).catch(()=>toast('Oran kaydedilemedi')); }
+/* 9 Kasim 2026, Mustafa: "opr payini simdilik sil; bundan sonraki islerde %50, bond 1100 USD, 350 USD fix bende; mevcutlari sil."
+   Bolum gizli; eski satirlar silindi (yedek ep-seo/yedek/opr-pay-kaan-20261109-silme-oncesi.json), 9 Kasim'a kadar odenen faturalar kgp-sayilan.json'da. */
+const OPR_GIZLI=true;
 function payCiz(){
   const el=document.getElementById('kaanpay'); if(!el) return; const oz=document.getElementById('oprozet');
+  if(OPR_GIZLI){el.style.display='none';if(oz)oz.style.display='none';return;}
   if(!PAY){el.style.display='none';if(oz)oz.style.display='none';return;} const AYS={Oca:1,Şub:2,Mar:3,Nis:4,May:5,Haz:6,Tem:7,Ağu:8,Eyl:9,Eki:10,Kas:11,Ara:12}; const tsr=t=>{const m=String(t||'').match(/(\d+)\s+(\S{3})/); return m?(AYS[m[2]]||0)*100+Number(m[1]):9999;};
   const S=(PAY.satirlar?toArr(PAY.satirlar):[]).concat(payTuret()).sort((x,y)=>tsr(x.tarih)-tsr(y.tarih)||String(x.musteri).localeCompare(String(y.musteri),'tr')); if(!S.length){el.style.display='none';return;} el.style.display='';
   const f=n=>Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
