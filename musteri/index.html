@@ -87,13 +87,13 @@
   <section id="formBox" hidden>
     <div class="note">Yıldızlı (*) kalemler zorunlu. Dosya başına en fazla 7 MB; daha büyük belgeyi sıkıştırıp (PDF küçültme ya da ZIP) yükleyin. İstediğiniz zaman <b>Taslak kaydet</b> ile ara verebilir, hepsi tamamlanınca <b>Formu gönder</b>'e basarsınız; eksik varsa hangi kalemler olduğunu söyler. Her kalemin durumunu Export Partners işaretler.</div>
     <div class="card">
-      <h1>FDA Gıda Tesisi Kaydı ve DUNS Numarası: Evrak ve Bilgi Formu</h1>
-      <p class="lead">Kayıt üretim tesisi adına açılır; bilgiler üretici firmaya ait olmalıdır. Kayıt yabancı tesis adına açıldığı için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir.</p>
+      <h1 id="formBaslik">FDA Gıda Tesisi Kaydı ve DUNS Numarası: Evrak ve Bilgi Formu</h1>
+      <p class="lead" id="formAciklama">Kayıt üretim tesisi adına açılır; bilgiler üretici firmaya ait olmalıdır. Kayıt yabancı tesis adına açıldığı için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir.</p>
       <div id="alanlar"></div>
     </div>
     <div class="card" style="margin-top:16px">
       <h2 style="margin-top:0">Gizlilik</h2>
-      <p class="lead" style="margin:0 0 10px">Bu formda verdiğiniz bilgiler ve yüklediğiniz belgeler yalnızca FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu için kullanılır; yalnızca Export Partners ekibi görür, üçüncü kişiyle paylaşılmaz. Veriler Google Firebase altyapısında (Avrupa Birliği, Belçika) şifreli bağlantıyla saklanır. Kayıt tamamlandıktan sonra belgelerinizin silinmesini istediğinizde info@exportpartners.com.tr adresine yazmanız yeterlidir. Ayrıntı: <a href="https://www.exportpartners.com.tr/gizlilik-politikasi/" target="_blank" rel="noopener">Gizlilik Politikası</a>.</p>
+      <p class="lead" id="gizlilikMetin" style="margin:0 0 10px">Bu formda verdiğiniz bilgiler ve yüklediğiniz belgeler yalnızca FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu için kullanılır; yalnızca Export Partners ekibi görür, üçüncü kişiyle paylaşılmaz. Veriler Google Firebase altyapısında (Avrupa Birliği, Belçika) şifreli bağlantıyla saklanır. Kayıt tamamlandıktan sonra belgelerinizin silinmesini istediğinizde info@exportpartners.com.tr adresine yazmanız yeterlidir. Ayrıntı: <a href="https://www.exportpartners.com.tr/gizlilik-politikasi/" target="_blank" rel="noopener">Gizlilik Politikası</a>.</p>
       <label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer"><input type="checkbox" id="onayKutu" style="margin-top:4px" onchange="kirli=true"> <span>Bilgilerimin ve belgelerimin yukarıdaki amaçla işlenmesini kabul ediyorum. <span class="msg" id="onayTarih"></span></span></label>
     </div>
     <div class="card" style="margin-top:16px" id="soruKart">
@@ -151,7 +151,7 @@ const FIREBASE_CONFIG={
    10 (ambalaj tipi) GEREKSIZ.
    Bolunmeden onceki tek satirlik k07 ve k08 kayitlari eski formlarda duruyor;
    gosterim tarafi ESKI_ALAN ile geriye donuk okunuyor. */
-const KALEMLER=[
+const KALEMLER_GIDA=[
   {b:"FİRMA BİLGİLERİ"},
   {k:"k03",n:1,ad:"Fatura adresi",a:"Vergi levhasındaki adresten farklıysa yazınız",ph:"Ornek: Merkez Mah. Atatürk Cad. No:5 Kat:3, Sisli / Istanbul, Turkiye",cok:true},
   {k:"k04",n:2,ad:"Şirket web sitesi",a:"Varsa",ph:"Ornek: www.ornekgida.com"},
@@ -174,6 +174,50 @@ const KALEMLER=[
   {k:"k13",zorunlu:true,n:15,ad:"Şirket sahibinin kimlik fotokopisi",a:"PDF veya net fotoğraf",dosya:true},
   {k:"k14",n:16,ad:"Certificate of Formation ve EIN Letter",a:"Yalnızca ABD'de kurulu şirketiniz varsa; Türkiye şirketi için gerekmez",dosya:true,abd:true}
 ];
+/* 11 Kasim 2026: FDA kozmetik (MoCRA) tesis kaydi ve urun listeleme formu. Kaynak: FDA "Registration and Listing of
+   Cosmetic Product Facilities and Products" rehberi (Aralik 2024) bolum III.C (zorunlu ve istege bagli alanlar) ve FEI
+   talebinde istenen bilgiler. Gida formundaki imza sirkuleri ve kimlik burada yok: FDA kozmetik kaydi bunlari istemez.
+   Tesis adresi vergi levhasindan ALINMAZ: kayit uretimin yapildigi fiziksel tesis adinadir (Kuzey Guney, Ekim 2026).
+   Tracker, gorevlerde COSMETICS varsa ve FDA&DUNS yoksa musteri_portal/<uid>/form/tur = "kozmetik" yazar. */
+const KALEMLER_KOZ=[
+  {b:"FİRMA BİLGİLERİ"},
+  {k:"z01",zorunlu:true,n:1,ad:"Şirket e-posta adresi",a:"FDA yazışmaları bu adrese gelir, aktif olmalı",ph:"Ornek: export@ornekkozmetik.com"},
+  {k:"z02",zorunlu:true,n:2,ad:"Şirket telefonu",a:"Ülke koduyla. Ürün kaydında firmanın iletişim numarası olarak yer alır",ph:"Ornek: +90 212 000 00 00",tel:true},
+  {k:"z03",n:3,ad:"Şirket web sitesi",a:"Varsa",ph:"Ornek: www.ornekkozmetik.com"},
+  {k:"z04",zorunlu:true,n:4,ad:"Etikette adı geçen firma ve rolü",a:"ABD'ye gidecek etikette hangi firmanın adı yazacak ve hangi sıfatla: üretici (Manufactured by) ya da dağıtıcı (Distributed by). Ürün kaydı bu firma adına yapılır",ph:"Ornek: Ornek Kozmetik A.S., Distributed by",cok:true},
+  {b:"ÜRETİM TESİSİ"},
+  {k:"z05",zorunlu:true,n:5,ad:"Ürünler nerede üretiliyor",a:"Kendi tesisinizde mi, fason üreticide mi? Fason ise üretici firmanın resmi unvanını yazın; tesis kaydı ürünün üretildiği ya da dolumunun yapıldığı tesis adına açılır. Birden fazla tesis varsa hepsini yazın",ph:"Ornek: Fason, Ornek Fason Kozmetik San. ve Tic. Ltd. Sti.",cok:true},
+  {k:"z06",zorunlu:true,n:6,ad:"Üretim tesisinin açık adresi",a:"Üretimin fiilen yapıldığı fiziksel adres (merkez ofis ya da vergi levhası adresi değil)",ph:"Ornek: Organize Sanayi Bolgesi 3. Cadde No:8, Gebze / Kocaeli, Turkiye",cok:true},
+  {k:"z07",zorunlu:true,n:7,ad:"Üretim tesisinin telefonu ve e-postası",a:"Tesise ait telefon ve e-posta",ph:"Ornek: +90 262 000 00 00, uretim@ornekfason.com",cok:true},
+  {k:"z08",zorunlu:true,n:8,ad:"Tesiste yapılan işlemler",a:"Örnek: üretim, dolum, ambalajlama, etiketleme",ph:"Ornek: Uretim ve dolum; etiketleme bizim depomuzda"},
+  {k:"z09",n:9,ad:"Tesisin FDA numarası (FEI) ya da önceki FDA kaydı",a:"Tesis daha önce FDA ile herhangi bir işlem yaptıysa (gıda, ilaç, kozmetik kaydı) numarasını yazın; mevcut numara kullanılır, yenisi alınmaz",ph:"Ornek: FEI 3012345678"},
+  {k:"z10",n:10,ad:"Tesisin DUNS numarası",a:"Varsa",ph:"Ornek: 12-345-6789 (9 hane)"},
+  {k:"z11",n:11,ad:"Tesisin önceki unvanı ya da adresi",a:"Son yıllarda unvan ya da adres değiştiyse eski halini yazın",ph:"Ornek: 2024'e kadar Ornek Kimya Ltd. Sti., Tuzla",cok:true},
+  {b:"FDA MUHATABI YETKİLİ"},
+  {k:"z12",zorunlu:true,n:12,ad:"Yetkilinin adı soyadı ve görevi",a:"FDA yazışmalarında muhatap alınacak kişi",ph:"Ornek: Ayse Kaya, Kalite Muduru"},
+  {k:"z13",zorunlu:true,n:13,ad:"Yetkilinin telefonu",a:"Ülke koduyla",ph:"Ornek: +90 533 000 00 00",tel:true},
+  {k:"z14",zorunlu:true,n:14,ad:"Yetkilinin e-postası",a:"FDA bildirimleri bu adrese de gider",ph:"Ornek: ayse@ornekkozmetik.com"},
+  {b:"MARKALAR VE ÜRÜNLER"},
+  {k:"z15",zorunlu:true,n:15,ad:"Marka adları",a:"ABD'de satılacak ürünlerin etiketinde yazan bütün marka adları",ph:"Ornek: Ornek Home, Ornek Beauty",cok:true},
+  {k:"z16",zorunlu:true,n:16,ad:"Ürün listesi",a:"Excel ya da PDF. Her satırda: etiketteki İngilizce ürün adı, marka, ürün tipi (krem, losyon, parfüm, el sabunu vb.), hacim ya da gramaj, yalnızca profesyonel kullanım mı. Aynı formülün yalnızca rengi, kokusu ya da boyu farklı varyantlarını aynı satırda belirtin",dosya:true,kabul:".xlsx,.xls,.csv,.pdf"},
+  {k:"z17",zorunlu:true,n:17,ad:"Ürünlerin içerik listesi (INCI)",a:"Her ürün için etikette yer alacak tam içerik listesi; parfüm ve renklendiriciler dahil. Yalnızca içerik adları istenir, oranlar ve formül istenmez. Tek PDF ya da ZIP",dosya:true,kabul:".pdf,.xlsx,.xls,.doc,.docx,.zip"},
+  {k:"z18",zorunlu:true,n:18,ad:"Etiket dosyaları",a:"ABD'ye gidecek ürünlerin ön ve arka etiket tasarımı (kozmetik ürünler, varsa mum ve difüzör dahil). PDF, AI ya da JPG; birden fazla dosya için ZIP. 7 MB'ı geçiyorsa aşağıdaki kutuya paylaşım bağlantısı yazın",dosya:true,kabul:".pdf,.ai,.jpg,.jpeg,.png,.zip"},
+  {k:"z19",n:19,ad:"Etiket dosyaları için paylaşım bağlantısı",a:"Dosyalar 7 MB'tan büyükse Google Drive, WeTransfer ya da benzeri bağlantı",ph:"Ornek: https://drive.google.com/..."},
+  {k:"z20",n:20,ad:"Mum ve difüzörler için güvenlik bilgi formu (SDS)",a:"Varsa. Bu ürünler kozmetik sayılmaz, FDA'ya kaydedilmez; etiket uyarılarının kontrolü için kullanılır",dosya:true,kabul:".pdf,.zip"},
+  {b:"EVRAKLAR"},
+  {k:"z21",zorunlu:true,n:21,ad:"Vergi levhası",a:"Etikette adı geçen firmanın vergi levhası, PDF. Firma unvanı buradan alınır",dosya:true}
+];
+let KALEMLER=KALEMLER_GIDA;
+const FORM_METIN={gida:null,kozmetik:{baslik:"FDA Kozmetik Tesis Kaydı ve Ürün Kaydı (MoCRA): Evrak ve Bilgi Formu",aciklama:"Tesis kaydı, ürünün üretildiği ya da dolumunun yapıldığı tesis adına açılır; ürün kaydı etikette adı geçen firma adına yapılır. Yabancı tesis için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir."}};
+let FORM_TUR='gida';
+function formTuru(){
+  const t=(kayit.form||{}).tur==='kozmetik'?'kozmetik':'gida';
+  if(t===FORM_TUR)return;
+  if(!FORM_METIN.gida)FORM_METIN.gida={baslik:document.getElementById('formBaslik').textContent,aciklama:document.getElementById('formAciklama').textContent,gizlilik:document.getElementById('gizlilikMetin').innerHTML};
+  FORM_TUR=t; KALEMLER=t==='kozmetik'?KALEMLER_KOZ:KALEMLER_GIDA;
+  const m=FORM_METIN[t]; document.getElementById('formBaslik').textContent=m.baslik; document.getElementById('formAciklama').textContent=m.aciklama; document.getElementById('gizlilikMetin').innerHTML=t==='kozmetik'?FORM_METIN.gida.gizlilik.replace('FDA gıda tesisi kaydı, US Agent ataması ve DUNS başvurusu','FDA kozmetik tesis kaydı, ürün kaydı, US Agent ataması ve etiket incelemesi'):m.gizlilik;
+  const sel=document.getElementById('soruKalem'); if(sel){while(sel.options.length>1)sel.remove(1);}
+}
 /* Bolunen alanlarin eski tek satirlik karsiliklari; eski kayitlar bos gorunmesin. */
 const ESKI_ALAN={k07a:"k07",k07b:"k07",k07c:"k07",k08a:"k08",k08b:"k08",k08c:"k08",k08e:"k08"};
 
@@ -362,6 +406,7 @@ auth.onAuthStateChanged(u=>{
     if(kirli){/* kullanici yazarken sunucu verisiyle ezme; yalnizca durumu, notlari ve sorulari tazele */ kayit.durum=v.durum||{}; kayit.notlar=v.notlar||{}; kayit.sorular=v.sorular||{}; kayit.firma=v.firma||''; ciz(true); return; }
     kayit={form:v.form||{},dosyalar:v.dosyalar||{},durum:v.durum||{},notlar:v.notlar||{},sorular:v.sorular||{},firma:v.firma||'',guncelleme:v.guncelleme||'',eposta:v.eposta||''};
     if(v.eposta) document.getElementById('whoMail').textContent=v.eposta;
+    formTuru();
     ciz(false);
   },e=>{toast('Kayıt okunamadı: '+(e&&e.message||e));});
 });
@@ -391,7 +436,7 @@ function ciz(sadeceRozet){
     }else if(x.dosya){
       const f=kayit.dosyalar[x.k];
       alan=`<div class="file" id="f-${x.k}">${f?`<a href="javascript:void(0)" onclick="dosyaAc('${x.k}')">📎 ${esc(f.ad)}</a><span class="msg">${Math.round((f.boyut||0)/1024)} KB</span><button class="fx" title="Kaldır" onclick="dosyaSil('${x.k}')">✕</button>`:'<span class="msg">Henüz yüklenmedi</span>'}
-        <label class="upl">${f?'Değiştir':'Dosya yükle'}<input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="dosyaSec(event,'${x.k}')"></label></div>`;
+        <label class="upl">${f?'Değiştir':'Dosya yükle'}<input type="file" accept="${x.kabul||'.pdf,.jpg,.jpeg,.png'}" onchange="dosyaSec(event,'${x.k}')"></label></div>`;
     }else if(x.cok){
       alan=`<textarea id="in-${x.k}" placeholder="${esc(x.ph||'')}" oninput="kirli=true">${esc(val)}</textarea>`;
     }else if(x.k==='k04'&&!val){
