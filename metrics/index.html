@@ -88,7 +88,7 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
   <nav id="sekmeler">
     <button data-t="ozet" class="secili">Genel özet</button><button data-t="yorum">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
     <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
-    <button data-t="gorunurluk">Davranış ve rakip</button><button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button>
+    <button data-t="gorunurluk">Davranış ve rakip</button><button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button><button data-t="haftalik">Haftalık analiz</button>
   </nav>
 </header>
 <main id="ana"><div id="yukleniyor">Veri yükleniyor…</div></main>
@@ -222,6 +222,22 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+='</div></section>';
  
  var dv=V.davranis||{},bl=V.backlink||{};
+ /* 11 Kasim 2026, Mustafa: "butun Metrics'i analiz et; son 3 ayda gelisme gostermeyenleri bul, proje ac; her sayfadan 5 oneri; haftalik raporla ayni sayfada." */
+ var hk=V.haftalik||{};
+ H+='<section class="sekme" id="haftalik"><h2>Haftalık analiz · son 3 ay</h2>'+hataNotu('haftalik');
+ if(hk.tarih){
+  H+='<div class="izgara g3">'+kart('Açılan gelişim projeleri',(hk.projeler||[]).map(function(x){return '<div class="oneri"><b>'+e(x.baslik)+'</b><div class="neden">'+e(x.olcum)+' · '+e(x.sekme)+'</div></div>'}).join(''),
+   'Panelde CC işi olarak açık · analiz '+e(hk.tarih)+' · parametre gelişince proje kapanır')+'</div>';
+  H+='<div class="izgara g3" style="margin-top:14px">';
+  (hk.sira||[]).forEach(function(ad){var sk=(hk.sekmeler||{})[ad]||{},on=(hk.sayfa_oneri||{})[ad]||[];
+   var tb=(sk.seriler||[]).filter(function(x){return x.durum=='kötüleşti'||x.durum=='yerinde'}).slice(0,6);
+   H+=kart(e(ad)+(sk.olculen?' <span class="etiket">· '+sk.gelismeyen+'/'+sk.olculen+' parametre gelişmedi</span>':''),
+    (tb.length?'<div class="tablo"><table><tr><th>Parametre</th><th class="r">3 ay önce</th><th class="r">Şimdi</th></tr>'+tb.map(function(x){return '<tr><td>'+e(x.ad)+'</td><td class="r">'+sf(x.once,1)+'</td><td class="r '+(x.durum=='kötüleşti'?'dus':'')+'">'+sf(x.simdi,1)+'</td></tr>'}).join('')+'</table></div>':'')+
+    '<h4 style="margin:10px 0 4px">5 öneri</h4><ol style="margin:0;padding-left:18px">'+on.map(function(x){return '<li style="margin-bottom:6px">'+e(x)+'</li>'}).join('')+'</ol>','');
+  });
+  H+='</div>';
+ } else H+='<div class="etiket">Analiz henüz yazılmadı.</div>';
+ H+='</section>';
  H+='<section class="sekme" id="gorunurluk"><h2>Ziyaretçi davranışı (PostHog)</h2>'+hataNotu('davranis')+hataNotu('backlink');
  if(dv.ziyaretci){
  H+='<div class="izgara g4">'+
