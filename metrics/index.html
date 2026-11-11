@@ -133,7 +133,7 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
    return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer"><b>'+e(x.q)+'</b> <span class="'+(dus?'dus':'yuk')+'">'+(dus?'▼':'▲')+' %'+Math.abs(x.yuzde)+'</span> · '+sf(x.onceki,1)+' → '+sf(x.konum,1)+' <span class="etiket">('+(x.donem=='hafta'?'son 7 gün':'son 28 gün')+')</span>'+
     (x.sayfa?'<div class="neden">Sayfa: '+e(x.sayfa)+'</div>':'')+
     '<ul style="margin:4px 0 4px;padding-left:18px">'+(x.sebep||[]).map(function(y){return '<li>'+e(y)+'</li>'}).join('')+'</ul>'+
-    '<div class="neden"><b>Aksiyon:</b> '+e(x.aksiyon)+'</div></div>'}).join(''):'<div class="etiket">Eşiği aşan değişim yok.</div>'),
+    (x.alinan?'<div class="neden" style="color:#2E7D32"><b>Alınan aksiyon:</b> '+e(x.alinan)+'</div>':'<div class="neden"><b>Aksiyon:</b> '+e(x.aksiyon)+'</div>')+'</div>'}).join(''):'<div class="etiket">Eşiği aşan değişim yok.</div>'),
    'Eşik: '+e(dg.esik||'')+' · haftalık kontrolde konum ≥ 4 sıra ya da ≥ %30 · '+(dg.olculen||0)+' kelime ölçüldü · sebepler veriden çıkarılan olasılıklardır, kesin hüküm değildir · dokun: çizgi');
  H+=kart('Yapay zekâda önde olduğumuz sorgular',(g.satirlar?'<div class="tablo"><table><tr><th>Sorgu</th><th class="r">Sıra</th><th class="r">Hafta</th><th class="r">Ay</th></tr>'+g.satirlar.map(function(x){
    return '<tr data-s="'+x.s+'"><td>'+e(x.q)+'</td><td class="r '+(x.sira?(x.sira<=3?'renk-y':''):'renk-k')+'">'+(x.sira||'yok')+'</td><td class="r">'+ok(x.hafta)+'</td><td class="r">'+ok(x.ay)+'</td></tr>'}).join('')+'</table></div>'+
