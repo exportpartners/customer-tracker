@@ -176,7 +176,7 @@ const KALEMLER_GIDA=[
 ];
 /* 11 Kasim 2026: FDA kozmetik (MoCRA) tesis kaydi ve urun listeleme formu. Kaynak: FDA "Registration and Listing of
    Cosmetic Product Facilities and Products" rehberi (Aralik 2024) bolum III.C (zorunlu ve istege bagli alanlar) ve FEI
-   talebinde istenen bilgiler. Gida formundaki imza sirkuleri ve kimlik burada yok: FDA kozmetik kaydi bunlari istemez.
+   talebinde istenen bilgiler. Kimlik fotokopisi burada yok; imza sirkuleri FDA'nin istedigi bir belge degil, kaydi firma adina yurutme yetkisinin kaniti olarak istenir (Mustafa, 11 Kasim 2026).
    Tesis adresi vergi levhasindan ALINMAZ: kayit uretimin yapildigi fiziksel tesis adinadir (Kuzey Guney, Ekim 2026).
    Tracker, gorevlerde COSMETICS varsa ve FDA&DUNS yoksa musteri_portal/<uid>/form/tur = "kozmetik" yazar. */
 const KALEMLER_KOZ=[
@@ -205,7 +205,8 @@ const KALEMLER_KOZ=[
   {k:"z19",n:19,ad:"Etiket dosyaları için paylaşım bağlantısı",a:"Dosyalar 7 MB'tan büyükse Google Drive, WeTransfer ya da benzeri bağlantı",ph:"Ornek: https://drive.google.com/..."},
   {k:"z20",n:20,ad:"Mum ve difüzörler için güvenlik bilgi formu (SDS)",a:"Varsa. Bu ürünler kozmetik sayılmaz, FDA'ya kaydedilmez; etiket uyarılarının kontrolü için kullanılır",dosya:true,kabul:".pdf,.zip"},
   {b:"EVRAKLAR"},
-  {k:"z21",zorunlu:true,n:21,ad:"Vergi levhası",a:"Etikette adı geçen firmanın vergi levhası, PDF. Firma unvanı buradan alınır",dosya:true}
+  {k:"z21",zorunlu:true,n:21,ad:"Vergi levhası",a:"Etikette adı geçen firmanın vergi levhası, PDF. Firma unvanı buradan alınır",dosya:true},
+  {k:"z22",zorunlu:true,n:22,ad:"İmza sirküleri",a:"Etikette adı geçen firmanın imza sirküleri, PDF. Kaydı firma adına yürütme yetkisinin kimden geldiğini gösterir",dosya:true}
 ];
 let KALEMLER=KALEMLER_GIDA;
 const FORM_METIN={gida:null,kozmetik:{baslik:"FDA Kozmetik Tesis Kaydı ve Ürün Kaydı (MoCRA): Evrak ve Bilgi Formu",aciklama:"Tesis kaydı, ürünün üretildiği ya da dolumunun yapıldığı tesis adına açılır; ürün kaydı etikette adı geçen firma adına yapılır. Yabancı tesis için US Agent ataması zorunludur; bu görevi Export Partners LLC üstlenir."}};
