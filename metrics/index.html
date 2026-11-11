@@ -14,7 +14,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--zemin);color:var(--yazi);font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px}
 header{background:var(--lac);color:#fff;padding:14px 24px 0;position:sticky;top:0;z-index:5}
-.ust{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ust{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:nowrap}.ust>div:first-child{min-width:0}
 header h1{margin:0;font-size:20px;font-weight:700}header h1 span{color:var(--tur)}
 .alt{color:#C4CBD8;font-size:12px}
 nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
@@ -79,7 +79,11 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
 <header>
   <div class="ust">
     <div><h1>EP <span>Metrics</span></h1><div class="alt" id="uretim">Ölçüm ve strateji · satıra dokun, zaman çizgisi açılır</div></div>
-    <button id="cikis" style="background:none;border:1px solid #4B5563;color:#C4CBD8;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;display:none">Çıkış</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none">
+      <!-- 11 Kasim 2026, Mustafa: "mobilde guncelle olsun, refresh sag ustte" -->
+      <button id="guncelle" style="background:#FF7D07;border:0;color:#fff;border-radius:999px;padding:7px 16px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">↻ Güncelle</button>
+      <button id="cikis" style="background:none;border:1px solid #4B5563;color:#C4CBD8;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;display:none">Çıkış</button>
+    </div>
   </div>
   <nav id="sekmeler">
     <button data-t="ozet" class="secili">Genel özet</button><button data-t="yorum">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
@@ -349,6 +353,10 @@ if(window.VERI){V=window.VERI;ciz()}else{
   firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(function(u){var g=document.getElementById('giris');if(u){g.classList.remove('acik');document.getElementById('cikis').style.display='';veriYukle()}else{g.classList.add('acik');document.getElementById('cikis').style.display='none'}});
   document.getElementById('cikis').onclick=function(){firebase.auth().signOut()};
+  document.getElementById('guncelle').onclick=function(){var b=this;b.textContent='Güncelleniyor…';b.disabled=true;
+    var t=document.querySelector('#sekmeler .secili');try{sessionStorage.setItem('epm-sekme',t?t.dataset.t:'')}catch(e){}
+    location.reload()};
+  try{var _s=sessionStorage.getItem('epm-sekme');if(_s){sessionStorage.removeItem('epm-sekme');setTimeout(function(){var x=document.querySelector('#sekmeler [data-t="'+_s+'"]');if(x)x.click()},800)}}catch(e){}
  }).catch(function(){document.getElementById('ana').innerHTML='<div class="hata">Firebase yüklenemedi, bağlantıyı kontrol et.</div>'})}
 </script>
 </body>
