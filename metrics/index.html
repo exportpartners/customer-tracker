@@ -86,7 +86,7 @@ ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
     </div>
   </div>
   <nav id="sekmeler">
-    <button data-t="ozet" class="secili">Genel özet</button><button data-t="bulgular">Hedef ağacı</button><button data-t="yorum">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
+    <button data-t="ozet" class="secili">Genel özet</button><button data-t="bulgular">Hedef ağacı</button><button data-t="yol">Yol haritası</button><button data-t="yorum">Yorum</button><button data-t="kelime">Kelimeler</button><button data-t="trafik">Trafik ve talep</button><button data-t="seo">SEO ve GEO</button>
     <button data-t="teknik">Teknik</button><button data-t="reklam">Reklam</button><button data-t="icerik">İçerik</button>
     <button data-t="gorunurluk">Davranış ve rakip</button><button data-t="hatlar">Hatlar</button><button data-t="oneri">Öneriler</button><button data-t="haftalik">Haftalık analiz</button>
   </nav>
@@ -249,6 +249,7 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  } else H+='<div class="etiket">Analiz henüz yazılmadı.</div>';
  H+='</section>';
  // HEDEF AGACI (13 Kasim 2026): hedef -> bulgu -> aksiyon -> sonuc; HTML'i bulgu.py uretir
+ H+='<section class="sekme" id="yol"><h2>Yol haritası: 6 aylık model</h2>'+hataNotu('yol')+(V.yol_html||'<div class="etiket">Yol haritası henüz üretilmedi.</div>')+'</section>';
  H+='<section class="sekme" id="bulgular"><h2>Hedef ağacı</h2>'+hataNotu('bulgular')+(V.agac_html||'<div class="etiket">Ağaç henüz üretilmedi.</div>')+'</section>';
  H+='<section class="sekme" id="gorunurluk"><h2>Ziyaretçi davranışı (PostHog)</h2>'+hataNotu('davranis')+hataNotu('backlink');
  if(dv.ziyaretci){
