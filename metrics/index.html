@@ -154,7 +154,7 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
    ['1-10','11-20','21+'].map(function(b){return '<div><div class="sayi">'+((h.bant||{})[b]||0)+'</div><div class="etiket">'+(b=='1-10'?'ilk sayfada':b+' arası')+'</div></div>'}).join('')+
    '<div><div class="sayi">'+(h.gorunmuyor||0)+'</div><div class="etiket">görünmüyor</div></div></div>'+
    Object.keys(h.sepetler||{}).map(function(k){var x=h.sepetler[k];return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer"><b>'+e(k)+' sepeti</b> · ortalama konum '+sf(x.son,1)+'<div class="neden">Dokun: 16 aylık çizgi</div></div>'}).join('')+
-   kelimeTablo((h.satirlar||[]).filter(function(x){return x.konum}).slice(0,15)),'kelime-izle.py sepetleri: Amazon 25 + FDA 17 · hedef ilk sayfa');
+   kelimeTablo((h.satirlar||[]).filter(function(x){return x.konum}).slice(0,15)),'kelime-izle.py sepetleri: Amazon 25 + Amazon gıda ve kozmetik 12 + FDA 17 · hedef ilk sayfa');
  H+='</div></section>';
  // TRAFIK
  H+='<section class="sekme" id="trafik"><h2>Trafik ve talep</h2>'+hataNotu('ga4')+hataNotu('talep')+'<div class="izgara g4">';
