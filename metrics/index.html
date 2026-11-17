@@ -153,8 +153,11 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  H+=kart('Hedef kelimeler (sabit sepet)','<div class="etiket" style="margin-bottom:8px">Bilgi amaçlıdır: düşük gösterimli kelimelerde 5-10 sıra oynama gürültüdür; iş hat hunisinden açılır.</div><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">'+
    ['1-10','11-20','21+'].map(function(b){return '<div><div class="sayi">'+((h.bant||{})[b]||0)+'</div><div class="etiket">'+(b=='1-10'?'ilk sayfada':b+' arası')+'</div></div>'}).join('')+
    '<div><div class="sayi">'+(h.gorunmuyor||0)+'</div><div class="etiket">görünmüyor</div></div></div>'+
-   Object.keys(h.sepetler||{}).map(function(k){var x=h.sepetler[k];return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer"><b>'+e(k)+' sepeti</b> · ortalama konum '+sf(x.son,1)+'<div class="neden">Dokun: 16 aylık çizgi</div></div>'}).join('')+
-   kelimeTablo((h.satirlar||[]).filter(function(x){return x.konum}).slice(0,15)),'kelime-izle.py sepetleri: Amazon 25 + Amazon gıda ve kozmetik 12 + FDA 17 · hedef ilk sayfa');
+   (function(){var sk=Object.keys(h.sepetler||{}),am=sk.filter(function(k){return k.indexOf('Amazon')==0}),di=sk.filter(function(k){return k.indexOf('Amazon')!=0});
+    var kutu=function(k){var x=h.sepetler[k];return '<div class="oneri" data-s="'+x.s+'" style="cursor:pointer;flex:1 1 200px;margin:0"><b>'+e(k)+'</b><br>ortalama konum '+(x.son==null?'<span class="sabit">henüz gösterim yok</span>':sf(x.son,1))+'<div class="neden">Dokun: 16 aylık çizgi</div></div>'};
+    return (am.length?'<h4 style="margin:10px 0 6px">Amazon portföyü</h4><div class="etiket" style="margin-bottom:6px">Alt gruplar yan yana; birleşik puan yok.</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+am.map(kutu).join('')+'</div>':'')+
+     (di.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">'+di.map(kutu).join('')+'</div>':'')})()+
+   kelimeTablo((h.satirlar||[]).filter(function(x){return x.konum}).slice(0,15)),'kelime-izle.py sepetleri: Amazon portföyü (Amazon 25, ticari ek 11, gıda 4, kozmetik 8) + FDA 17 · hedef ilk sayfa');
  H+='</div></section>';
  // TRAFIK
  H+='<section class="sekme" id="trafik"><h2>Trafik ve talep</h2>'+hataNotu('ga4')+hataNotu('talep')+'<div class="izgara g4">';
