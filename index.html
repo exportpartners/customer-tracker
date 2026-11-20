@@ -1006,9 +1006,14 @@ function render(){
      mukerrerlik RENEWAL'dir, oteki bantlar hala tek yer. */
   idx.forEach(i=>{
     const EK=['renewal'];
-    const b=BANTLAR.filter(b=>!EK.includes(b.key)).find(b=>b.uyar(data[i]));
+    /* 20 Kasim 2026, Mustafa: "Sutas 2 kere vardi, bir firma 2 yerde nasil olur panelde?" Acik kayit (New, Hold,
+       Meta, Amazon, In Progress...) FDA RENEWAL gorevi tasisa da YALNIZ kendi bandinda durur. RENEWAL ek listesi
+       yalniz biten is (COMPLETED, NOT CONVERTED) icindir (26 Eylul karari); bandi olmayan Renewal kaydi yalniz RENEWAL'da. */
+    let b=BANTLAR.filter(b=>!EK.includes(b.key)).find(b=>b.uyar(data[i]));
+    const rn=BANTLAR.find(x=>x.key==='renewal');
+    if(b && b.key==='other' && rn.uyar(data[i])) b=null;
     if(b) kova[b.key].push(i);
-    EK.forEach(k=>{ const r=BANTLAR.find(x=>x.key===k); if(r && r.uyar(data[i])) kova[k].push(i); });
+    if((!b || ['completed','notconv'].includes(b.key)) && rn.uyar(data[i])) kova['renewal'].push(i);
   });
   const RSIRA={'Completed':0,'Hold':1,'In Progress':2,'New':3,'Renewal':4,'Not Converted':5};
   kova.renewal.sort((a,b)=>(RSIRA[data[a].status]??9)-(RSIRA[data[b].status]??9));
