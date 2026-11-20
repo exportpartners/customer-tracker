@@ -1021,7 +1021,12 @@ function render(){
      temas: firstMeeting, sonTemas ve issuedDate'in EN BUYUGU; NEW'in yaninda alt bantlar (AMAZON, META-FDA, COLD
      EMAIL) ve HOLD da ayni sirayla dizilir. */
   const yeniTarih=(c)=>[c.firstMeeting,c.sonTemas,c.issuedDate].filter(Boolean).sort().pop()||'';
+  /* 20 Kasim 2026, Mustafa: "tracker'da gorusme yapilanlari asagi dogru at, otekiler ustte dursun." Gorusmesi yapilan
+     (Intro / Follow-up / Technical Call Done) kayit bandin altina iner; iki grup kendi icinde tarihe gore. */
+  const gorusuldu=(c)=>(c.notes||[]).some(n=>/Call Done$/.test(n));
   ['new','amazon','chewport','meta','cold','hold'].forEach(k=>{ if(kova[k]) kova[k].sort((a,b)=>{
+    const ga=gorusuldu(data[a]), gb=gorusuldu(data[b]);
+    if(ga!==gb) return ga?1:-1;
     const ta=yeniTarih(data[a]), tb=yeniTarih(data[b]);
     if(ta&&tb) return tb.localeCompare(ta);
     if(ta) return -1;
