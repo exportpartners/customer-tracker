@@ -53,6 +53,7 @@ tr[data-s]:hover td{background:#FFF8F1}
 .oneri b{color:var(--lac)}.oneri .neden{font-size:12px;color:var(--soluk)}
 .oneri code{font-size:11px;background:#fff;border:1px solid var(--cizgi);border-radius:4px;padding:0 4px;color:var(--lac)}
 ol.is{margin:0;padding-left:18px}ol.is li{margin:5px 0}
+.tz-satir{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.tz{font-size:11px;color:#4A5568;background:#F3F4F6;border-radius:999px;padding:3px 9px}.tz-b{background:#FEF2F2;color:#991B1B}
 .hata{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:10px;padding:8px 12px;font-size:12px;margin:6px 0}
 #perde{position:fixed;inset:0;background:rgba(15,20,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
 #perde.acik{display:flex}
@@ -275,6 +276,12 @@ function ciz(){var a=V.kelime||{},t=V.trafik||{},s=V.seo||{},g=V.geo||{},tk=V.te
  
  H+='<section class="sekme" id="ozet"><h2>Genel özet</h2><div id="oz-sec" style="display:flex;gap:8px;margin:0 0 14px"></div><div id="oz-ic"></div></section>';
  document.getElementById('ana').innerHTML=H;
+ // 23 Kasim 2026: her sekmenin ustunde kaynaklarinin son guncellemesi, sikligi; beklenen araligi asan "bayat" (kirmizi)
+ (function(){var TZ=V.tazelik||{},TS=V.tazelik_sekme||{},AY=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  function zf(z){if(!z)return 'yok';var d=new Date(z);return d.getDate()+' '+AY[d.getMonth()]+', '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  document.querySelectorAll('section.sekme').forEach(function(sc){var l=TS[sc.id];if(!l)return;
+   var h=l.map(function(k){var t=TZ[k];if(!t)return '';return '<span class="tz'+(t.bayat?' tz-b':'')+'">'+e(t.ad)+': son güncelleme '+zf(t.zaman)+' · '+(t.siklik=='gunluk'?'günlük':'haftalık')+(t.bayat?' · <b>bayat</b>':'')+'</span>'}).join('');
+   var d=document.createElement('div');d.className='tz-satir';d.innerHTML=h;var h2=sc.querySelector('h2');if(h2)h2.after(d);else sc.prepend(d)})})();
  try{ozetCiz()}catch(x){console.log(x)}
  try{cpcCiz(60)}catch(x){}
  try{((V.trafik||{}).kanal||[]).forEach(function(k,i){kanalCiz(i,60)})}catch(x){}
